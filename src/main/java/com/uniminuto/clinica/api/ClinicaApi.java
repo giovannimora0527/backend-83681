@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.apache.coyote.BadRequestException;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
-@RequestMapping("/clinica")
+@RequestMapping("/veterinaria")
 public interface ClinicaApi {
 
     /**
@@ -30,22 +30,8 @@ public interface ClinicaApi {
      * @throws BadRequestException excepcion.
      */
     @GetMapping(value = "/test2",
-            produces = {"application/text"},
-            consumes = {"application/json"})
-    ResponseEntity<String> testService2()
-            throws BadRequestException;
-
-    /**
-     * Metodo test del servicio.
-     *
-     * @return Servicio funcionando correctamente.
-     * @throws BadRequestException excepcion.
-     */
-    @GetMapping(value = "/test3",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> testService3()
+    ResponseEntity<MiRespuestaRS> testService2()
             throws BadRequestException;
-
-
 }

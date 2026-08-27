@@ -8,16 +8,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class ClinicaServiceImpl implements ClinicaService {
 
+
     @Override
-    public String testService2() throws BadRequestException {
-        return "Servicio ok";
+    public String testService() throws BadRequestException {
+        return "Servicio funcionando correctamente";
     }
 
     @Override
-    public MiRespuestaRS testService3() throws BadRequestException {
-        MiRespuestaRS rta = new MiRespuestaRS();
-        rta.setMessage("probando servicio con objeto personalizado");
-        rta.setStatus(201);
-        return rta;
+    public MiRespuestaRS testService2() throws BadRequestException {
+        MiRespuestaRS respuesta = new MiRespuestaRS();
+        respuesta.setStatus(200);
+        respuesta.setMessage("Servicio funcionando correctamente desde un objeto json personalizado");
+        return respuesta;
     }
 }

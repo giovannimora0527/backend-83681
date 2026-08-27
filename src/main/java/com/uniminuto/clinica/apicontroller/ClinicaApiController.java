@@ -16,16 +16,13 @@ public class ClinicaApiController implements ClinicaApi {
 
     @Override
     public ResponseEntity<String> testService() throws BadRequestException {
-        return ResponseEntity.ok("Servicio funcionando correctamente");
+        return ResponseEntity.ok(this.clinicaService.testService());
     }
 
     @Override
-    public ResponseEntity<String> testService2() throws BadRequestException {
-        return ResponseEntity.ok(clinicaService.testService2());
+    public ResponseEntity<MiRespuestaRS> testService2() throws BadRequestException {
+        return ResponseEntity.ok(this.clinicaService.testService2());
     }
 
-    @Override
-    public ResponseEntity<MiRespuestaRS> testService3() throws BadRequestException {
-        return ResponseEntity.ok(clinicaService.testService3());
-    }
+
 }
