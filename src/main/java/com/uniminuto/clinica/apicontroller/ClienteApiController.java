@@ -2,8 +2,8 @@ package com.uniminuto.clinica.apicontroller;
 
 import com.uniminuto.clinica.api.ClienteApi;
 import com.uniminuto.clinica.entity.Cliente;
+import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.service.ClienteService;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +18,7 @@ public class ClienteApiController implements ClienteApi {
 
 
     @Override
-    public ResponseEntity<List<Cliente>> getClientes()
-            throws BadRequestException {
+    public ResponseEntity<List<Cliente>> getClientes() throws BadRequestException {
         return ResponseEntity.ok(this.clienteService.getAllClientes());
     }
 

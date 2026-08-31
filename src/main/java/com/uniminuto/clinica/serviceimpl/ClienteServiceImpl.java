@@ -1,9 +1,9 @@
 package com.uniminuto.clinica.serviceimpl;
 
 import com.uniminuto.clinica.entity.Cliente;
+import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.repository.ClienteRepository;
 import com.uniminuto.clinica.service.ClienteService;
-import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

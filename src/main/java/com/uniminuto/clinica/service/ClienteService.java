@@ -1,7 +1,7 @@
 package com.uniminuto.clinica.service;
 
 import com.uniminuto.clinica.entity.Cliente;
-import org.apache.coyote.BadRequestException;
+import com.uniminuto.clinica.exception.BadRequestException;
 
 import java.util.List;
 
