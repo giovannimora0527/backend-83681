@@ -1,11 +1,6 @@
 package com.uniminuto.clinica.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.cglib.core.Local;
 
@@ -32,4 +27,12 @@ public class Mascota {
 
     @Column (name = "fecha_modificacion")
     private LocalDateTime fechaModificacion;
+
+    @ManyToOne
+    @JoinColumn(name = "raza_id")
+    private Raza raza;
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
 }
