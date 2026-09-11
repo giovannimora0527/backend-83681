@@ -12,11 +12,8 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.Collator;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,21 +21,15 @@ import java.util.stream.Collectors;
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     @Autowired
     private UsuarioRepository usuarioRepository;
 
     @Override
-    public List<UsuarioRS> listarUsuarios() {
-        // Orden alfabetico A-Z: Collator con Locale "es" maneja tildes y mayus/minus
-        // igual que localeCompare(a, b, 'es', { sensitivity: 'base' }) en JS.
-        Collator collator = Collator.getInstance(new Locale("es"));
-        collator.setStrength(Collator.SECONDARY);
-
-        return usuarioRepository.findAll().stream()
-                .sorted(Comparator.comparing(Usuario::getNombre, collator))
+    public List<UsuarioRS> listarUsuarios() throws BadRequestException {
+        return usuarioRepository.findAllByOrderByUsernameAsc().stream()
                 .map(this::aPublico)
                 .collect(Collectors.toList());
     }
@@ -48,40 +39,40 @@ public class UsuarioServiceImpl implements UsuarioService {
         this.validarUsuario(usuarioRq, true);
 
         String email = usuarioRq.getEmail().trim().toLowerCase();
-        if (this.usuarioRepository.findByEmail(email).isPresent()) {
+        Optional<Usuario> optUsuario = this.usuarioRepository.findByEmail(email);
+        if (optUsuario.isPresent()) {
             throw new BadRequestException("Ya existe un usuario con ese email");
         }
 
         Usuario usuario = new Usuario();
-        usuario.setNombre(usuarioRq.getNombre().trim());
+        usuario.setUsername(usuarioRq.getUsername().trim());
         usuario.setEmail(email);
-        usuario.setPassword(this.cifrarMD5(usuarioRq.getPassword()));
+        usuario.setPasswordHash(this.cifrarMD5(usuarioRq.getPasswordHash()));
         usuario.setRol(usuarioRq.getRol() == null || usuarioRq.getRol().trim().isEmpty()
                 ? "usuario" : usuarioRq.getRol().trim());
-        usuario.setFechaRegistro(LocalDateTime.now());
+        usuario.setActivo(true);
+        usuario.setFechaCreacion(LocalDateTime.now()); // Esta sí existe en tu BD
 
-        this.usuarioRepository.save(usuario);
-
-        return this.aPublico(usuario);
+        usuarioRepository.save(usuario);
+        return aPublico(usuario);
     }
 
     @Override
     public UsuarioRS actualizarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
-        if (usuarioRq == null || usuarioRq.getUsuarioId() == null) {
+        if (usuarioRq == null || usuarioRq.getId() == null) {
             throw new BadRequestException("El ID del usuario es obligatorio para actualizar");
         }
 
-        Optional<Usuario> optUsuario = this.usuarioRepository.findById(usuarioRq.getUsuarioId());
+        Optional<Usuario> optUsuario = this.usuarioRepository.findById(usuarioRq.getId());
         if (optUsuario.isEmpty()) {
             throw new BadRequestException("Usuario no encontrado");
         }
 
+        Usuario usuario = optUsuario.get();
         this.validarUsuario(usuarioRq, false);
 
-        Usuario usuario = optUsuario.get();
-
-        if (usuarioRq.getNombre() != null && !usuarioRq.getNombre().trim().isEmpty()) {
-            usuario.setNombre(usuarioRq.getNombre().trim());
+        if (usuarioRq.getUsername() != null && !usuarioRq.getUsername().trim().isEmpty()) {
+            usuario.setUsername(usuarioRq.getUsername().trim());
         }
 
         if (usuarioRq.getEmail() != null && !usuarioRq.getEmail().trim().isEmpty()) {
@@ -97,16 +88,13 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuario.setRol(usuarioRq.getRol().trim());
         }
 
-        // El password es opcional en la actualizacion: si no llega, se conserva el hash anterior.
-        if (usuarioRq.getPassword() != null && !usuarioRq.getPassword().trim().isEmpty()) {
-            usuario.setPassword(this.cifrarMD5(usuarioRq.getPassword()));
+        if (usuarioRq.getPasswordHash() != null && !usuarioRq.getPasswordHash().trim().isEmpty()) {
+            usuario.setPasswordHash(this.cifrarMD5(usuarioRq.getPasswordHash()));
         }
 
-        usuario.setFechaModificacion(LocalDateTime.now());
+        usuarioRepository.save(usuario);
 
-        this.usuarioRepository.save(usuario);
-
-        return this.aPublico(usuario);
+        return aPublico(usuario);
     }
 
     private void validarUsuario(UsuarioRq usuarioRq, boolean esCreacion) throws BadRequestException {
@@ -114,12 +102,12 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new BadRequestException("El objeto de entrada no puede estar vacío");
         }
 
-        if (esCreacion || usuarioRq.getNombre() != null) {
-            if (usuarioRq.getNombre() == null || usuarioRq.getNombre().trim().isEmpty()) {
-                throw new BadRequestException("El nombre es obligatorio");
+        if (esCreacion || usuarioRq.getUsername() != null) {
+            if (usuarioRq.getUsername() == null || usuarioRq.getUsername().trim().isEmpty()) {
+                throw new BadRequestException("El username es obligatorio");
             }
-            if (usuarioRq.getNombre().trim().length() < 3) {
-                throw new BadRequestException("El nombre debe tener al menos 3 caracteres");
+            if (usuarioRq.getUsername().trim().length() < 3) {
+                throw new BadRequestException("El username debe tener al menos 3 caracteres");
             }
         }
 
@@ -132,20 +120,17 @@ public class UsuarioServiceImpl implements UsuarioService {
             }
         }
 
-        if (esCreacion || usuarioRq.getPassword() != null) {
-            if (usuarioRq.getPassword() == null || usuarioRq.getPassword().trim().isEmpty()) {
+        if (esCreacion || usuarioRq.getPasswordHash() != null) {
+            if (usuarioRq.getPasswordHash() == null || usuarioRq.getPasswordHash().trim().isEmpty()) {
                 if (esCreacion) {
                     throw new BadRequestException("El password es obligatorio");
                 }
-            } else if (usuarioRq.getPassword().length() < 4) {
+            } else if (usuarioRq.getPasswordHash().length() < 4) {
                 throw new BadRequestException("El password debe tener al menos 4 caracteres");
             }
         }
     }
 
-    /**
-     * Requisito 3: cifrar el password en Hash MD5 usando el proveedor nativo de Java.
-     */
     private String cifrarMD5(String texto) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -160,17 +145,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
 
-    /**
-     * Requisito 2: nunca exponer el password. Se arma la respuesta publica sin ese campo.
-     */
     private UsuarioRS aPublico(Usuario usuario) {
         UsuarioRS rs = new UsuarioRS();
         rs.setUsuarioId(usuario.getUsuarioId());
-        rs.setNombre(usuario.getNombre());
+        rs.setUsername(usuario.getUsername());
         rs.setEmail(usuario.getEmail());
         rs.setRol(usuario.getRol());
-        rs.setFechaRegistro(usuario.getFechaRegistro());
-        rs.setFechaModificacion(usuario.getFechaModificacion());
+        rs.setFechaCreacion(usuario.getFechaCreacion());
         return rs;
     }
 }

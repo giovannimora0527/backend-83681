@@ -1,11 +1,7 @@
 package com.uniminuto.clinica.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -17,24 +13,26 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "usuario_id")
+    @Column(name = "id")
     private Long usuarioId;
 
-    @Column(name = "nombre", nullable = false, length = 100)
-    private String nombre;
+    @Column(name = "username")
+    private String username;
 
-    @Column(name = "email", nullable = false, unique = true, length = 150)
-    private String email;
+    @Column(name = "password_hash")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String passwordHash;
 
-    @Column(name = "password", nullable = false, length = 32)
-    private String password;
-
-    @Column(name = "rol", length = 30)
+    @Column(name = "rol")
     private String rol;
 
-    @Column(name = "fecha_registro")
-    private LocalDateTime fechaRegistro;
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
 
-    @Column(name = "fecha_modificacion")
-    private LocalDateTime fechaModificacion;
+    @Column(name = "activo")
+    private Boolean activo;
+
+    @Column(name = "email")
+    private String email;
+
 }

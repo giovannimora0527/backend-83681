@@ -5,13 +5,15 @@ import lombok.Data;
 @Data
 public class UsuarioRq {
 
-    private Long usuarioId;
+    private Long id;
 
-    private String nombre;
+    private String username;
 
     private String email;
 
-    private String password;
+    private String passwordHash;
 
     private String rol;
+
+    private Boolean activo;
 }

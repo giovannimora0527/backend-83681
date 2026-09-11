@@ -19,3 +19,4 @@ public interface MascotaService {
 
     MiRespuestaRS actualizarMascota(MascotaRq mascotaRq) throws BadRequestException;
 }
+ 

@@ -91,7 +91,7 @@ public class MascotaServiceImpl implements MascotaService {
     }
 
     @Override
-    public MiRespuestaRS actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
+        public MiRespuestaRS actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
         // Paso 1. Valido el objeto de entrada
         this.validarObjetoEntrada(mascotaRq);
 

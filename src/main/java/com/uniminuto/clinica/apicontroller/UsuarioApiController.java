@@ -23,7 +23,7 @@ public class UsuarioApiController implements UsuarioApi {
     }
 
     @Override
-    public ResponseEntity<UsuarioRS> guardarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
+    public ResponseEntity<UsuarioRS> crearUsuario(UsuarioRq usuarioRq) throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.crearUsuario(usuarioRq));
     }
 

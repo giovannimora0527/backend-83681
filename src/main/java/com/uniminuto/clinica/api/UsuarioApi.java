@@ -23,7 +23,7 @@ public interface UsuarioApi {
      * @return lista de usuarios.
      * @throws BadRequestException excepcion.
      */
-    @GetMapping(value = "/listar-usuario",
+    @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<UsuarioRS>> listarUsuarios()
@@ -36,22 +36,22 @@ public interface UsuarioApi {
      * @return usuario creado, sin password.
      * @throws BadRequestException excepcion.
      */
-    @PostMapping(value = "/guardar-usuario",
+    @PostMapping(value = "/crear",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<UsuarioRS> guardarUsuario(
+    ResponseEntity<UsuarioRS> crearUsuario(
             @RequestBody UsuarioRq usuarioRq)
             throws BadRequestException;
 
     /**
-     * Actualiza un usuario existente. El password es opcional: si no llega,
-     * se conserva el hash anterior; si llega, se vuelve a cifrar en MD5.
+     * Actualiza un usuario existente. El password es opcional: Si no se relaciona,
+     * se conserva el hash anterior; si se relaciona, se vuelve a cifrar en MD5..
      *
      * @param usuarioRq datos del usuario a actualizar (debe incluir usuarioId).
      * @return usuario actualizado, sin password.
      * @throws BadRequestException excepcion.
      */
-    @PostMapping(value = "/actualizar-usuario",
+    @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<UsuarioRS> actualizarUsuario(
