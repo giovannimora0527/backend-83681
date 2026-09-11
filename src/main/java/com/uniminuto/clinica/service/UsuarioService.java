@@ -1,16 +1,16 @@
 package com.uniminuto.clinica.service;
 
-import com.uniminuto.clinica.entity.Usuario;
+import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.UsuarioRq;
+import com.uniminuto.clinica.models.UsuarioRS;
+
 import java.util.List;
 
 public interface UsuarioService {
-    Usuario crearUsuario(Usuario usuario);
 
-    Usuario actualizarUsuario(Usuario usuario);
+    List<UsuarioRS> listarUsuarios() throws BadRequestException;
 
-    List<Usuario> getlistarUsuarios();
+    UsuarioRS crearUsuario(UsuarioRq usuarioRq) throws BadRequestException;
 
-    List<Usuario> listarUsuarios();
-
-    Usuario actualizarUsuario(Long id, Usuario usuario);
+    UsuarioRS actualizarUsuario(UsuarioRq usuarioRq) throws BadRequestException;
 }
