@@ -1,14 +1,11 @@
 package com.uniminuto.clinica.service;
 
-import com.uniminuto.clinica.entity.Usuario;
-
+import com.uniminuto.clinica.models.UsuarioRequestDTO;
+import com.uniminuto.clinica.models.UsuarioResponseDTO;
 import java.util.List;
 
 public interface UsuarioService {
-
-    Usuario crear(Usuario usuario);
-
-    List<Usuario> listar();
-
-    Usuario actualizar(Long id, Usuario usuario);
+    List<UsuarioResponseDTO> listarUsuarios();
+    UsuarioResponseDTO crearUsuario(UsuarioRequestDTO dto);
+    UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO dto);
 }
