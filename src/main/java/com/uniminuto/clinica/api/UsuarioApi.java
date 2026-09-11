@@ -2,7 +2,7 @@ package com.uniminuto.clinica.api;
 
 import com.uniminuto.clinica.entity.Usuario;
 import com.uniminuto.clinica.exception.BadRequestException;
-import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.UsuarioRS;
 import com.uniminuto.clinica.models.UsuarioRq;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +35,7 @@ public interface UsuarioApi {
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> guardarUsuario(
+    ResponseEntity<UsuarioRS> guardarUsuario(
             @RequestBody UsuarioRq usuarioRq
     )
             throws BadRequestException;
@@ -49,7 +49,7 @@ public interface UsuarioApi {
     @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> actualizarUsuario(
+    ResponseEntity<UsuarioRS> actualizarUsuario(
             @RequestBody UsuarioRq usuarioRq
     )
             throws BadRequestException;

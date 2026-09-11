@@ -3,7 +3,7 @@ package com.uniminuto.clinica.apicontroller;
 import com.uniminuto.clinica.api.UsuarioApi;
 import com.uniminuto.clinica.entity.Usuario;
 import com.uniminuto.clinica.exception.BadRequestException;
-import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.UsuarioRS;
 import com.uniminuto.clinica.models.UsuarioRq;
 import com.uniminuto.clinica.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +25,12 @@ public class UsuarioApiController implements UsuarioApi {
     }
 
     @Override
-    public ResponseEntity<MiRespuestaRS> guardarUsuario(@RequestBody UsuarioRq usuarioRq) throws BadRequestException {
+    public ResponseEntity<UsuarioRS> guardarUsuario(@RequestBody UsuarioRq usuarioRq) throws BadRequestException {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.usuarioService.guardarUsuario(usuarioRq));
     }
 
     @Override
-    public ResponseEntity<MiRespuestaRS> actualizarUsuario(@RequestBody UsuarioRq usuarioRq) throws BadRequestException {
+    public ResponseEntity<UsuarioRS> actualizarUsuario(@RequestBody UsuarioRq usuarioRq) throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.actualizarUsuario(usuarioRq));
     }
 }

@@ -3,7 +3,7 @@ package com.uniminuto.clinica.models;
 import lombok.Data;
 
 @Data
-public class MiRespuestaRS {
+public class UsuarioRS {
 
     /**
      * Status de la peticion.

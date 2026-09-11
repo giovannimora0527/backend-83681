@@ -5,7 +5,7 @@ import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.entity.Raza;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MascotaRq;
-import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.UsuarioRS;
 import com.uniminuto.clinica.repository.ClienteRepository;
 import com.uniminuto.clinica.repository.MascotaRepository;
 import com.uniminuto.clinica.repository.RazaRepository;
@@ -56,7 +56,7 @@ public class MascotaServiceImpl implements MascotaService {
     }
 
     @Override
-    public MiRespuestaRS guardarMascota(MascotaRq mascotaRq) throws BadRequestException {
+    public UsuarioRS guardarMascota(MascotaRq mascotaRq) throws BadRequestException {
         // Paso 1. Valido el objeto de entrada
         this.validarObjetoEntrada(mascotaRq);
 
@@ -83,7 +83,7 @@ public class MascotaServiceImpl implements MascotaService {
         this.mascotaRepository.save(mascota);
 
         // Paso 4. Retornar la respuesta
-        MiRespuestaRS respuesta = new MiRespuestaRS();
+        UsuarioRS respuesta = new UsuarioRS();
         respuesta.setStatus(200);
         respuesta.setMessage("Mascota guardada correctamente");
 
@@ -91,7 +91,7 @@ public class MascotaServiceImpl implements MascotaService {
     }
 
     @Override
-    public MiRespuestaRS actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
+    public UsuarioRS actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
         // Paso 1. Valido el objeto de entrada
         this.validarObjetoEntrada(mascotaRq);
 
@@ -122,7 +122,7 @@ public class MascotaServiceImpl implements MascotaService {
         this.mascotaRepository.save(mascota);
 
         // Paso 4. Retornar la respuesta
-        MiRespuestaRS respuesta = new MiRespuestaRS();
+        UsuarioRS respuesta = new UsuarioRS();
         respuesta.setStatus(200);
         respuesta.setMessage("Mascota actualizada correctamente");
 

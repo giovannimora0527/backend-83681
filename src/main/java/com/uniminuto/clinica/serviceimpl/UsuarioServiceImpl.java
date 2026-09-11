@@ -2,7 +2,7 @@ package com.uniminuto.clinica.serviceimpl;
 
 import com.uniminuto.clinica.entity.Usuario;
 import com.uniminuto.clinica.exception.BadRequestException;
-import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.UsuarioRS;
 import com.uniminuto.clinica.models.UsuarioRq;
 import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.service.UsuarioService;
@@ -30,7 +30,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public MiRespuestaRS guardarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
+    public UsuarioRS guardarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
         if (usuarioRq == null) {
             throw new BadRequestException("La solicitud del usuario es obligatoria.");
         }
@@ -69,7 +69,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
             this.usuarioRepository.save(nuevoUsuario);
 
-            MiRespuestaRS respuesta = new MiRespuestaRS();
+            UsuarioRS respuesta = new UsuarioRS();
             respuesta.setStatus(HttpStatus.CREATED.value());
             respuesta.setMessage("Usuario creado con éxito.");
             return respuesta;
@@ -80,7 +80,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public MiRespuestaRS actualizarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
+    public UsuarioRS actualizarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
         if (usuarioRq == null) {
             throw new BadRequestException("La solicitud del usuario es obligatoria.");
         }
@@ -123,7 +123,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         try {
             this.usuarioRepository.save(usuarioExistente);
 
-            MiRespuestaRS respuesta = new MiRespuestaRS();
+            UsuarioRS respuesta = new UsuarioRS();
             respuesta.setStatus(HttpStatus.OK.value());
             respuesta.setMessage("Usuario actualizado con éxito.");
             return respuesta;
