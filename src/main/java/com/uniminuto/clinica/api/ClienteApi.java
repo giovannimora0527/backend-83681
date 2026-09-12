@@ -35,7 +35,7 @@ public interface ClienteApi {
      */
     @GetMapping(value = "/cliente-documento",
             produces = {"application/json"},
-            consumes = {"application/json"})
+            consumes = {"application/json"}git add .)git commit -m "Taller sobre servicios web"
     ResponseEntity<Cliente> getClientesByNumeroDocumento(
             @RequestParam String numeroDocumento
     )
