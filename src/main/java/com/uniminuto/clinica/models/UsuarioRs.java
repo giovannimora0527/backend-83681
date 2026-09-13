@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
  * Representacion del usuario: No incluye el password.
  */
 @Data
-public class UsuarioRS {
+public class UsuarioRs {
 
     private Long usuarioId;
 

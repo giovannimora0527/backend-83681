@@ -1,6 +1,6 @@
 package com.uniminuto.clinica.api;
 
-import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.MiRespuestaRs;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +32,6 @@ public interface ClinicaApi {
     @GetMapping(value = "/test2",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> testService2()
+    ResponseEntity<MiRespuestaRs> testService2()
             throws BadRequestException;
 }

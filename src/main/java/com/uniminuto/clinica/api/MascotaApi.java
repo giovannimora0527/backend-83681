@@ -1,10 +1,9 @@
 package com.uniminuto.clinica.api;
 
-import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MascotaRq;
-import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.MiRespuestaRs;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +50,7 @@ public interface MascotaApi {
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> guardarMascota(
+    ResponseEntity<MiRespuestaRs> guardarMascota(
             @RequestBody MascotaRq mascotaRq
     )
             throws BadRequestException;
@@ -59,7 +58,7 @@ public interface MascotaApi {
     @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> actualizarMascota(
+    ResponseEntity<MiRespuestaRs> actualizarMascota(
             @RequestBody MascotaRq mascotaRq
     )
             throws BadRequestException;

@@ -3,7 +3,7 @@ package com.uniminuto.clinica.serviceimpl;
 import com.uniminuto.clinica.entity.Usuario;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.UsuarioRq;
-import com.uniminuto.clinica.models.UsuarioRS;
+import com.uniminuto.clinica.models.UsuarioRs;
 import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +28,14 @@ public class UsuarioServiceImpl implements UsuarioService {
     private UsuarioRepository usuarioRepository;
 
     @Override
-    public List<UsuarioRS> listarUsuarios() throws BadRequestException {
+    public List<UsuarioRs> listarUsuarios() throws BadRequestException {
         return usuarioRepository.findAllByOrderByUsernameAsc().stream()
                 .map(this::aPublico)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public UsuarioRS crearUsuario(UsuarioRq usuarioRq) throws BadRequestException {
+    public UsuarioRs crearUsuario(UsuarioRq usuarioRq) throws BadRequestException {
         this.validarUsuario(usuarioRq, true);
 
         String email = usuarioRq.getEmail().trim().toLowerCase();
@@ -58,7 +58,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public UsuarioRS actualizarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
+    public UsuarioRs actualizarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
         if (usuarioRq == null || usuarioRq.getId() == null) {
             throw new BadRequestException("El ID del usuario es obligatorio para actualizar");
         }
@@ -145,8 +145,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
     }
 
-    private UsuarioRS aPublico(Usuario usuario) {
-        UsuarioRS rs = new UsuarioRS();
+    private UsuarioRs aPublico(Usuario usuario) {
+        UsuarioRs rs = new UsuarioRs();
         rs.setUsuarioId(usuario.getUsuarioId());
         rs.setUsername(usuario.getUsername());
         rs.setEmail(usuario.getEmail());

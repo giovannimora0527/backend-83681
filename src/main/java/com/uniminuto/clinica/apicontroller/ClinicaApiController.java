@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.apache.coyote.BadRequestException;
 import org.springframework.web.bind.annotation.RestController;
-import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.MiRespuestaRs;
 
 @RestController
 public class ClinicaApiController implements ClinicaApi {
@@ -20,7 +20,7 @@ public class ClinicaApiController implements ClinicaApi {
     }
 
     @Override
-    public ResponseEntity<MiRespuestaRS> testService2() throws BadRequestException {
+    public ResponseEntity<MiRespuestaRs> testService2() throws BadRequestException {
         return ResponseEntity.ok(this.clinicaService.testService2());
     }
 
