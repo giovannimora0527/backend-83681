@@ -19,14 +19,24 @@ import java.util.List;
 public interface CitaApi {
 
     /**
-     * Filtra citas por rango de fecha (ISO-8601)
-     * Ejemplo de formato: 2026-09-14T08:30:00
+     * Obtiene todas las citas disponibles en el sistema.
+     *
+     * @return Respuesta HTTP con la lista completa de citas.
+     * @throws BadRequestException Si ocurre una validación o un problema de negocio.
      */
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<Cita>> listarCitas() throws BadRequestException;
 
+    /**
+     * Filtra citas por un rango de fechas en formato ISO-8601 o YYYY-MM-DD.
+     *
+     * @param fechaInicial Fecha inicial del rango de búsqueda.
+     * @param fechaFinal Fecha final del rango de búsqueda.
+     * @return Lista de citas dentro del rango indicado.
+     * @throws BadRequestException Si alguno de los parámetros es nulo, vacío o inválido.
+     */
     @GetMapping(value = "/filtrar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -35,6 +45,13 @@ public interface CitaApi {
            @RequestParam String fechaFinal)
            throws BadRequestException;
 
+    /**
+     * Crea una nueva cita con la información enviada en el cuerpo de la petición.
+     *
+     * @param citaRq Datos de la cita que se desea registrar.
+     * @return Respuesta con el estado y el mensaje del proceso.
+     * @throws BadRequestException Si la información no cumple las validaciones del sistema.
+     */
     @PostMapping(value = "/guardar",
            produces = {"application/json"},
            consumes = {"application/json"})
@@ -42,6 +59,13 @@ public interface CitaApi {
            @RequestBody CitaRq citaRq)
            throws BadRequestException;
 
+    /**
+     * Actualiza la información de una cita ya existente.
+     *
+     * @param citaRq Datos actualizados de la cita.
+     * @return Respuesta con el estado y el mensaje del proceso.
+     * @throws BadRequestException Si la cita no existe o los datos enviados son inválidos.
+     */
     @PostMapping(value = "/actualizar",
            produces = {"application/json"},
            consumes = {"application/json"})
