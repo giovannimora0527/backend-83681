@@ -3,6 +3,8 @@ package com.uniminuto.clinica.apicontroller;
 import com.uniminuto.clinica.api.CitaApi;
 import com.uniminuto.clinica.entity.Cita;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.CitaRq;
+import com.uniminuto.clinica.models.UsuarioRS;
 import com.uniminuto.clinica.service.CitaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -55,5 +57,15 @@ public class CitaApiController implements CitaApi {
         } catch (DateTimeParseException ex) {
             throw new BadRequestException("Formato de fecha inválido. Use yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss");
         }
+    }
+
+    @Override
+    public ResponseEntity<UsuarioRS> guardarCita(CitaRq citaRq) throws BadRequestException {
+        return ResponseEntity.ok(this.citaService.guardarCita(citaRq));
+    }
+
+    @Override
+    public ResponseEntity<UsuarioRS> actualizarCita(CitaRq citaRq) throws BadRequestException {
+        return ResponseEntity.ok(this.citaService.actualizarCita(citaRq));
     }
 }
