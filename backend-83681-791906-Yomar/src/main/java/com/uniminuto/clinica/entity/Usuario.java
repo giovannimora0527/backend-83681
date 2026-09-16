@@ -22,9 +22,6 @@ public class Usuario {
     @Column(name = "password_hash")
     private String passwordHash;
 
-    @Column(name = "tipo_documento")
-    private String tipoDocumento;
-
     @Column(name = "rol")
     private String rol;
 

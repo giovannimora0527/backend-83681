@@ -7,9 +7,11 @@ import com.uniminuto.clinica.models.UsuarioRq;
 import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -20,11 +22,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
     @Override
     public List<Usuario> listarUsuarios() {
-        return usuarioRepository.findAllByOrderByUsernameAsc();
+        return usuarioRepository.findAllByOrderByUserNameAsc();
     }
 
     @Override
@@ -40,8 +40,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Paso 3. Crear la entidad a guardar
         Usuario usuario = new Usuario();
         usuario.setUserName(usuarioRq.getUserName());
-        usuario.setPasswordHash(passwordEncoder.encode(usuarioRq.getPassword()));
-        usuario.setTipoDocumento(usuarioRq.getTipoDocumento());
+        usuario.setPasswordHash(this.hashPassword(usuarioRq.getPassword()));
         usuario.setRol(usuarioRq.getRol());
         usuario.setEmail(usuarioRq.getEmail());
         usuario.setActivo(usuarioRq.getActivo() != null ? usuarioRq.getActivo() : true);
@@ -71,7 +70,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         // Paso 3. Actualizar los datos
         Usuario usuario = optUsuario.get();
         usuario.setUserName(usuarioRq.getUserName());
-        usuario.setTipoDocumento(usuarioRq.getTipoDocumento());
         usuario.setRol(usuarioRq.getRol());
         usuario.setEmail(usuarioRq.getEmail());
         if (usuarioRq.getActivo() != null) {
@@ -80,7 +78,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         // Solo re-cifra la contraseña si mandaron una nueva
         if (usuarioRq.getPassword() != null && !usuarioRq.getPassword().isBlank()) {
-            usuario.setPasswordHash(passwordEncoder.encode(usuarioRq.getPassword()));
+            usuario.setPasswordHash(this.hashPassword(usuarioRq.getPassword()));
         }
 
         this.usuarioRepository.save(usuario);
@@ -91,6 +89,25 @@ public class UsuarioServiceImpl implements UsuarioService {
         respuesta.setMessage("Usuario actualizado correctamente");
 
         return respuesta;
+    }
+
+    /**
+     * Calcula el hash SHA-256 de una contraseña en texto plano.
+     * Usa únicamente clases del propio JDK (java.security), sin dependencias externas.
+     */
+    private String hashPassword(String passwordPlano) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(passwordPlano.getBytes(StandardCharsets.UTF_8));
+
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Algoritmo SHA-256 no disponible", e);
+        }
     }
 
     private void validarObjetoEntrada(UsuarioRq usuarioRq, boolean esCreacion) throws BadRequestException {
