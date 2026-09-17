@@ -25,7 +25,7 @@ import java.util.Optional;
  * Implementación del servicio de anotaciones de historia médica.
  */
 @Service
-public class Anotacion_HistoriaServiceImpl implements Anotacion_HistoriaService {
+public class    Anotacion_HistoriaServiceImpl implements Anotacion_HistoriaService {
 
     /** Repositorio para persistir y consultar anotaciones. */
     @Autowired
