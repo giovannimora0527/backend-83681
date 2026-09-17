@@ -11,6 +11,12 @@ import java.util.List;
 
 public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Long> {
 
+
+    /**
+     * Busca todas las fórmulas médicas ordenadas por fecha de creación de forma descendente.
+     * @return Lista de fórmulas médicas ordenadas por fecha de creación descendente.
+     */
+
         java.util.List<FormulaMedica> findAllByOrderByFechaCreacionRegistroDesc();
 
 }
