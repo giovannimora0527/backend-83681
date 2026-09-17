@@ -6,7 +6,7 @@ import lombok.Data;
  * Modelo de petición para crear o actualizar una anotación de historia.
  */
 @Data
-public class AnotacionHistoriaRq {
+public class Anotacion_HistoriaRq {
 
     /** Identificador de la anotación (para actualizaciones). */
     private Long id;

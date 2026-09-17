@@ -15,11 +15,21 @@ import com.uniminuto.clinica.service.CitaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+
+/**
+ * Implementación del servicio de citas que maneja la lógica de negocio y la interacción con los repositorios.
+ */
 public class CitaServiceImpl implements CitaService {
 
     /**
@@ -55,6 +65,14 @@ public class CitaServiceImpl implements CitaService {
      * @throws BadRequestException Si solo se recibe una de las dos fechas o si el rango es inválido.
      */
     @Override
+    /**
+     * Retorna las citas dentro del rango de fechas indicado, ordenadas
+     * desde la más reciente hasta la más antigua.
+     *
+     * @param fechaInicial Fecha inicial del rango de búsqueda. Si es null, se interpretará como sin filtro.
+     * @param fechaFinal Fecha final del rango de búsqueda. Si es null, se interpretará como sin filtro.
+     * @return Lista de citas que cumplen el rango establecido.
+     */
     public List<Cita> filtrarCitas(LocalDateTime fechaInicial, LocalDateTime fechaFinal) {
         // Si no vienen fechas, retornar todas ordenadas de la más reciente a la más antigua.
         if (fechaInicial == null && fechaFinal == null) {
@@ -74,6 +92,53 @@ public class CitaServiceImpl implements CitaService {
     }
 
     /**
+     * Retorna las citas dentro del rango indicado en texto, convirtiendo los valores a LocalDateTime.
+     *
+     * @param fechaInicial Fecha inicial recibida en texto.
+     * @param fechaFinal Fecha final recibida en texto.
+     * @return Lista de citas filtradas dentro del rango.
+     * @throws BadRequestException Si alguna fecha es nula, vacía o tiene un formato inválido.
+     */
+    @Override
+    public List<Cita> filtrarCitas(String fechaInicial, String fechaFinal) throws BadRequestException {
+       if (fechaInicial == null || fechaInicial.isBlank() || fechaFinal == null || fechaFinal.isBlank()) {
+           throw new BadRequestException("fechaInicial y fechaFinal son requeridas para filtrar");
+       }
+
+       LocalDateTime fi = parseFecha(fechaInicial, false);
+       LocalDateTime ff = parseFecha(fechaFinal, true);
+       return filtrarCitas(fi, ff);
+    }
+
+    /**
+     * Convierte la fecha recibida en texto a LocalDateTime con soporte a varios formatos.
+     *
+     * @param valor Texto con la fecha a convertir.
+     * @param esFechaFinal Indica si el valor corresponde a la fecha final del rango.
+     * @return Fecha convertida a LocalDateTime.
+     * @throws BadRequestException Si el formato recibido no es válido.
+     */
+    private LocalDateTime parseFecha(String valor, boolean esFechaFinal) throws BadRequestException {
+       DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+               .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+               .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+               .appendOptional(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+               .appendOptional(DateTimeFormatter.ISO_LOCAL_DATE)
+               .toFormatter();
+
+       try {
+           TemporalAccessor parsed = formatter.parseBest(valor, LocalDateTime::from, LocalDate::from);
+           if (parsed instanceof LocalDateTime) {
+               return (LocalDateTime) parsed;
+           }
+           LocalDate fecha = LocalDate.from(parsed);
+           return esFechaFinal ? fecha.atTime(LocalTime.MAX) : fecha.atStartOfDay();
+       } catch (DateTimeParseException ex) {
+           throw new BadRequestException("Formato de fecha inválido. Use yyyy-MM-dd, yyyy-MM-dd HH:mm:ss o yyyy-MM-ddTHH:mm:ss");
+       }
+    }
+
+    /**
      * Guarda una nueva cita validando los datos del payload y la existencia de
      * cliente, médico y mascota relacionados.
      *
@@ -82,6 +147,10 @@ public class CitaServiceImpl implements CitaService {
      * @throws BadRequestException Si la solicitud no cumple validaciones o entidades relacionadas no existen.
      */
     @Override
+    /**
+     * Guarda una nueva cita validando los datos recibidos y la existencia de
+     * cliente, médico y mascota relacionados.
+     */
     public UsuarioRS guardarCita(CitaRq citaRq) throws BadRequestException {
         try {
             validarObjetoEntrada(citaRq);
@@ -119,6 +188,13 @@ public class CitaServiceImpl implements CitaService {
      * @throws BadRequestException Si la cita no existe o la entrada es inválida.
      */
     @Override
+    /**
+     * Actualiza una cita existente validando la información enviada.
+     *
+     * @param citaRq Objeto con los datos actualizados de la cita.
+     * @return Respuesta con el estado y el mensaje de la operación.
+     * @throws BadRequestException Si la cita no existe o los datos no son válidos.
+     */
     public UsuarioRS actualizarCita(CitaRq citaRq) throws BadRequestException {
         try {
             validarObjetoEntrada(citaRq);

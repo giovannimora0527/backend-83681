@@ -1,6 +1,6 @@
 package com.uniminuto.clinica.repository;
 
-import com.uniminuto.clinica.entity.HistoriaMedica;
+import com.uniminuto.clinica.entity.Historia_Medica;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,13 +12,13 @@ import java.util.List;
  * Provee métodos para recuperar historias ordenadas por fecha.
  */
 @Repository
-public interface HistoriaMedicaRepository extends JpaRepository<HistoriaMedica, Long> {
+public interface Historia_MedicaRepository extends JpaRepository<Historia_Medica, Long> {
 
     /**
      * Obtiene todas las historias ordenadas de la más reciente a la más antigua.
      * @return lista de historias ordenadas descendentemente por fechaCreacion
      */
-    List<HistoriaMedica> findAllByOrderByFechaCreacionDesc();
+    List<Historia_Medica> findAllByOrderByFechaCreacionDesc();
 
     /**
      * Obtiene todas las historias cuya fechaCreacion está entre inicio y fin, ordenadas descendentemente.
@@ -26,5 +26,5 @@ public interface HistoriaMedicaRepository extends JpaRepository<HistoriaMedica, 
      * @param fin fecha final inclusive
      * @return lista de historias dentro del rango ordenadas descendentemente
      */
-    List<HistoriaMedica> findAllByFechaCreacionBetweenOrderByFechaCreacionDesc(LocalDateTime inicio, LocalDateTime fin);
+    List<Historia_Medica> findAllByFechaCreacionBetweenOrderByFechaCreacionDesc(LocalDateTime inicio, LocalDateTime fin);
 }

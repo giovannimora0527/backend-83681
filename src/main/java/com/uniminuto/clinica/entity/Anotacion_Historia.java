@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Data
 @Table(name = "anotacion_historia")
-public class AnotacionHistoria {
+public class Anotacion_Historia {
 
     /** Identificador único de la anotación (PK auto-generado). */
     @Id
@@ -23,7 +23,7 @@ public class AnotacionHistoria {
     /** Relación ManyToOne hacia la historia médica asociada (historia_id). */
     @ManyToOne
     @JoinColumn(name = "historia_id")
-    private HistoriaMedica historia;
+    private Historia_Medica historia;
 
     /** Identificador del médico que realizó la anotación (medico_id). */
     @Column(name = "medico_id")

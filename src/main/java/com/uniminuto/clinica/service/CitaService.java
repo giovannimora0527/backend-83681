@@ -8,6 +8,10 @@ import com.uniminuto.clinica.models.UsuarioRS;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
+/**
+ * Servicio que expone operaciones sobre citas.
+ */
 public interface CitaService {
 
     /**
@@ -19,6 +23,16 @@ public interface CitaService {
      * @return Lista de citas que cumplen el rango establecido.
      */
     List<Cita> filtrarCitas(LocalDateTime fechaInicial, LocalDateTime fechaFinal);
+
+    /**
+     * Retorna las citas dentro de un rango recibido en texto y lo convierte a LocalDateTime.
+     *
+     * @param fechaInicial Fecha inicial en formato yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss.
+     * @param fechaFinal Fecha final en formato yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss.
+     * @return Lista de citas dentro del rango indicado.
+     * @throws BadRequestException Si alguna de las fechas es nula, vacía o tiene formato inválido.
+     */
+    List<Cita> filtrarCitas(String fechaInicial, String fechaFinal) throws BadRequestException;
 
     /**
      * Guarda una nueva cita validando los datos recibidos y la existencia de

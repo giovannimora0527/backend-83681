@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
+/**
+ * Repositorio que expone operaciones de persistencia sobre la entidad Cita.
+ */
 public interface CitaRepository extends JpaRepository<Cita, Long> {
 
     /**

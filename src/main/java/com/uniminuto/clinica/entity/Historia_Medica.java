@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Data
 @Table(name = "historia_medica")
-public class HistoriaMedica {
+public class Historia_Medica {
 
     /** Identificador único de la historia médica (PK auto-generado). */
     @Id
@@ -20,9 +20,9 @@ public class HistoriaMedica {
     @Column(name = "id")
     private Long id;
 
-    /** Identificador del paciente asociado a esta historia. */
-    @Column(name = "paciente_id")
-    private Integer pacienteId;
+    /** Identificador del cliente asociado a esta historia. */
+    @Column(name = "cliente_id")
+    private Integer clienteId;
 
     /** Fecha y hora en que se creó la historia. */
     @Column(name = "fecha_creacion")
