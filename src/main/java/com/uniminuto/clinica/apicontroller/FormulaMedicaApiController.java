@@ -6,14 +6,17 @@ import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.service.FormulaMedicaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping; // <-- No olvides importar esto
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+
 /**
  * Controlador que implementa los endpoints definidos en la interfaz FormulaMedicaApi.
  * Proporciona funcionalidades para listar y consultar fórmulas médicas.
  */
 @RestController
+@RequestMapping("/formula_medica") // <-- ¡Agrega esto aquí!
 public class FormulaMedicaApiController implements FormulaMedicaApi {
 
     /**
@@ -29,7 +32,7 @@ public class FormulaMedicaApiController implements FormulaMedicaApi {
      * @throws BadRequestException Si ocurre una validación o un problema de negocio.
      */
     @Override
-    public ResponseEntity<List<FormulaMedica>> listarFormulasMedicas() throws BadRequestException {
+    public ResponseEntity<List<FormulaMedica>> listarFormulaMedica() throws BadRequestException {
         return ResponseEntity.ok(this.formulaMedicaService.listarFormulasMedicas());
     }
 
