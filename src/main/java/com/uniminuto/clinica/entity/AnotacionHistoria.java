@@ -20,12 +20,16 @@ public class AnotacionHistoria {
     @Column(name = "historia_id")
     private Long historiaId;
 
+    /** Identificador del médico que realizó la anotación (FK). */
     @Column(name = "medico_id")
     private Integer medicoId;
 
+    /** Fecha y hora en que se creó la anotación. */
     @Column(name = "fecha")
     private LocalDateTime fecha;
 
+
+    /** Descripción detallada de la anotación clínica realizada por el médico. */
     @Column(name = "descripcion")
     private String descripcion;
 }
