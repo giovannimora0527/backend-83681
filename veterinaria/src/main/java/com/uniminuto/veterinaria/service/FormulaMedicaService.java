@@ -1,27 +1,16 @@
 package com.uniminuto.veterinaria.service;
 
 import com.uniminuto.veterinaria.entity.FormulaMedica;
-import com.uniminuto.veterinaria.repository.FormulaMedicaRepository;
-import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Servicio que contiene la logica de negocio para FormulaMedica.
+ * Interfaz de la capa de servicio para definir las operaciones de negocio del recurso FormulaMedica.
  */
-@Service
-public class FormulaMedicaService {
+public interface FormulaMedicaService {
 
-    private final FormulaMedicaRepository repository;
+    List<FormulaMedica> listarTodas();
 
-    public FormulaMedicaService(FormulaMedicaRepository repository) {
-        this.repository = repository;
-    }
+    FormulaMedica guardarFormula(FormulaMedica formulaMedica);
 
-    /**
-     * Lista todas las formulas medicas ordenadas por fecha reciente.
-     * @return Lista de formulas medicas.
-     */
-    public List<FormulaMedica> listarTodas() {
-        return repository.findAllByOrderByFechaCreacionDesc();
-    }
+    FormulaMedica actualizarFormula(Long id, FormulaMedica formulaMedica);
 }

@@ -1,47 +1,43 @@
 package com.uniminuto.veterinaria.service;
 
 import com.uniminuto.veterinaria.entity.Cita;
-import com.uniminuto.veterinaria.repository.CitaRepository;
-import org.springframework.stereotype.Service;
-import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Servicio que contiene la logica de negocio para Cita.
+ * Interfaz de la capa de servicio para definir las operaciones de negocio del recurso Cita.
  */
-@Service
-public class CitaService {
-
-    private final CitaRepository repository;
-
-    public CitaService(CitaRepository repository) {
-        this.repository = repository;
-    }
+public interface CitaService {
 
     /**
-     * Lista todas las citas almacenadas.
-     * @return Lista general de citas.
+     * Obtiene el listado completo de citas registradas.
+     *
+     * @return Lista de objetos {@link Cita}.
      */
-    public List<Cita> listarTodas() {
-        return repository.findAll();
-    }
+    List<Cita> listarTodas();
 
     /**
-     * Filtra citas en un rango de fechas ordenadas por la mas reciente.
-     * @param inicio Fecha inicio.
-     * @param fin Fecha fin.
-     * @return Lista de citas filtradas.
+     * Filtra las citas por un rango de fechas en orden descendente.
+     *
+     * @param inicio Fecha de inicio en formato YYYY-MM-DD.
+     * @param fin    Fecha de fin en formato YYYY-MM-DD.
+     * @return Lista de citas dentro del rango especificado.
      */
-    public List<Cita> filtrarPorFecha(LocalDate inicio, LocalDate fin) {
-        return repository.findByFechaBetweenOrderByFechaDesc(inicio, fin);
-    }
+    List<Cita> filtrarPorFecha(String inicio, String fin);
 
     /**
-     * Guarda o actualiza una cita en el sistema.
-     * @param cita Objeto cita.
-     * @return Cita guardada.
+     * Registra una nueva cita médica.
+     *
+     * @param cita Objeto {@link Cita} con los datos a guardar.
+     * @return Objeto {@link Cita} guardado en la base de datos.
      */
-    public Cita guardar(Cita cita) {
-        return repository.save(cita);
-    }
+    Cita guardarCita(Cita cita);
+
+    /**
+     * Actualiza la información de una cita existente.
+     *
+     * @param id   Identificador de la cita a actualizar.
+     * @param cita Datos actualizados de la cita.
+     * @return Objeto {@link Cita} modificado.
+     */
+    Cita actualizarCita(Long id, Cita cita);
 }

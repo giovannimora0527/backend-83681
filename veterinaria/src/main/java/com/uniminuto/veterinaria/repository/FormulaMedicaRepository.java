@@ -3,17 +3,19 @@ package com.uniminuto.veterinaria.repository;
 import com.uniminuto.veterinaria.entity.FormulaMedica;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
 
 /**
- * Repositorio para el acceso a datos de la entidad FormulaMedica.
+ * Repositorio JPA para la entidad FormulaMedica.
  */
 @Repository
 public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Long> {
 
     /**
-     * Obtiene formulas medicas ordenadas de la mas reciente a la mas antigua.
-     * @return Lista de formulas medicas ordenadas.
+     * Consulta todas las fórmulas médicas ordenadas por fecha de creación descendente.
+     *
+     * @return Lista de fórmulas médicas.
      */
     List<FormulaMedica> findAllByOrderByFechaCreacionDesc();
 }
