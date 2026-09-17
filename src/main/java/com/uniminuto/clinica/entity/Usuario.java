@@ -12,6 +12,7 @@ import java.util.Date;
 @Entity
 @Table(name = "usuario")
 @Data
+@SuppressWarnings("deprecation") // <--- Añade esto para evitar que el compilador marque el error del @Temporal
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -17,7 +17,7 @@ public interface UsuarioApi {
     /**
      * Metodo para listar todos los usuarios.
      *
-     * 
+     *
      * @return Lista de usuarios.
      * @throws BadRequestException excepcion.
      */
