@@ -4,11 +4,9 @@ import lombok.Data;
 
 @Data
 public class UsuarioRq {
-
     /**
      * Representacion de usuario: No incluye el password.
      */
-
     private Long id;
 
     private String username;

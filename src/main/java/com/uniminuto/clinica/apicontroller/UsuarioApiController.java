@@ -18,11 +18,13 @@ public class UsuarioApiController implements UsuarioApi {
     private UsuarioService usuarioService;
 
     @Override
+
     public ResponseEntity<List<UsuarioRs>> listarUsuarios() throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.listarUsuarios());
     }
 
     @Override
+
     public ResponseEntity<UsuarioRs> crearUsuario(UsuarioRq usuarioRq) throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.crearUsuario(usuarioRq));
     }

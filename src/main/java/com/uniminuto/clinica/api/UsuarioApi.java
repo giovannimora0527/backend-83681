@@ -40,6 +40,7 @@ public interface UsuarioApi {
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<UsuarioRs> crearUsuario(
+
             @RequestBody UsuarioRq usuarioRq)
             throws BadRequestException;
 

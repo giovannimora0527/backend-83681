@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface UsuarioService {
 
+
     List<UsuarioRs> listarUsuarios() throws BadRequestException;
 
     UsuarioRs crearUsuario(UsuarioRq usuarioRq) throws BadRequestException;
