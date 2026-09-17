@@ -2,156 +2,122 @@ package com.uniminuto.clinica.serviceimpl;
 
 import com.uniminuto.clinica.entity.Usuario;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.models.UsuarioRq;
-import com.uniminuto.clinica.models.UsuarioRS;
+import com.uniminuto.clinica.models.UsuarioRs;
 import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.service.UsuarioService;
+import com.uniminuto.clinica.util.PasswordUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+
     @Override
-    public List<UsuarioRS> listarUsuarios() throws BadRequestException {
-        return usuarioRepository.findAllByOrderByUsernameAsc().stream()
-                .map(this::aPublico)
-                .collect(Collectors.toList());
+    public List<UsuarioRs> obtenerUsuariosOrdenados() {
+        List<Usuario> usuarios = usuarioRepository.findAllByOrderByUsernameAsc(true);
+        return convertirUsuarioToUsuarioRs(usuarios);
+    }
+
+    private List<UsuarioRs> convertirUsuarioToUsuarioRs(List<Usuario> usuarios) {
+        return usuarios.stream().map(usuario -> {
+            UsuarioRs usuarioRs = new UsuarioRs();
+            usuarioRs.setId(usuario.getId());
+            usuarioRs.setUsername(usuario.getUsername());
+            usuarioRs.setRol(usuario.getRol());
+            usuarioRs.setFechaCreacion(usuario.getFechaCreacion());
+            usuarioRs.setActivo(usuario.getActivo());
+            usuarioRs.setEmail(usuario.getEmail());
+            return usuarioRs;
+        }).toList();
     }
 
     @Override
-    public UsuarioRS crearUsuario(UsuarioRq usuarioRq) throws BadRequestException {
-        this.validarUsuario(usuarioRq, true);
+    public MiRespuestaRS crearUsuario(UsuarioRq usuarioRq) {
+        this.validarUsuario(usuarioRq);
 
-        String email = usuarioRq.getEmail().trim().toLowerCase();
-        Optional<Usuario> optUsuario = this.usuarioRepository.findByEmail(email);
-        if (optUsuario.isPresent()) {
-            throw new BadRequestException("Ya existe un usuario con ese email");
+        if (this.usuarioRepository.existsByUsername(usuarioRq.getUsername())) {
+            throw new BadRequestException("El nombre de usuario ya existe");
+        }
+        if (this.usuarioRepository.existsByEmail(usuarioRq.getEmail())) {
+            throw new BadRequestException("El correo electrónico ya existe");
         }
 
-        Usuario usuario = new Usuario();
-        usuario.setUsername(usuarioRq.getUsername().trim());
-        usuario.setEmail(email);
-        usuario.setPasswordHash(this.cifrarMD5(usuarioRq.getPasswordHash()));
-        usuario.setRol(usuarioRq.getRol() == null || usuarioRq.getRol().trim().isEmpty()
-                ? "usuario" : usuarioRq.getRol().trim());
-        usuario.setActivo(true);
-        usuario.setFechaCreacion(LocalDateTime.now()); // Esta sí existe en tu BD
+        String claveMD5 = PasswordUtil.generarMD5(usuarioRq.getPassword());
+        Usuario usuarioNuevo = new Usuario();
+        usuarioNuevo.setUsername(usuarioRq.getUsername());
+        usuarioNuevo.setPasswordHash(claveMD5);
+        usuarioNuevo.setRol(usuarioRq.getRol());
+        usuarioNuevo.setEmail(usuarioRq.getEmail());
+        usuarioNuevo.setActivo(true);
+        usuarioNuevo.setFechaCreacion(LocalDateTime.now());
 
-        usuarioRepository.save(usuario);
-        return aPublico(usuario);
+        usuarioRepository.save(usuarioNuevo);
+
+        MiRespuestaRS rta = new MiRespuestaRS();
+        rta.setMessage("Usuario creado exitosamente");
+        rta.setStatus(200);
+
+        return rta;
     }
 
     @Override
-    public UsuarioRS actualizarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
-        if (usuarioRq == null || usuarioRq.getId() == null) {
-            throw new BadRequestException("El ID del usuario es obligatorio para actualizar");
+    public MiRespuestaRS actualizarUsuario(UsuarioRq usuarioRq) {
+        this.validarUsuario(usuarioRq);
+
+        Optional<Usuario> optUser = this.usuarioRepository.findById(usuarioRq.getId());
+        if (optUser.isEmpty()) {
+            throw new BadRequestException("El usuario no existe");
         }
 
-        Optional<Usuario> optUsuario = this.usuarioRepository.findById(usuarioRq.getId());
-        if (optUsuario.isEmpty()) {
-            throw new BadRequestException("Usuario no encontrado");
-        }
-
-        Usuario usuario = optUsuario.get();
-        this.validarUsuario(usuarioRq, false);
-
-        if (usuarioRq.getUsername() != null && !usuarioRq.getUsername().trim().isEmpty()) {
-            usuario.setUsername(usuarioRq.getUsername().trim());
-        }
-
-        if (usuarioRq.getEmail() != null && !usuarioRq.getEmail().trim().isEmpty()) {
-            String emailNuevo = usuarioRq.getEmail().trim().toLowerCase();
-            Optional<Usuario> optDuplicado = this.usuarioRepository.findByEmail(emailNuevo);
-            if (optDuplicado.isPresent() && !optDuplicado.get().getUsuarioId().equals(usuario.getUsuarioId())) {
-                throw new BadRequestException("Ya existe otro usuario con ese email");
+        Usuario usuarioExistente = optUser.get();
+        if (!usuarioExistente.getUsername().equals(usuarioRq.getUsername())) {
+            if (this.usuarioRepository.existsByUsername(usuarioRq.getUsername())) {
+                throw new BadRequestException("El nombre de usuario ya existe");
             }
-            usuario.setEmail(emailNuevo);
         }
-
-        if (usuarioRq.getRol() != null && !usuarioRq.getRol().trim().isEmpty()) {
-            usuario.setRol(usuarioRq.getRol().trim());
+        usuarioExistente.setUsername(usuarioRq.getUsername());
+        if (!usuarioExistente.getEmail().equals(usuarioRq.getEmail())) {
+            if (this.usuarioRepository.existsByEmail(usuarioRq.getEmail())) {
+                throw new BadRequestException("El correo electrónico ya existe");
+            }
         }
+        usuarioExistente.setEmail(usuarioRq.getEmail());
+        usuarioExistente.setRol(usuarioRq.getRol());
+        usuarioExistente.setActivo(usuarioRq.getActivo());
+        usuarioRepository.save(usuarioExistente);
 
-        if (usuarioRq.getPasswordHash() != null && !usuarioRq.getPasswordHash().trim().isEmpty()) {
-            usuario.setPasswordHash(this.cifrarMD5(usuarioRq.getPasswordHash()));
-        }
+        MiRespuestaRS rta = new MiRespuestaRS();
+        rta.setMessage("Usuario actualizado exitosamente");
+        rta.setStatus(200);
 
-        usuarioRepository.save(usuario);
-
-        return aPublico(usuario);
+        return rta;
     }
 
-    private void validarUsuario(UsuarioRq usuarioRq, boolean esCreacion) throws BadRequestException {
+    private void validarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
         if (usuarioRq == null) {
-            throw new BadRequestException("El objeto de entrada no puede estar vacío");
+            throw new BadRequestException("El usuario no puede estar vacío");
         }
-
-        if (esCreacion || usuarioRq.getUsername() != null) {
-            if (usuarioRq.getUsername() == null || usuarioRq.getUsername().trim().isEmpty()) {
-                throw new BadRequestException("El username es obligatorio");
-            }
-            if (usuarioRq.getUsername().trim().length() < 3) {
-                throw new BadRequestException("El username debe tener al menos 3 caracteres");
-            }
+        if (usuarioRq.getUsername() == null || usuarioRq.getUsername().isEmpty()) {
+            throw new BadRequestException("El nombre de usuario no puede estar vacío");
         }
-
-        if (esCreacion || usuarioRq.getEmail() != null) {
-            if (usuarioRq.getEmail() == null || usuarioRq.getEmail().trim().isEmpty()) {
-                throw new BadRequestException("El email es obligatorio");
-            }
-            if (!EMAIL_PATTERN.matcher(usuarioRq.getEmail().trim()).matches()) {
-                throw new BadRequestException("El email no tiene un formato válido");
-            }
+        if (usuarioRq.getPassword() == null || usuarioRq.getPassword().isEmpty()) {
+            throw new BadRequestException("La contraseña no puede estar vacía");
         }
-
-        if (esCreacion || usuarioRq.getPasswordHash() != null) {
-            if (usuarioRq.getPasswordHash() == null || usuarioRq.getPasswordHash().trim().isEmpty()) {
-                if (esCreacion) {
-                    throw new BadRequestException("El password es obligatorio");
-                }
-            } else if (usuarioRq.getPasswordHash().length() < 4) {
-                throw new BadRequestException("El password debe tener al menos 4 caracteres");
-            }
+        if (usuarioRq.getRol() == null || usuarioRq.getRol().isEmpty()) {
+            throw new BadRequestException("El rol no puede estar vacío");
         }
-    }
-
-    private String cifrarMD5(String texto) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] hash = md.digest(texto.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hash) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("No se pudo cifrar el password", e);
+        if (usuarioRq.getEmail() == null || usuarioRq.getEmail().isEmpty()) {
+            throw new BadRequestException("El correo electrónico no puede estar vacío");
         }
-    }
-
-    private UsuarioRS aPublico(Usuario usuario) {
-        UsuarioRS rs = new UsuarioRS();
-        rs.setUsuarioId(usuario.getUsuarioId());
-        rs.setUsername(usuario.getUsername());
-        rs.setEmail(usuario.getEmail());
-        rs.setRol(usuario.getRol());
-        rs.setFechaCreacion(usuario.getFechaCreacion());
-        return rs;
     }
 }

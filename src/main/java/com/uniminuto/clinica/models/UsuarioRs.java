@@ -1,11 +1,13 @@
 package com.uniminuto.clinica.models;
 
+import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
-public class UsuarioRq {
+public class UsuarioRs {
+
     /*
      * Identificador único del usuario.
      */
@@ -17,14 +19,14 @@ public class UsuarioRq {
     private String username;
 
     /**
-     * Contraseña a guardar.
-     */
-    private String password;
-
-    /**
      * Rol del usuario.
      */
     private String rol;
+
+    /**
+     * Fecha de creación del usuario.
+     */
+    private LocalDateTime fechaCreacion;
 
     /**
      * Indica si el usuario está activo.

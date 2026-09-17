@@ -1,40 +1,44 @@
 package com.uniminuto.clinica.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Data
 @Table(name = "usuario")
+@Data
 public class Usuario {
 
+    /** * Identificador único del usuario. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "usuario_id")
-    private Long usuarioId;
+    @Column(name = "id", nullable = false, updatable = false)
+    private Long id;
 
-    @Column(name = "nombre", nullable = false, length = 100)
-    private String nombre;
+    /** * Nombre de usuario. */
+    @Column(name = "username", nullable = false, unique = true, length = 50)
+    private String username;
 
-    @Column(name = "email", nullable = false, unique = true, length = 150)
-    private String email;
+    /** * Contraseña almacenada como hash. */
+    @Column(name = "password_hash", columnDefinition = "TEXT")
+    private String passwordHash;
 
-    @Column(name = "password", nullable = false, length = 32)
-    private String password;
-
-    @Column(name = "rol", length = 30)
+    /** * Rol del usuario. */
+    @Column(name = "rol", nullable = false, length = 30)
     private String rol;
 
-    @Column(name = "fecha_registro")
-    private LocalDateTime fechaRegistro;
+    /** * Fecha de creación del usuario. */
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
 
-    @Column(name = "fecha_modificacion")
-    private LocalDateTime fechaModificacion;
+    /** * Indica si el usuario está activo. */
+    @Column(name = "activo")
+    private Boolean activo;
+
+    /**
+     * Correo electrónico.
+     */
+    @Column(name = "email", nullable = false, length = 255)
+    private String email;
 }

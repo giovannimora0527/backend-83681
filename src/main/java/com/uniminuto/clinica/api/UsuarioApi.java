@@ -1,14 +1,12 @@
 package com.uniminuto.clinica.api;
 
+import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.models.UsuarioRq;
-import com.uniminuto.clinica.models.UsuarioRS;
+import com.uniminuto.clinica.models.UsuarioRs;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,44 +15,45 @@ import java.util.List;
 public interface UsuarioApi {
 
     /**
-     * Lista los usuarios ordenados alfabeticamente de la A a la Z.
-     * Nunca incluye el password, por seguridad.
+     * Metodo que lista los usuariosRs organizados alfabeticamente.
      *
-     * @return lista de usuarios.
+     * @return Lista<UsuarioRs> </>.
      * @throws BadRequestException excepcion.
      */
-    @GetMapping(value = "/listar-usuario",
+    @GetMapping(value = "/listar-ordenado",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<List<UsuarioRS>> listarUsuarios()
+    ResponseEntity<List<UsuarioRs>> getUsuarios()
+            throws BadRequestException;
+
+
+    /**
+     * Metodo que guarda un nuevo usuario.
+     *
+     * @param usuarioRq Datos del usuario a guardar.
+     * @return Lista<UsuarioRs> </>.
+     * @throws BadRequestException excepcion.
+     */
+    @PostMapping(value = "/guardar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<MiRespuestaRS> guardar(
+            @RequestBody UsuarioRq usuarioRq
+    )
             throws BadRequestException;
 
     /**
-     * Crea un usuario nuevo. El password se cifra en Hash MD5 antes de guardarlo.
+     * Metodo que actualiza un usuario existente.
      *
-     * @param usuarioRq datos del usuario a crear.
-     * @return usuario creado, sin password.
+     * @param usuarioRq Datos del usuario a actualizar.
+     * @return Lista<UsuarioRs> </>.
      * @throws BadRequestException excepcion.
      */
-    @PostMapping(value = "/guardar-usuario",
+    @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<UsuarioRS> guardarUsuario(
-            @RequestBody UsuarioRq usuarioRq)
-            throws BadRequestException;
-
-    /**
-     * Actualiza un usuario existente. El password es opcional: si no llega,
-     * se conserva el hash anterior; si llega, se vuelve a cifrar en MD5.
-     *
-     * @param usuarioRq datos del usuario a actualizar (debe incluir usuarioId).
-     * @return usuario actualizado, sin password.
-     * @throws BadRequestException excepcion.
-     */
-    @PostMapping(value = "/actualizar-usuario",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<UsuarioRS> actualizarUsuario(
-            @RequestBody UsuarioRq usuarioRq)
+    ResponseEntity<MiRespuestaRS> actualizar(
+            @RequestBody UsuarioRq usuarioRq
+    )
             throws BadRequestException;
 }

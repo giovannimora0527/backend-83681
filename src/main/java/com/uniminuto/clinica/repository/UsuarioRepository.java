@@ -4,15 +4,33 @@ import com.uniminuto.clinica.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 
+/**
+ * Repositorio de la entidad Usuario.
+ */
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     /**
-     * Busca un usuario por su email (usado para validar que sea unico).
-     * @param email email a buscar.
-     * @return posible usuario encontrado.
+     * Metodo que lista los usuarios organizados alfabeticamente.
+     * @param ascendente bandera para odenar ascendente o descendente.
+     * @return Lista<Usuario> </>.
      */
-    Optional<Usuario> findByEmail(String email);
+    List<Usuario> findAllByOrderByUsernameAsc(Boolean ascendente);
+
+    /**
+     * Metodo que verifica si un usuario existe por su nombre de usuario.
+     * @param username nombre de usuario.
+     * @return true si existe, false si no existe.
+     */
+    Boolean existsByUsername(String username);
+
+    /**
+     * Metodo que verifica si un usuario existe por su correo electronico.
+     * @param email correo electronico.
+     * @return true si existe, false si no existe.
+     */
+    Boolean existsByEmail(String email);
+
 }
