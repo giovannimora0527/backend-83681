@@ -22,7 +22,7 @@ public class FormulaMedicaServicelmpl implements FormulaMedicaService {
         List<FormulaMedica> formulas = formulaMedicaRepository.findAllByOrderByFechaCreacionRegistroDesc();
 
         // Validar que se hayan encontrado registros
-        // Si la lista es null o está vacía, lanzar excepción de negocio
+        // Si la lista es null o está vacía, lanzar excepción
         if (formulas == null || formulas.isEmpty()) {
             throw new BadRequestException("No se encontraron fórmulas médicas.");
         }

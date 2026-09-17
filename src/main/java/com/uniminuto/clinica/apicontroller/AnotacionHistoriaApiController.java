@@ -31,7 +31,7 @@ public class AnotacionHistoriaApiController implements AnotacionHistoriaApi {
         return ResponseEntity.ok(this.anotacionService.listarAnotaciones(fechaInicio, fechaFin));
     }
 
-    /*
+    /**
      * Recibe los datos de la anotación y delega al servicio para crearla.
      */
 
