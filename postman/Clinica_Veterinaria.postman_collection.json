@@ -1,0 +1,221 @@
+{
+  "info": {
+    "name": "Clinica Veterinaria API",
+    "description": "Colección de pruebas para los servicios REST de la Clínica Veterinaria (Spring Boot). Base URL usa la variable de colección {{base_url}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/clinica/v1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Formula Medica",
+      "item": [
+        {
+          "name": "Listar formulas medicas (orden desc por fecha creacion)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/formula-medica/listar-ordenado",
+              "host": ["{{base_url}}"],
+              "path": ["formula-medica", "listar-ordenado"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cita",
+      "item": [
+        {
+          "name": "Filtrar citas por rango de fechas (orden desc)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cita/filtrar?fechaInicial=2026-01-01T00:00:00&fechaFinal=2026-12-31T23:59:59",
+              "host": ["{{base_url}}"],
+              "path": ["cita", "filtrar"],
+              "query": [
+                { "key": "fechaInicial", "value": "2026-01-01T00:00:00" },
+                { "key": "fechaFinal", "value": "2026-12-31T23:59:59" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear cita",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaCita\": \"2026-09-20T10:30:00\",\n  \"motivo\": \"Control de vacunación\",\n  \"estado\": \"PENDIENTE\",\n  \"mascotaId\": 1,\n  \"medicoId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cita/guardar",
+              "host": ["{{base_url}}"],
+              "path": ["cita", "guardar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar cita",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"citaId\": 1,\n  \"fechaCita\": \"2026-09-21T15:00:00\",\n  \"motivo\": \"Control de vacunación (reprogramada)\",\n  \"estado\": \"CONFIRMADA\",\n  \"mascotaId\": 1,\n  \"medicoId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cita/actualizar",
+              "host": ["{{base_url}}"],
+              "path": ["cita", "actualizar"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Historia Medica",
+      "item": [
+        {
+          "name": "Crear historia medica",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnostico\": \"Otitis leve\",\n  \"tratamiento\": \"Limpieza ótica y gotas antibióticas\",\n  \"mascotaId\": 1,\n  \"medicoId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/historia-medica/guardar",
+              "host": ["{{base_url}}"],
+              "path": ["historia-medica", "guardar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar historias medicas por rango de fechas (orden desc)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/historia-medica/listar?fechaInicial=2026-01-01T00:00:00&fechaFinal=2026-12-31T23:59:59",
+              "host": ["{{base_url}}"],
+              "path": ["historia-medica", "listar"],
+              "query": [
+                { "key": "fechaInicial", "value": "2026-01-01T00:00:00" },
+                { "key": "fechaFinal", "value": "2026-12-31T23:59:59" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar historia medica",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"historiaId\": 1,\n  \"diagnostico\": \"Otitis leve resuelta\",\n  \"tratamiento\": \"Finalizado tratamiento antibiótico\",\n  \"mascotaId\": 1,\n  \"medicoId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/historia-medica/actualizar",
+              "host": ["{{base_url}}"],
+              "path": ["historia-medica", "actualizar"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Anotacion Historia",
+      "item": [
+        {
+          "name": "Crear anotacion de historia",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observacion\": \"Se observa mejoría notable tras 5 días de tratamiento\",\n  \"historiaId\": 1,\n  \"medicoId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/anotacion-historia/guardar",
+              "host": ["{{base_url}}"],
+              "path": ["anotacion-historia", "guardar"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar anotaciones de una historia (orden desc)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/anotacion-historia/listar?historiaId=1",
+              "host": ["{{base_url}}"],
+              "path": ["anotacion-historia", "listar"],
+              "query": [
+                { "key": "historiaId", "value": "1" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar anotacion de historia",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"anotacionId\": 1,\n  \"observacion\": \"Observación corregida: mejoría total, alta médica\",\n  \"historiaId\": 1,\n  \"medicoId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/anotacion-historia/actualizar",
+              "host": ["{{base_url}}"],
+              "path": ["anotacion-historia", "actualizar"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
