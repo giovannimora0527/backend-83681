@@ -16,7 +16,7 @@ public class HistoriaMedica {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "mascota_id", nullable = false)
+    @JoinColumn(name = "paciente_id", nullable = false)
     private Mascota mascota;
 
     @Column(name = "fecha_creacion")
