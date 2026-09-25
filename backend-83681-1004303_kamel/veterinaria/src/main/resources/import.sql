@@ -1,0 +1,2 @@
+INSERT INTO cita (mascota, motivo, fecha, estado) VALUES ('Max', 'Control general', '2026-09-10', 'PROGRAMADA');
+INSERT INTO historia_medica (paciente, diagnostico, tratamiento, fecha) VALUES ('Luna', 'Sana', 'Ninguno', '2026-09-15');
