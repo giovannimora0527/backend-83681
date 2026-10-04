@@ -1,10 +1,11 @@
 package com.uniminuto.clinica.repository;
 
-import com.uniminuto.clinica.entity.Usuario;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.uniminuto.clinica.entity.Usuario;
 
 /**
  * Repositorio de la entidad Usuario.
@@ -17,7 +18,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      * @param ascendente bandera para odenar ascendente o descendente.
      * @return Lista<Usuario> </>.
      */
-    List<Usuario> findAllByOrderByUsernameAsc(Boolean ascendente);
+    List<Usuario> findAllByActivoOrderByUsernameAsc(Boolean activo);
 
     /**
      * Metodo que verifica si un usuario existe por su nombre de usuario.

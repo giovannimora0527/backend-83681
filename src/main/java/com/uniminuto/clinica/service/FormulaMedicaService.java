@@ -3,6 +3,9 @@ package com.uniminuto.clinica.service;
 import java.util.List;
 
 import com.uniminuto.clinica.entity.FormulaMedica;
+import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.FormulaMedicaRq;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 
 /**
  * Contrato de servicio para la gestion de formulas medicas.
@@ -16,4 +19,8 @@ public interface FormulaMedicaService {
      * @return lista de formulas medicas.
      */
     List<FormulaMedica> listar();
+
+    MiRespuestaRS guardar(FormulaMedicaRq rq) throws BadRequestException;
+
+    MiRespuestaRS actualizar(FormulaMedicaRq rq) throws BadRequestException;
 }

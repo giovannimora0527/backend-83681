@@ -3,6 +3,8 @@ package com.uniminuto.clinica.apicontroller;
 import com.uniminuto.clinica.api.MedicoApi;
 import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.MedicoRq;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.service.MedicoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +17,6 @@ public class MedicoApiController implements MedicoApi {
 
     @Autowired
     private MedicoService medicoService;
-
 
     @Override
     public ResponseEntity<List<Medico>> getMedicos() throws BadRequestException {
@@ -30,5 +31,15 @@ public class MedicoApiController implements MedicoApi {
     @Override
     public ResponseEntity<Medico> buscarMedicoPorRegistroProfesional(String registroProfesional) throws BadRequestException {
         return ResponseEntity.ok(this.medicoService.buscarMedicoPorRegistroProfesional(registroProfesional));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> guardarMedico(MedicoRq medicoRq) throws BadRequestException {
+        return ResponseEntity.ok(this.medicoService.guardarMedico(medicoRq));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> actualizarMedico(MedicoRq medicoRq) throws BadRequestException {
+        return ResponseEntity.ok(this.medicoService.actualizarMedico(medicoRq));
     }
 }

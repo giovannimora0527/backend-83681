@@ -1,5 +1,12 @@
 package com.uniminuto.clinica.serviceimpl;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.uniminuto.clinica.entity.Usuario;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MiRespuestaRS;
@@ -8,12 +15,6 @@ import com.uniminuto.clinica.models.UsuarioRs;
 import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.service.UsuarioService;
 import com.uniminuto.clinica.util.PasswordUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -24,7 +25,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public List<UsuarioRs> obtenerUsuariosOrdenados() {
-        List<Usuario> usuarios = usuarioRepository.findAllByOrderByUsernameAsc(true);
+        List<Usuario> usuarios = usuarioRepository.findAllByActivoOrderByUsernameAsc(true);
         return convertirUsuarioToUsuarioRs(usuarios);
     }
 
