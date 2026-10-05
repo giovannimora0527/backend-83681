@@ -3,6 +3,7 @@ package com.uniminuto.clinica.apicontroller;
 import com.uniminuto.clinica.api.FormulaMedicaApi;
 import com.uniminuto.clinica.entity.FormulaMedica;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.UsuarioRS;
 import com.uniminuto.clinica.service.FormulaMedicaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,5 +43,15 @@ public class FormulaMedicaApiController implements FormulaMedicaApi {
     @Override
     public ResponseEntity<List<FormulaMedica>> consultarFormulasMedicas() throws BadRequestException {
         return ResponseEntity.ok(this.formulaMedicaService.listarFormulasMedicas());
+    }
+
+    @Override
+    public ResponseEntity<UsuarioRS> guardarFormulaMedica(FormulaMedica formula) throws BadRequestException {
+        return ResponseEntity.ok(this.formulaMedicaService.guardarFormulaMedica(formula));
+    }
+
+    @Override
+    public ResponseEntity<UsuarioRS> actualizarFormulaMedica(FormulaMedica formula) throws BadRequestException {
+        return ResponseEntity.ok(this.formulaMedicaService.actualizarFormulaMedica(formula));
     }
 }

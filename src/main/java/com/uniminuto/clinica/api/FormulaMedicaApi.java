@@ -6,6 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import com.uniminuto.clinica.models.UsuarioRS;
 
 import java.util.List;
 
@@ -38,5 +41,17 @@ public interface FormulaMedicaApi {
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<FormulaMedica>> consultarFormulasMedicas()
+            throws BadRequestException;
+
+    @PostMapping(value = "/guardar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<UsuarioRS> guardarFormulaMedica(@RequestBody FormulaMedica formula)
+            throws BadRequestException;
+
+    @PostMapping(value = "/actualizar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<UsuarioRS> actualizarFormulaMedica(@RequestBody FormulaMedica formula)
             throws BadRequestException;
 }

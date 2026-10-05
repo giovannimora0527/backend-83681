@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -39,5 +41,17 @@ public interface ClienteApi {
     ResponseEntity<Cliente> getClientesByNumeroDocumento(
             @RequestParam String numeroDocumento
     )
+            throws BadRequestException;
+
+    @PostMapping(value = "/guardar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<Cliente> guardarCliente(@RequestBody Cliente cliente)
+            throws BadRequestException;
+
+    @PostMapping(value = "/actualizar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<Cliente> actualizarCliente(@RequestBody Cliente cliente)
             throws BadRequestException;
 }

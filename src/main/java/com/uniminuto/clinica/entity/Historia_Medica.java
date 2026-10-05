@@ -21,7 +21,7 @@ public class Historia_Medica {
     private Long id;
 
     /** Identificador del cliente asociado a esta historia. */
-    @Column(name = "cliente_id")
+    @Column(name = "paciente_id")
     private Integer clienteId;
 
     /** Fecha y hora en que se creó la historia. */

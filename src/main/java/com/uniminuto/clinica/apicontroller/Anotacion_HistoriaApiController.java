@@ -23,6 +23,11 @@ public class Anotacion_HistoriaApiController implements Anotacion_HistoriaApi {
     @Autowired
     private Anotacion_HistoriaService anotacionHistoriaService;
 
+    @Override
+    public ResponseEntity<List<Anotacion_Historia>> listarTodasLasAnotaciones() throws BadRequestException {
+        return ResponseEntity.ok(this.anotacionHistoriaService.listarTodasLasAnotaciones());
+    }
+
     /**
      * Lista todas las anotaciones de una historia médica.
      *

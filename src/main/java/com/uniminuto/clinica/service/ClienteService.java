@@ -11,4 +11,8 @@ public interface ClienteService {
 
     Cliente getClienteByNumeroDocumento(String numeroDocumento)
             throws BadRequestException;
+
+    Cliente guardarCliente(Cliente cliente) throws BadRequestException;
+
+    Cliente actualizarCliente(Cliente cliente) throws BadRequestException;
 }

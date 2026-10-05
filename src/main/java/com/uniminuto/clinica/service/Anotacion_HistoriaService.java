@@ -13,6 +13,8 @@ import java.util.List;
  */
 public interface Anotacion_HistoriaService {
 
+    List<Anotacion_Historia> listarTodasLasAnotaciones();
+
     /**
      * Crea una nueva anotación para una historia existente.
      *

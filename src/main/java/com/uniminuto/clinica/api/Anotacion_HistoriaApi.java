@@ -17,6 +17,11 @@ import java.util.List;
 @RequestMapping("/anotacion-historia")
 public interface Anotacion_HistoriaApi {
 
+    @GetMapping(value = "/all",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<List<Anotacion_Historia>> listarTodasLasAnotaciones() throws BadRequestException;
+
     /**
      * Lista todas las anotaciones de una historia médica.
      *

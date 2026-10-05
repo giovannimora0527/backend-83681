@@ -27,6 +27,11 @@ import java.util.Optional;
 @Service
 public class Anotacion_HistoriaServiceImpl implements Anotacion_HistoriaService {
 
+    @Override
+    public List<Anotacion_Historia> listarTodasLasAnotaciones() {
+        return anotacionRepo.findAll();
+    }
+
     /** Repositorio para persistir y consultar anotaciones. */
     @Autowired
     private Anotacion_HistoriaRepository anotacionRepo;
@@ -44,8 +49,11 @@ public class Anotacion_HistoriaServiceImpl implements Anotacion_HistoriaService 
     @Override
     public UsuarioRS guardarAnotacion(Anotacion_HistoriaRq rq) {
         UsuarioRS rs = new UsuarioRS();
-        if (rq.getHistoriaId() == null) {
+        if (rq == null || rq.getHistoriaId() == null) {
             throw new BadRequestException("historiaId es requerido");
+        }
+        if (rq.getDescripcion() == null || rq.getDescripcion().isBlank() || rq.getMedicoId() == null) {
+            throw new BadRequestException("medicoId y descripción son requeridos");
         }
         Optional<Historia_Medica> hOpt = this.historiaRepo.findById(rq.getHistoriaId());
         if (hOpt.isEmpty()) {
@@ -78,6 +86,11 @@ public class Anotacion_HistoriaServiceImpl implements Anotacion_HistoriaService 
             throw new BadRequestException("Anotación no encontrada");
         }
         Anotacion_Historia a = aOpt.get();
+        if (rq.getHistoriaId() != null) {
+            Historia_Medica historia = this.historiaRepo.findById(rq.getHistoriaId())
+                    .orElseThrow(() -> new BadRequestException("Historia no encontrada"));
+            a.setHistoria(historia);
+        }
         if (rq.getDescripcion() != null) a.setDescripcion(rq.getDescripcion());
         if (rq.getMedicoId() != null) a.setMedicoId(rq.getMedicoId());
         // la columna fecha representa el momento de la anotación; no se altera aquí
