@@ -12,18 +12,18 @@ public class AnotacionHistoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, unique = true)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @ManyToOne
     @JoinColumn(name = "historia_id", nullable = false)
+    @ManyToOne
     private HistoriaMedica historia;
 
-    @ManyToOne
     @JoinColumn(name = "medico_id", nullable = false)
+    @ManyToOne
     private Medico medico;
 
-    @Column(name = "fecha")
+    @Column(name = "fecha", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fecha;
 
     @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")

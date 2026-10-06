@@ -2,8 +2,7 @@ package com.uniminuto.clinica.apicontroller;
 
 import com.uniminuto.clinica.api.FormulaMedicaApi;
 import com.uniminuto.clinica.entity.FormulaMedica;
-import com.uniminuto.clinica.exception.BadRequestException;
-import com.uniminuto.clinica.service.FormulaMedicaService;
+import com.uniminuto.clinica.service.FormulaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,12 +13,10 @@ import java.util.List;
 public class FormulaMedicaApiController implements FormulaMedicaApi {
 
     @Autowired
-    private FormulaMedicaService formulaMedicaService;
-
+    private FormulaService formulaService;
 
     @Override
-    public ResponseEntity<List<FormulaMedica>> getFormulasByOrden(boolean asc)
-            throws BadRequestException {
-        return ResponseEntity.ok(formulaMedicaService.listarFormulasOrdenadas(asc));
+    public ResponseEntity<List<FormulaMedica>> listarFormulas() {
+        return ResponseEntity.ok(this.formulaService.findAllFormulas());
     }
 }

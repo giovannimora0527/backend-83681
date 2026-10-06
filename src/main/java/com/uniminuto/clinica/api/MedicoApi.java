@@ -23,7 +23,7 @@ public interface MedicoApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
-    @GetMapping(value = "/all",
+    @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<Medico>> getMedicos()

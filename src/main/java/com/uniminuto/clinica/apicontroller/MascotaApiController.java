@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -19,27 +20,38 @@ public class MascotaApiController implements MascotaApi {
     private MascotaService mascotaService;
 
     @Override
-    public ResponseEntity<List<Mascota>> getMascotas() throws BadRequestException {
-        return ResponseEntity.ok(mascotaService.getListarMascotas());
+    public ResponseEntity<List<Mascota>> listarMascotas() throws BadRequestException {
+       return ResponseEntity.ok(mascotaService.listarMascotas());
     }
 
     @Override
-    public ResponseEntity<Mascota> buscarMascotasPorNombre(String nombre) throws BadRequestException {
-        return ResponseEntity.ok(mascotaService.buscarMascotaPorNombre(nombre));
+    public ResponseEntity<List<Mascota>> listarMascotasOrdenado(boolean ascendente) throws BadRequestException {
+        return ResponseEntity.ok(mascotaService.listarMascotasOrdenado(ascendente));
     }
 
     @Override
-    public ResponseEntity<List<Mascota>> listarMascotasOrdenadas(boolean ascendente) throws BadRequestException {
-        return ResponseEntity.ok(mascotaService.getListarMascotasOrdenadas(ascendente));
+    public ResponseEntity<List<Mascota>> buscarMascotaPorNombre(String nombre) throws BadRequestException {
+        return ResponseEntity.ok(mascotaService.findByNombreMascota(nombre).map(List::of).orElseGet(List::of));
+    }
+
+    @Override
+    public ResponseEntity<List<Mascota>> buscarMascotaPorCliente(Long clienteId) throws BadRequestException {
+        return ResponseEntity.ok(mascotaService.buscarMascotasPorCliente(clienteId));
+
+    }
+
+    @Override
+    public ResponseEntity<List<Mascota>> buscarMascotaPorRaza(Integer razaId) throws BadRequestException {
+        return ResponseEntity.ok(mascotaService.buscarMascotasPorRaza(razaId));
     }
 
     @Override
     public ResponseEntity<MiRespuestaRS> guardarMascota(MascotaRq mascotaRq) throws BadRequestException {
-        return ResponseEntity.ok(this.mascotaService.guardarMascota(mascotaRq));
+        return ResponseEntity.ok(mascotaService.guardarMascota(mascotaRq));
     }
 
     @Override
     public ResponseEntity<MiRespuestaRS> actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
-        return ResponseEntity.ok(this.mascotaService.actualizarMascota(mascotaRq));
+        return ResponseEntity.ok(mascotaService.actualizarMascota(mascotaRq));
     }
 }

@@ -7,8 +7,8 @@ import java.util.List;
 
 public interface ClienteService {
 
-    List<Cliente> getAllClientes();
+    List<Cliente> listarClientes() throws BadRequestException;
 
-    Cliente getClienteByNumeroDocumento(String numeroDocumento)
-            throws BadRequestException;
+
+    Cliente getClienteByNumeroDocumento(String numeroDocumento) throws BadRequestException;
 }

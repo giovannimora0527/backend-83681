@@ -11,14 +11,16 @@ import java.time.LocalDateTime;
 public class FormulaMedica {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, unique = true)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "cita_id", nullable = false)
-    private Integer citaId;
+    @ManyToOne
+    @JoinColumn(name = "cita_id", nullable = false)
+    private Cita cita;
 
-    @Column(name = "medicamento_id", nullable = false)
-    private Integer medicamentoId;
+    @ManyToOne
+    @JoinColumn(name = "medicamento_id", nullable = false)
+    private Medicamento medicamento;
 
     @Column(name = "dosis", nullable = false, columnDefinition = "TEXT")
     private String dosis;

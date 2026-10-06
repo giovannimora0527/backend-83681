@@ -18,8 +18,8 @@ public class ClienteApiController implements ClienteApi {
 
 
     @Override
-    public ResponseEntity<List<Cliente>> getClientes() throws BadRequestException {
-        return ResponseEntity.ok(this.clienteService.getAllClientes());
+    public ResponseEntity<List<Cliente>> listarClientes() throws BadRequestException {
+        return ResponseEntity.ok(this.clienteService.listarClientes());
     }
 
     @Override

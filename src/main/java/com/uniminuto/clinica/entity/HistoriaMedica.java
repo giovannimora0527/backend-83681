@@ -12,13 +12,13 @@ public class HistoriaMedica {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, unique = true)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "paciente_id", nullable = false)
     private Mascota mascota;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fechaCreacion;
 }

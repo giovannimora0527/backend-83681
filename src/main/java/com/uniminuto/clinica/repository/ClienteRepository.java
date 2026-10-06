@@ -9,11 +9,5 @@ import java.util.Optional;
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
-    /**
-     * Metodo para buscar un cliente por su numero de documento.
-     * @param numeroDocumento documento a buscar.
-     * @return posible cliente encontrado.
-     */
     Optional<Cliente> findByNumeroDocumento(String numeroDocumento);
-    
 }

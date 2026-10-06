@@ -14,37 +14,38 @@ import java.time.LocalDate;
 @Table(name = "cliente")
 @Data
 public class Cliente {
-
     @Id
-    @Column(name = "cliente_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "cliente_id")
     private Long id;
 
-    @Column(name = "tipo_documento")
+    @Column(name = "usuario_id", unique = true)
+    private Integer usuarioId;
+
+    @Column(name = "tipo_documento", nullable = false, length = 10)
     private String tipoDocumento;
 
-    @Column(name = "numero_documento")
+    @Column(name = "numero_documento", nullable = false, unique = true, length = 20)
     private String numeroDocumento;
 
-    @Column(name = "nombres")
+    @Column(name = "nombres", nullable = false, length = 100)
     private String nombres;
 
-    @Column(name = "apellidos")
+    @Column(name = "apellidos", nullable = false, length = 100)
     private String apellidos;
 
-    @Column(name = "fecha_nacimiento")
+    @Column(name = "fecha_nacimiento", nullable = false)
     private LocalDate fechaNacimiento;
 
-    @Column(name = "genero")
+    @Column(name = "genero", length = 1)
     private String genero;
 
-    @Column(name = "telefono")
+    @Column(name = "telefono", length = 20)
     private String telefono;
 
-    @Column(name = "direccion")
+    @Column(name = "direccion", columnDefinition = "TEXT")
     private String direccion;
 
-    @Column(name = "activo")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
-
 }
