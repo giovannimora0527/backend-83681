@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class CitaRq {
 
     private Long id;
+    private Long clienteId;
     private Integer mascotaId;
     private Long medicoId;
     private LocalDateTime fechaHora;

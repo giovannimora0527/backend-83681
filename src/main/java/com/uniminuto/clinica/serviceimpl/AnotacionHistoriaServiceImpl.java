@@ -66,7 +66,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
         nuevaAnotacion.setHistoria(existeHistoria? historiaOpt.get() : historia);
         nuevaAnotacion.setDescripcion(anotacionHistoriaRq.getDescripcion());
         nuevaAnotacion.setMedico(medicoOptional.get());
-        nuevaAnotacion.setFecha(LocalDateTime.now());
+        nuevaAnotacion.setFechaHora(LocalDateTime.now());
         this.anotacionHistoriaRepository.save(nuevaAnotacion);
 
         MiRespuestaRS rta = new MiRespuestaRS();

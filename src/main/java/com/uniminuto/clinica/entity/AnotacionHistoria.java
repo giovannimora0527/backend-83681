@@ -23,9 +23,15 @@ public class AnotacionHistoria {
     @ManyToOne
     private Medico medico;
 
-    @Column(name = "fecha", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime fecha;
+    @Column(name = "fecha_hora", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime fechaHora;
 
     @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")
     private String descripcion;
+
+    @Column(name = "observacion", columnDefinition = "TEXT")
+    private String observacion;
+
+    @Column(name = "diagnostico_evolucion", columnDefinition = "TEXT")
+    private String diagnostico_evolucion;
 }

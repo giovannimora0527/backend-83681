@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "formula_medica")
 @Data
 public class FormulaMedica {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
@@ -25,8 +26,20 @@ public class FormulaMedica {
     @Column(name = "dosis", nullable = false, columnDefinition = "TEXT")
     private String dosis;
 
+    @Column(name = "frecuencia", nullable = false, length = 100)
+    private String frecuencia;
+
+    @Column(name = "duracion_tratamiento", nullable = false)
+    private String duracionTratamiento;
+
     @Column(name = "indicaciones", columnDefinition = "TEXT")
     private String indicaciones;
+
+    @Column(name = "fecha_emision", nullable = false)
+    private LocalDateTime fechaEmision;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean activo = true;
 
     @Column(name = "fecha_creacion_registro", nullable = false)
     private LocalDateTime fechaCreacionRegistro;
