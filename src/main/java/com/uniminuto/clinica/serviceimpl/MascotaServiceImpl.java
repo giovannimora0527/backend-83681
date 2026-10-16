@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class MascotaServiceImpl implements MascotaService {
+public class    MascotaServiceImpl implements MascotaService {
 
     /**
      * Inyección de dependencias del repositorio de mascotas
