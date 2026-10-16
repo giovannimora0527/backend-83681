@@ -19,6 +19,26 @@ public class HistoriaMedica {
     @JoinColumn(name = "paciente_id", nullable = false)
     private Mascota mascota;
 
+    @ManyToOne
+    @JoinColumn(name = "cita_id", nullable = false)
+    private Cita cita;
+
+    @ManyToOne
+    @JoinColumn(name = "medico_id", nullable = false)
+    private Medico medico;
+
     @Column(name = "fecha_creacion", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fechaCreacion;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String diagnostico;
+
+    @Column(columnDefinition = "TEXT")
+    private String observaciones;
+
+    @Column(name = "motivo_consulta", columnDefinition = "TEXT", nullable = false)
+    private String motivoConsulta;
+
+    @Column(length = 45, nullable = false)
+    private String estado;
 }

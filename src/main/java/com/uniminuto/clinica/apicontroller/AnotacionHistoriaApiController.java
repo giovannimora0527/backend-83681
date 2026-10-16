@@ -1,6 +1,7 @@
 package com.uniminuto.clinica.apicontroller;
 
 import com.uniminuto.clinica.api.AnotacionHistoriaApi;
+import com.uniminuto.clinica.entity.AnotacionHistoria;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.AnotacionHistoriaRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
@@ -9,15 +10,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class AnotacionHistoriaApiController implements AnotacionHistoriaApi {
 
     @Autowired
-    private AnotacionHistoriaService anotacionHistoriaService;
-
+    private AnotacionHistoriaService anotacionService;
 
     @Override
-    public ResponseEntity<MiRespuestaRS> crearAnotacionHistoria(AnotacionHistoriaRq anotacionHistoria) throws BadRequestException {
-        return ResponseEntity.ok(anotacionHistoriaService.crearAnotacionHistoria(anotacionHistoria));
+    public ResponseEntity<List<AnotacionHistoria>> listarAnotacionesPorHistoria(Long historiaId) throws BadRequestException {
+        return ResponseEntity.ok(anotacionService.listarAnotacionesPorHistoria(historiaId));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> crearAnotacionHistoria(AnotacionHistoriaRq request) throws BadRequestException {
+        return ResponseEntity.ok(anotacionService.crearAnotacionHistoria(request));
     }
 }
