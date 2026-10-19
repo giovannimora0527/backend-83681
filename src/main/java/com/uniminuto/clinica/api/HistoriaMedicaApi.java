@@ -20,8 +20,7 @@ public interface HistoriaMedicaApi {
      * @throws BadRequestException excepcion.
      */
     @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<HistoriaMedica>> listarHistorias()
             throws BadRequestException;
 

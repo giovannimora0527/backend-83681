@@ -102,6 +102,16 @@ public class HistoriaMedicaServiceImpl implements HistoriaMedicaService {
         Medico medico = medicoRepository.findById(request.getMedicoId())
                 .orElseThrow(() -> new BadRequestException("Error: El veterinario no existe."));
 
+        // Validar que la cita pertenezca a la mascota seleccionada
+        if (cita.getMascota() == null || !Long.valueOf(cita.getMascota().getMascotaId()).equals(request.getMascotaId())) {
+            throw new BadRequestException("Error: La cita seleccionada no pertenece a la mascota indicada.");
+        }
+
+        // Validar que el médico coincida con la cita
+        if (cita.getMedico() == null || !cita.getMedico().getId().equals(request.getMedicoId())) {
+            throw new BadRequestException("Error: El médico seleccionado no coincide con el asignado a la cita.");
+        }
+
         // Crear y guardar la historia médica
         HistoriaMedica historia = new HistoriaMedica();
         historia.setMascota(mascota);

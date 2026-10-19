@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface AnotacionHistoriaService {
 
+    List<AnotacionHistoria> listarAnotaciones() throws BadRequestException;
+
     List<AnotacionHistoria> listarAnotacionesPorHistoria(Long historiaId) throws BadRequestException;
 
     MiRespuestaRS crearAnotacionHistoria(AnotacionHistoriaRq request) throws BadRequestException;

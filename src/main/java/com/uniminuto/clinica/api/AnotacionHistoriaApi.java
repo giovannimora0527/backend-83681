@@ -14,7 +14,7 @@ import java.util.List;
 public interface AnotacionHistoriaApi {
 
     /**
-     * Metodo para listar las anotaciones de una historia clinica especifica.
+     * Metodo para listar las anotaciones de una historia clinica específica.
      *
      * @param historiaId Identificador de la historia medica.
      * @return Servicio funcionando correctamente.

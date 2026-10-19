@@ -58,6 +58,12 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
     }
 
     @Override
+    public List<AnotacionHistoria> listarAnotaciones() throws BadRequestException {
+        // Listar todas las anotaciones de la base de datos
+        return anotacionHistoriaRepository.findAll();
+    }
+
+    @Override
     public List<AnotacionHistoria> listarAnotacionesPorHistoria(Long historiaId) throws BadRequestException {
         if (historiaId == null) {
             throw new BadRequestException("El ID de la historia no puede ser nulo.");
@@ -69,13 +75,15 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
     @Override
     public MiRespuestaRS crearAnotacionHistoria(AnotacionHistoriaRq anotacionHistoriaRq) throws BadRequestException {
 
-        // Validaciones obligatorias
+        // Validaciones obligatorias iniciales
         this.validarAnotacionHistoria(anotacionHistoriaRq);
 
+        Long idHistoriaFinal = anotacionHistoriaRq.getHistoriaId();
+
         // Validar que la historia clínica exista
-        Optional<HistoriaMedica> historiaOpt = this.historiaMedicaRepository.findById(anotacionHistoriaRq.getHistoriaId());
+        Optional<HistoriaMedica> historiaOpt = this.historiaMedicaRepository.findById(idHistoriaFinal);
         if (historiaOpt.isEmpty()) {
-            throw new BadRequestException("La historia clínica con ID " + anotacionHistoriaRq.getHistoriaId() + " no existe.");
+            throw new BadRequestException("La historia clínica con ID " + idHistoriaFinal + " no existe.");
         }
 
         // Validar que el médico exista
@@ -84,10 +92,18 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
             throw new BadRequestException("El médico con ID " + anotacionHistoriaRq.getMedicoId() + " no existe.");
         }
 
+        // Validar que el médico corresponda a la historia médica al agregar la anotación
+        HistoriaMedica historia = historiaOpt.get();
+        Medico medico = medicoOptional.get();
+
+        if (!historia.getMedico().getId().equals(medico.getId())) {
+            throw new BadRequestException("Error: El médico seleccionado no coincide con el médico asignado a esta historia médica.");
+        }
+
         // Crear y guardar la anotación de la historia clínica
         AnotacionHistoria nuevaAnotacion = new AnotacionHistoria();
-        nuevaAnotacion.setHistoria(historiaOpt.get());
-        nuevaAnotacion.setMedico(medicoOptional.get());
+        nuevaAnotacion.setHistoria(historia);
+        nuevaAnotacion.setMedico(medico);
         nuevaAnotacion.setFechaHora(LocalDateTime.now());
         nuevaAnotacion.setDescripcion(anotacionHistoriaRq.getDescripcion());
         nuevaAnotacion.setObservacion(anotacionHistoriaRq.getObservacion());

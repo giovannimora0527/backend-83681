@@ -8,6 +8,7 @@ import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.service.AnotacionHistoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,5 +27,10 @@ public class AnotacionHistoriaApiController implements AnotacionHistoriaApi {
     @Override
     public ResponseEntity<MiRespuestaRS> crearAnotacionHistoria(AnotacionHistoriaRq request) throws BadRequestException {
         return ResponseEntity.ok(anotacionService.crearAnotacionHistoria(request));
+    }
+
+    @GetMapping("/listar-anotaciones")
+    public ResponseEntity<List<AnotacionHistoria>> listarAnotaciones() throws BadRequestException {
+        return ResponseEntity.ok(anotacionService.listarAnotaciones());
     }
 }
