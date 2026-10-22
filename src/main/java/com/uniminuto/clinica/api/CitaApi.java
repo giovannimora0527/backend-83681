@@ -1,75 +1,125 @@
 package com.uniminuto.clinica.api;
 
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
+import com.uniminuto.clinica.models.Filtros;
+import com.uniminuto.clinica.models.PaginaRS;
+import com.uniminuto.clinica.models.CitaVistaRS;
 import com.uniminuto.clinica.entity.Cita;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.CitaRq;
-import com.uniminuto.clinica.models.UsuarioRS;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Contrato REST del recurso cita.
+ */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/cita")
 public interface CitaApi {
 
     /**
-     * Obtiene todas las citas disponibles en el sistema.
+     * Lista todas las citas, de la más reciente a la más antigua.
      *
-     * @return Respuesta HTTP con la lista completa de citas.
-     * @throws BadRequestException Si ocurre una validación o un problema de negocio.
+     * @return lista de citas.
+     * @throws BadRequestException si ocurre un error de negocio.
      */
     @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<List<Cita>> listarCitas() throws BadRequestException;
+            produces = {"application/json"})
+    ResponseEntity<List<Cita>> listarCitas()
+            throws BadRequestException;
 
     /**
-     * Filtra citas por un rango de fechas en formato ISO-8601 o YYYY-MM-DD.
+     * Filtra citas por rango de fechas (yyyy-MM-dd o yyyy-MM-ddTHH:mm:ss).
      *
-     * @param fechaInicial Fecha inicial del rango de búsqueda.
-     * @param fechaFinal Fecha final del rango de búsqueda.
-     * @return Lista de citas dentro del rango indicado.
-     * @throws BadRequestException Si alguno de los parámetros es nulo, vacío o inválido.
+     * @param fechaInicial fecha inicial.
+     * @param fechaFinal   fecha final.
+     * @return citas dentro del rango.
+     * @throws BadRequestException si las fechas no son válidas.
      */
     @GetMapping(value = "/filtrar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<Cita>> filtrarCitas(
             @RequestParam String fechaInicial,
             @RequestParam String fechaFinal)
             throws BadRequestException;
 
     /**
-     * Crea una nueva cita con la información enviada en el cuerpo de la petición.
+     * Consulta una cita por su identificador.
      *
-     * @param citaRq Datos de la cita que se desea registrar.
-     * @return Respuesta con el estado y el mensaje del proceso.
-     * @throws BadRequestException Si la información no cumple las validaciones del sistema.
+     * @param id identificador de la cita.
+     * @return cita encontrada.
+     * @throws BadRequestException si no existe.
+     */
+    @GetMapping(value = "/consultar",
+            produces = {"application/json"})
+    ResponseEntity<Cita> consultarCita(
+            @RequestParam Long id)
+            throws BadRequestException;
+
+    /**
+     * Registra una nueva cita validando cliente, mascota, médico, horarios y estado.
+     *
+     * @param citaRq datos de la cita.
+     * @return resultado de la operación.
+     * @throws BadRequestException si no cumple las reglas de negocio.
      */
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<UsuarioRS> guardarCita(
+    ResponseEntity<MiRespuestaRS> guardarCita(
             @RequestBody CitaRq citaRq)
             throws BadRequestException;
 
     /**
-     * Actualiza la información de una cita ya existente.
+     * Actualiza una cita según su estado. Las citas canceladas o atendidas no se modifican.
      *
-     * @param citaRq Datos actualizados de la cita.
-     * @return Respuesta con el estado y el mensaje del proceso.
-     * @throws BadRequestException Si la cita no existe o los datos enviados son inválidos.
+     * @param citaRq datos actualizados.
+     * @return resultado de la operación.
+     * @throws BadRequestException si no cumple las reglas de negocio.
      */
-    @PostMapping(value = "/actualizar",
+    @PutMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<UsuarioRS> actualizarCita(
+    ResponseEntity<MiRespuestaRS> actualizarCita(
             @RequestBody CitaRq citaRq)
+            throws BadRequestException;
+
+    /**
+     * Reactiva una cita cancelada. Es una operación explícita, separada de la edición.
+     *
+     * @param id identificador de la cita.
+     * @return resultado de la operación.
+     * @throws BadRequestException si la cita no existe, no está cancelada o hay choque de horario.
+     */
+    @PostMapping(value = "/reactivar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<MiRespuestaRS> reactivarCita(
+            @RequestParam Long id)
+            throws BadRequestException;
+
+    /**
+     * Listado paginado y filtrable de citas (DataTable).
+     *
+     * @return página de citas en vista resumida.
+     * @throws BadRequestException si la paginación o los filtros no son válidos.
+     */
+    @GetMapping(value = "/paginado", produces = {"application/json"})
+    ResponseEntity<PaginaRS<CitaVistaRS>> listarCitasPaginadas(
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "10") int tamanio,
+            @RequestParam(required = false) String campo,
+            @RequestParam(required = false) String direccion,
+            @RequestParam(required = false) Long clienteId,
+            @RequestParam(required = false) Integer mascotaId,
+            @RequestParam(required = false) Long medicoId,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
+            @RequestParam(required = false) String texto)
             throws BadRequestException;
 }

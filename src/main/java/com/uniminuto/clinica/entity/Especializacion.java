@@ -8,6 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad especialización médica (catálogo).
+ */
 @Entity
 @Data
 @Table(name = "especializacion")
@@ -18,14 +21,12 @@ public class Especializacion {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "nombre", nullable = false, length = 100)
+    @Column(name = "nombre", nullable = false, unique = true, length = 100)
     private String nombre;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column( name = "codigo_especializacion", nullable = false, length = 10 )
+    @Column(name = "codigo_especializacion", nullable = false, unique = true, length = 10)
     private String codigoEspecializacion;
-
-
 }

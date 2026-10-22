@@ -1,36 +1,107 @@
 package com.uniminuto.clinica.api;
 
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
+import com.uniminuto.clinica.models.Filtros;
+import com.uniminuto.clinica.models.PaginaRS;
+import com.uniminuto.clinica.models.FormulaVistaRS;
 import com.uniminuto.clinica.entity.FormulaMedica;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.FormulaMedicaRq;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 /**
- * Interfaz que define los endpoints relacionados con la gestión de fórmulas médicas.
+ * Contrato REST del recurso fórmula médica.
  */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
-@RequestMapping("/formula_medica")
+@RequestMapping("/formula-medica")
 public interface FormulaMedicaApi {
 
     /**
-     * Endpoint para listar todas las fórmulas médicas registradas en el sistema.
+     * Lista todas las fórmulas, de la más reciente a la más antigua.
      *
-     * @return Respuesta HTTP con la lista completa de fórmulas médicas.
-     * @throws BadRequestException Si ocurre una validación o un problema de negocio.
+     * @return lista de fórmulas.
+     * @throws BadRequestException si ocurre un error de negocio.
      */
-    @GetMapping(value = "/listar", produces = {"application/json"})
-    ResponseEntity<List<FormulaMedica>> listarFormulaMedica() throws BadRequestException;
+    @GetMapping(value = "/listar",
+            produces = {"application/json"})
+    ResponseEntity<List<FormulaMedica>> listarFormulasMedicas()
+            throws BadRequestException;
 
     /**
-     * Endpoint dedicado solo a consultar fórmulas médicas por el alias /formulas.
+     * Lista las fórmulas de una mascota.
      *
-     * @return Respuesta HTTP con la lista de fórmulas médicas.
-     * @throws BadRequestException Si ocurre una validación o un problema de negocio.
+     * @param mascotaId identificador de la mascota.
+     * @return fórmulas de la mascota.
+     * @throws BadRequestException si la mascota no existe.
      */
-    @GetMapping(value = "/formulas", produces = {"application/json"})
-    ResponseEntity<List<FormulaMedica>> consultarFormulasMedicas() throws BadRequestException;
+    @GetMapping(value = "/listar-por-mascota",
+            produces = {"application/json"})
+    ResponseEntity<List<FormulaMedica>> listarFormulasPorMascota(
+            @RequestParam Integer mascotaId)
+            throws BadRequestException;
+
+    /**
+     * Consulta una fórmula por su identificador.
+     *
+     * @param id identificador de la fórmula.
+     * @return fórmula encontrada.
+     * @throws BadRequestException si no existe.
+     */
+    @GetMapping(value = "/consultar",
+            produces = {"application/json"})
+    ResponseEntity<FormulaMedica> consultarFormulaMedica(
+            @RequestParam Long id)
+            throws BadRequestException;
+
+    /**
+     * Registra una fórmula médica asociada a mascota, historia o cita, veterinario y medicamento.
+     *
+     * @param formulaRq datos de la fórmula.
+     * @return resultado de la operación.
+     * @throws BadRequestException si no cumple las reglas de negocio.
+     */
+    @PostMapping(value = "/guardar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<MiRespuestaRS> guardarFormulaMedica(
+            @RequestBody FormulaMedicaRq formulaRq)
+            throws BadRequestException;
+
+    /**
+     * Actualiza los datos clínicos de una fórmula (medicamento, dosis, frecuencia, duración e indicaciones).
+     *
+     * @param formulaRq datos actualizados.
+     * @return resultado de la operación.
+     * @throws BadRequestException si no cumple las reglas de negocio.
+     */
+    @PutMapping(value = "/actualizar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<MiRespuestaRS> actualizarFormulaMedica(
+            @RequestBody FormulaMedicaRq formulaRq)
+            throws BadRequestException;
+
+    /**
+     * Listado paginado y filtrable de fórmulas médicas (DataTable).
+     *
+     * @return página de fórmulas en vista resumida.
+     * @throws BadRequestException si la paginación o los filtros no son válidos.
+     */
+    @GetMapping(value = "/paginado", produces = {"application/json"})
+    ResponseEntity<PaginaRS<FormulaVistaRS>> listarFormulasPaginadas(
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "10") int tamanio,
+            @RequestParam(required = false) String campo,
+            @RequestParam(required = false) String direccion,
+            @RequestParam(required = false) Integer mascotaId,
+            @RequestParam(required = false) Long medicoId,
+            @RequestParam(required = false) String medicamento,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta)
+            throws BadRequestException;
 }

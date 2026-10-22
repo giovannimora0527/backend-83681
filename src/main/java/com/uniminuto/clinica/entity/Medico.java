@@ -10,6 +10,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad médico veterinario. Pertenece a una especialización.
+ */
 @Entity
 @Data
 @Table(name = "medico")
@@ -23,7 +26,7 @@ public class Medico {
     @Column(name = "tipo_documento", nullable = false, length = 10)
     private String tipoDocumento;
 
-    @Column(name = "numero_documento", nullable = false, length = 20)
+    @Column(name = "numero_documento", nullable = false, unique = true, length = 20)
     private String numeroDocumento;
 
     @Column(name = "nombres", nullable = false, length = 100)
@@ -35,7 +38,7 @@ public class Medico {
     @Column(name = "telefono", length = 20)
     private String telefono;
 
-    @Column(name = "registro_profesional", nullable = false, length = 50)
+    @Column(name = "registro_profesional", nullable = false, unique = true, length = 50)
     private String registroProfesional;
 
     @ManyToOne

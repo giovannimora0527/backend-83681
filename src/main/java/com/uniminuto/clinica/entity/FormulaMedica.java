@@ -5,90 +5,82 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Fórmula médica. Pertenece a una mascota y a una cita (consulta) de esa misma mascota,
+ * y la emite un veterinario. El medicamento es una llave a la tabla medicamento (id_medicamento), y la
+ * historia clínica es opcional (id_historia), porque la fórmula también puede ligarse solo a la consulta.
+ */
 @Entity
 @Data
 @Table(name = "formula_medica")
-
-/**
- * Representa la entidad formula_medica en la base de datos.
- * Contiene información sobre la fórmula médica, incluyendo referencias a la cita y al medicamento.
- */
-
 public class FormulaMedica {
 
-    /**
-     * Identificador único de la fórmula médica (PK auto-generado).
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    /**
-     * Referencia a la cita asociada a la fórmula médica.
-     */
-    @Column(name = "cita_id")
-    private Long citaId;
+    @ManyToOne
+    @JoinColumn(name = "mascota_id", nullable = false)
+    private Mascota mascota;
 
-    /**
-     * Referencia al medicamento asociado a la fórmula médica.
-     */
-    @Column(name = "medicamento_id")
-    private Long medicamentoId;
+    @ManyToOne
+    @JoinColumn(name = "cita_id", nullable = false)
+    private Cita cita;
 
-    /**
-     * Dosis de la fórmula médica.
-     */
-    @Column(name = "dosis", columnDefinition = "TEXT")
+    @ManyToOne
+    @JoinColumn(name = "medico_id", nullable = false)
+    private Medico medico;
+
+    @ManyToOne
+    @JoinColumn(name = "id_medicamento", nullable = false)
+    private Medicamento medicamento;
+
+    @ManyToOne
+    @JoinColumn(name = "id_historia")
+    private HistoriaMedica historia;
+
+    @Column(name = "dosis", nullable = false, length = 100)
     private String dosis;
 
-    /**
-     * Indicaciones de la fórmula médica.
-     */
-    @Column(name = "indicaciones", columnDefinition = "TEXT")
+    @Column(name = "frecuencia", nullable = false, length = 100)
+    private String frecuencia;
+
+    @Column(name = "duracion_dias", nullable = false)
+    private Integer duracionDias;
+
+    @Column(name = "indicaciones", nullable = false, columnDefinition = "TEXT")
     private String indicaciones;
 
-    /**
-     * Fecha de creación del registro.
-     */
+    @Column(name = "fecha_emision", nullable = false)
+    private LocalDate fechaEmision;
+
     @Column(name = "fecha_creacion_registro", nullable = false)
     private LocalDateTime fechaCreacionRegistro;
 
-    /**
-     * Fecha de actualización del registro.
-     */
     @Column(name = "fecha_actualizacion_registro")
     private LocalDateTime fechaActualizacionRegistro;
 
-    /**
-     * Método que se ejecuta antes de persistir la entidad en la base de datos.
-     * Asigna automáticamente la fecha de creación y actualización si no están definidas.
-     */
     @PrePersist
     public void prePersist() {
-        if (this.fechaCreacionRegistro == null) {
-            this.fechaCreacionRegistro = LocalDateTime.now();
+        if (fechaCreacionRegistro == null) {
+            fechaCreacionRegistro = LocalDateTime.now();
         }
-        if (this.fechaActualizacionRegistro == null) {
-            this.fechaActualizacionRegistro = LocalDateTime.now();
-        }
+        fechaActualizacionRegistro = fechaCreacionRegistro;
     }
 
-    /**
-     * Método que se ejecuta antes de actualizar la entidad en la base de datos.
-     * Actualiza automáticamente la fecha de actualización del registro.
-     */
     @PreUpdate
     public void preUpdate() {
-        this.fechaActualizacionRegistro = LocalDateTime.now();
+        fechaActualizacionRegistro = LocalDateTime.now();
     }
 }

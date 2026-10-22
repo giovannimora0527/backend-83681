@@ -4,16 +4,27 @@ import com.uniminuto.clinica.entity.Cliente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repositorio de clientes.
+ */
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     /**
-     * Metodo para buscar un cliente por su numero de documento.
+     * Busca un cliente por su número de documento.
+     *
      * @param numeroDocumento documento a buscar.
-     * @return posible cliente encontrado.
+     * @return cliente encontrado, si existe.
      */
     Optional<Cliente> findByNumeroDocumento(String numeroDocumento);
-    
+
+    /**
+     * Lista los clientes ordenados por apellidos y nombres.
+     *
+     * @return lista ordenada de clientes.
+     */
+    List<Cliente> findAllByOrderByApellidosAscNombresAsc();
 }
