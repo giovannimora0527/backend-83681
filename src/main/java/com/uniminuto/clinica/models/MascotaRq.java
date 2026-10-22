@@ -14,7 +14,7 @@ public class MascotaRq {
     private Integer mascotaId;
 
     /**
-     * Nombre de la mascota.
+     * Nombre de la mascota..
      */
     private String nombre;
 
