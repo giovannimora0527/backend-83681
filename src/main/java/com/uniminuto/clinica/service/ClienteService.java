@@ -14,6 +14,14 @@ public interface ClienteService {
     Cliente getClienteByNumeroDocumento(String numeroDocumento)
             throws BadRequestException;
 
+    /**
+     * Consulta un cliente por su identificador.
+     *
+     * @param id identificador del cliente.
+     * @return el cliente encontrado (404 si no existe).
+     */
+    Cliente getClienteById(Long id);
+
     MiRespuestaRS guardarCliente(ClienteRq clienteRq) throws BadRequestException;
 
     MiRespuestaRS actualizarCliente(ClienteRq clienteRq) throws BadRequestException;

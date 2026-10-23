@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,15 @@ public interface ClienteApi {
     ResponseEntity<Cliente> getClientesByNumeroDocumento(
             @RequestParam String numeroDocumento
     ) throws BadRequestException;
+
+    /**
+     * Consulta un cliente por su identificador.
+     *
+     * @param id identificador del cliente.
+     * @return 200 con el cliente, o 404 si no existe.
+     */
+    @GetMapping(value = "/{id:\\d+}", produces = {"application/json"})
+    ResponseEntity<Cliente> getClienteById(@PathVariable("id") Long id);
 
     @PostMapping(value = "/guardar", produces = {"application/json"}, consumes = {"application/json"})
     ResponseEntity<MiRespuestaRS> guardarCliente(@RequestBody ClienteRq clienteRq) throws BadRequestException;

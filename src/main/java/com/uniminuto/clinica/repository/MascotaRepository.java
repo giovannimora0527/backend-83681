@@ -28,4 +28,12 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
      * @return Lista de mascotas ordenadas por nombre descendente.
      */
     List<Mascota> findAllByOrderByNombreMascotaDesc();
+
+    /**
+     * Lista las mascotas de un cliente ordenadas por nombre.
+     *
+     * @param clienteId identificador del cliente.
+     * @return mascotas del cliente.
+     */
+    List<Mascota> findByCliente_IdOrderByNombreMascotaAsc(Long clienteId);
 }

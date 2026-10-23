@@ -48,6 +48,24 @@ public interface MascotaApi {
             throws BadRequestException;
 
 
+    /**
+     * Lista las mascotas de un cliente.
+     *
+     * @param clienteId identificador del cliente.
+     * @return 200 con las mascotas, o 404 si el cliente no existe.
+     */
+    @GetMapping(value = "/cliente/{clienteId:\\d+}", produces = {"application/json"})
+    ResponseEntity<List<Mascota>> listarMascotasPorCliente(@PathVariable("clienteId") Long clienteId);
+
+    /**
+     * Consulta una mascota por su identificador.
+     *
+     * @param mascotaId identificador de la mascota.
+     * @return 200 con la mascota, o 404 si no existe.
+     */
+    @GetMapping(value = "/{mascotaId:\\d+}", produces = {"application/json"})
+    ResponseEntity<Mascota> consultarMascota(@PathVariable("mascotaId") Long mascotaId);
+
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})

@@ -1,26 +1,54 @@
 package com.uniminuto.clinica.service;
 
-import java.util.List;
-
-import com.uniminuto.clinica.entity.FormulaMedica;
-import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.FormulaDetalleRs;
 import com.uniminuto.clinica.models.FormulaMedicaRq;
+import com.uniminuto.clinica.models.FormulaResumenRs;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 
+import java.util.List;
+
 /**
- * Contrato de servicio para la gestion de formulas medicas.
+ * Contrato de la lógica de negocio de las fórmulas médicas.
  */
 public interface FormulaMedicaService {
 
     /**
-     * Obtiene el listado de formulas medicas ordenado de la mas
-     * reciente a la mas antigua segun su fecha de creacion.
+     * Lista las fórmulas (información resumida) de la más reciente a la más antigua por fecha de creación.
      *
-     * @return lista de formulas medicas.
+     * @return fórmulas resumidas.
      */
-    List<FormulaMedica> listar();
+    List<FormulaResumenRs> listar();
 
-    MiRespuestaRS guardar(FormulaMedicaRq rq) throws BadRequestException;
+    /**
+     * Consulta el detalle completo de una fórmula.
+     *
+     * @param id identificador de la fórmula.
+     * @return la fórmula con todos sus datos.
+     */
+    FormulaDetalleRs consultar(Long id);
 
-    MiRespuestaRS actualizar(FormulaMedicaRq rq) throws BadRequestException;
+    /**
+     * Registra una fórmula validando las reglas de negocio.
+     *
+     * @param rq datos de la fórmula.
+     * @return respuesta con el resultado.
+     */
+    MiRespuestaRS crear(FormulaMedicaRq rq);
+
+    /**
+     * Edita una fórmula activa (no puede cambiar de mascota ni de historia clínica).
+     *
+     * @param id identificador de la fórmula.
+     * @param rq datos nuevos.
+     * @return respuesta con el resultado.
+     */
+    MiRespuestaRS editar(Long id, FormulaMedicaRq rq);
+
+    /**
+     * Inactiva una fórmula (reemplaza a la eliminación física).
+     *
+     * @param id identificador de la fórmula.
+     * @return respuesta con el resultado.
+     */
+    MiRespuestaRS inactivar(Long id);
 }

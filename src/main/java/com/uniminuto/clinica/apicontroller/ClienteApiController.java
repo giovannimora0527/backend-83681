@@ -28,6 +28,12 @@ public class ClienteApiController implements ClienteApi {
         return ResponseEntity.ok(this.clienteService.getClienteByNumeroDocumento(numeroDocumento));
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public ResponseEntity<Cliente> getClienteById(Long id) {
+        return ResponseEntity.ok(this.clienteService.getClienteById(id));
+    }
+
     @Override
     public ResponseEntity<MiRespuestaRS> guardarCliente(ClienteRq clienteRq) throws BadRequestException {
         return ResponseEntity.ok(this.clienteService.guardarCliente(clienteRq));

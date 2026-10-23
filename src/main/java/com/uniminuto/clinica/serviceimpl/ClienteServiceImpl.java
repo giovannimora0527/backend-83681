@@ -2,6 +2,7 @@ package com.uniminuto.clinica.serviceimpl;
 
 import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.exception.NotFoundException;
 import com.uniminuto.clinica.models.ClienteRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.repository.ClienteRepository;
@@ -36,6 +37,13 @@ public class ClienteServiceImpl implements ClienteService {
         }
 
         return optCliente.get();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Cliente getClienteById(Long id) {
+        return this.clienteRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("El cliente solicitado no fue encontrado."));
     }
 
     @Override

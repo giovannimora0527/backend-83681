@@ -1,18 +1,21 @@
 package com.uniminuto.clinica.repository;
 
+import com.uniminuto.clinica.entity.FormulaMedica;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import com.uniminuto.clinica.entity.FormulaMedica;
-
+/**
+ * Acceso a datos de las fórmulas médicas.
+ */
+@Repository
 public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Long> {
 
     /**
-     * Lista todas las formulas medicas ordenadas por fecha de creacion,
-     * de la mas reciente a la mas antigua.
+     * Lista todas las fórmulas ordenadas por fecha de creación, de la más reciente a la más antigua.
      *
-     * @return lista de formulas medicas ordenada descendentemente.
+     * @return fórmulas ordenadas descendentemente.
      */
     List<FormulaMedica> findAllByOrderByFechaCreacionDesc();
 }
