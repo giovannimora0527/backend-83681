@@ -42,4 +42,14 @@ public class MascotaApiController implements MascotaApi {
     public ResponseEntity<MiRespuestaRS> actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
         return ResponseEntity.ok(this.mascotaService.actualizarMascota(mascotaRq));
     }
+
+    @Override
+    public ResponseEntity<List<Mascota>> listarMascotasPorCliente(Long clienteId) throws BadRequestException {
+        return ResponseEntity.ok(this.mascotaService.listarMascotasPorCliente(clienteId));
+    }
+
+    @Override
+    public ResponseEntity<Mascota> consultarMascota(Long mascotaId) throws BadRequestException {
+        return ResponseEntity.ok(this.mascotaService.consultarMascota(mascotaId));
+    }
 }

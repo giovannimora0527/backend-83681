@@ -63,4 +63,27 @@ public interface MascotaApi {
             @RequestBody MascotaRq mascotaRq
     )
             throws BadRequestException;
+
+    /**
+     * Lista las mascotas que pertenecen a un cliente.
+     * Alimenta el combo dependiente "Cliente -> Mascotas del cliente".
+     *
+     * @param clienteId id del cliente.
+     * @return mascotas del cliente (404 si el cliente no existe).
+     * @throws BadRequestException excepcion.
+     */
+    @GetMapping(value = "/por-cliente", produces = {"application/json"})
+    ResponseEntity<List<Mascota>> listarMascotasPorCliente(@RequestParam Long clienteId)
+            throws BadRequestException;
+
+    /**
+     * Consulta una mascota por su id.
+     *
+     * @param mascotaId id de la mascota.
+     * @return mascota encontrada (404 si no existe).
+     * @throws BadRequestException excepcion.
+     */
+    @GetMapping(value = "/consultar", produces = {"application/json"})
+    ResponseEntity<Mascota> consultarMascota(@RequestParam Long mascotaId)
+            throws BadRequestException;
 }

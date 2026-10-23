@@ -10,6 +10,7 @@ import com.uniminuto.clinica.repository.ClienteRepository;
 import com.uniminuto.clinica.repository.MascotaRepository;
 import com.uniminuto.clinica.repository.RazaRepository;
 import com.uniminuto.clinica.service.MascotaService;
+import com.uniminuto.clinica.util.ValidadorEntidades;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +30,27 @@ public class MascotaServiceImpl implements MascotaService {
     @Autowired
     private ClienteRepository clienteRepository;
 
+    /**
+     * Validaciones comunes (existencia de cliente, mascota, etc.).
+     */
+    @Autowired
+    private ValidadorEntidades validador;
+
     @Override
     public List<Mascota> getListarMascotas() {
         return mascotaRepository.findAllByOrderByNombreMascotaAsc();
+    }
+
+    @Override
+    public List<Mascota> listarMascotasPorCliente(Long clienteId) throws BadRequestException {
+        // Primero se valida que el cliente exista (si no, responde 404)
+        this.validador.obtenerCliente(clienteId);
+        return mascotaRepository.findByClienteIdOrderByNombreMascotaAsc(clienteId);
+    }
+
+    @Override
+    public Mascota consultarMascota(Long mascotaId) throws BadRequestException {
+        return this.validador.obtenerMascota(mascotaId);
     }
 
     @Override

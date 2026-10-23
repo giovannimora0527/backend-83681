@@ -18,4 +18,22 @@ public interface MascotaService {
     MiRespuestaRS guardarMascota(MascotaRq mascotaRq) throws BadRequestException;
 
     MiRespuestaRS actualizarMascota(MascotaRq mascotaRq) throws BadRequestException;
+
+    /**
+     * Lista las mascotas de un cliente.
+     *
+     * @param clienteId id del cliente.
+     * @return mascotas del cliente ordenadas por nombre.
+     * @throws BadRequestException si el cliente no existe (404).
+     */
+    List<Mascota> listarMascotasPorCliente(Long clienteId) throws BadRequestException;
+
+    /**
+     * Consulta una mascota por su id.
+     *
+     * @param mascotaId id de la mascota.
+     * @return mascota encontrada.
+     * @throws BadRequestException si la mascota no existe (404).
+     */
+    Mascota consultarMascota(Long mascotaId) throws BadRequestException;
 }
