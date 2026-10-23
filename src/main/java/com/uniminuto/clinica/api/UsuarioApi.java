@@ -1,6 +1,5 @@
 package com.uniminuto.clinica.api;
 
-import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.models.UsuarioRq;
@@ -56,4 +55,7 @@ public interface UsuarioApi {
             @RequestBody UsuarioRq usuarioRq
     )
             throws BadRequestException;
+
+    @DeleteMapping(value = "/eliminar/{id}", produces = "application/json")
+    ResponseEntity<MiRespuestaRS> eliminar(@PathVariable("id") Long id);
 }

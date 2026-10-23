@@ -6,7 +6,6 @@ import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MascotaRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.service.MascotaService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,8 +14,11 @@ import java.util.List;
 @RestController
 public class MascotaApiController implements MascotaApi {
 
-    @Autowired
-    private MascotaService mascotaService;
+    private final MascotaService mascotaService;
+
+    public MascotaApiController(MascotaService mascotaService) {
+        this.mascotaService = mascotaService;
+    }
 
     @Override
     public ResponseEntity<List<Mascota>> getMascotas() throws BadRequestException {
@@ -38,8 +40,21 @@ public class MascotaApiController implements MascotaApi {
         return ResponseEntity.ok(this.mascotaService.guardarMascota(mascotaRq));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<Mascota> consultarMascota(Long mascotaId) {
+        return ResponseEntity.ok(mascotaService.consultarMascota(mascotaId));
+    }
+
     @Override
     public ResponseEntity<MiRespuestaRS> actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
         return ResponseEntity.ok(this.mascotaService.actualizarMascota(mascotaRq));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> eliminarMascota(Long mascotaId) {
+        return ResponseEntity.ok(mascotaService.eliminarMascota(mascotaId));
     }
 }

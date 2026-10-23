@@ -2,11 +2,9 @@ package com.uniminuto.clinica.repository;
 
 import com.uniminuto.clinica.entity.Mascota;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
 public interface MascotaRepository extends JpaRepository<Mascota, Long> {
 
     /**
@@ -28,4 +26,17 @@ public interface MascotaRepository extends JpaRepository<Mascota, Long> {
      * @return Lista de mascotas ordenadas por nombre descendente.
      */
     List<Mascota> findAllByOrderByNombreMascotaDesc();
+
+    /**
+     * Lista las mascotas de un cliente ordenadas por nombre. Se usa en los
+     * combos dependientes Cliente → Mascota del frontend.
+     *
+     * @param clienteId identificador del cliente.
+     * @return mascotas del cliente.
+     */
+    List<Mascota> findByClienteIdOrderByNombreMascotaAsc(Long clienteId);
+
+    boolean existsByCliente_Id(Long clienteId);
+
+    boolean existsByRaza_RazaId(Integer razaId);
 }

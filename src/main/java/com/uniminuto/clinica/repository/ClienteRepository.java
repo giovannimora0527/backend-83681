@@ -2,11 +2,9 @@ package com.uniminuto.clinica.repository;
 
 import com.uniminuto.clinica.entity.Cliente;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     /**
@@ -15,5 +13,11 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
      * @return posible cliente encontrado.
      */
     Optional<Cliente> findByNumeroDocumento(String numeroDocumento);
-    
+
+    boolean existsByTipoDocumentoAndNumeroDocumento(String tipoDocumento, String numeroDocumento);
+
+    boolean existsByTipoDocumentoAndNumeroDocumentoAndIdNot(
+            String tipoDocumento,
+            String numeroDocumento,
+            Long id);
 }

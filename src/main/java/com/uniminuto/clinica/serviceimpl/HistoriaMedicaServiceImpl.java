@@ -1,199 +1,194 @@
 package com.uniminuto.clinica.serviceimpl;
 
+import com.uniminuto.clinica.entity.Cita;
+import com.uniminuto.clinica.entity.EstadoCita;
+import com.uniminuto.clinica.entity.EstadoHistoria;
 import com.uniminuto.clinica.entity.HistoriaMedica;
 import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.exception.ConflictException;
+import com.uniminuto.clinica.models.HistoriaMedicaFiltroRq;
 import com.uniminuto.clinica.models.HistoriaMedicaRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.PaginaRs;
 import com.uniminuto.clinica.repository.HistoriaMedicaRepository;
-import com.uniminuto.clinica.repository.MascotaRepository;
-import com.uniminuto.clinica.repository.MedicoRepository;
+import com.uniminuto.clinica.repository.specification.HistoriaMedicaSpecification;
 import com.uniminuto.clinica.service.HistoriaMedicaService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.uniminuto.clinica.util.PaginacionUtil;
+import com.uniminuto.clinica.util.ValidacionUtil;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Objects;
 
 /**
- * Implementación del servicio de historias médicas.
+ * Implementación del servicio de historias clínicas.
  */
 @Service
 public class HistoriaMedicaServiceImpl implements HistoriaMedicaService {
 
     /**
-     * Repositorio de historias médicas.
+     * Longitud máxima del motivo de consulta.
      */
-    @Autowired
-    private HistoriaMedicaRepository historiaMedicaRepository;
+    private static final int LONGITUD_MOTIVO = 255;
 
     /**
-     * Repositorio de mascotas, usado para validar la mascota de la historia.
+     * Longitud máxima de los campos de texto largo.
      */
-    @Autowired
-    private MascotaRepository mascotaRepository;
+    private static final int LONGITUD_TEXTO = 2000;
 
     /**
-     * Repositorio de médicos, usado para validar el médico de la historia.
+     * Columnas por las que se puede ordenar el listado (columna del frontend → propiedad).
      */
-    @Autowired
-    private MedicoRepository medicoRepository;
+    private static final Map<String, String> COLUMNAS_ORDEN = Map.of(
+            "fecha", "fechaConsulta",
+            "mascota", "mascota.nombreMascota",
+            "cliente", "mascota.cliente.nombres",
+            "veterinario", "medico.nombres",
+            "motivo", "motivoConsulta",
+            "estado", "estado");
 
     /**
-     * {@inheritDoc}
+     * Repositorio de historias clínicas.
      */
-    @Override
-    public MiRespuestaRS crearHistoriaMedica(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
-        // Paso 1. Validar el objeto de entrada.
-        this.validarObjetoEntrada(historiaMedicaRq);
+    private final HistoriaMedicaRepository historiaMedicaRepository;
 
-        // Paso 2. Validar que la mascota exista.
-        Mascota mascota = this.obtenerMascota(historiaMedicaRq.getMascotaId());
+    /**
+     * Validador de las entidades relacionadas.
+     */
+    private final ValidadorRelaciones validador;
 
-        // Paso 3. Validar que el médico exista.
-        Medico medico = this.obtenerMedico(historiaMedicaRq.getMedicoId());
-
-        // Paso 4. Construir y guardar la nueva historia médica.
-        HistoriaMedica historiaMedica = new HistoriaMedica();
-        historiaMedica.setDiagnostico(historiaMedicaRq.getDiagnostico());
-        historiaMedica.setTratamiento(historiaMedicaRq.getTratamiento());
-        historiaMedica.setMascota(mascota);
-        historiaMedica.setMedico(medico);
-        historiaMedica.setFechaCreacion(LocalDateTime.now());
-
-        this.historiaMedicaRepository.save(historiaMedica);
-
-        // Paso 5. Retornar la respuesta de la operación.
-        MiRespuestaRS respuesta = new MiRespuestaRS();
-        respuesta.setStatus(200);
-        respuesta.setMessage("Historia médica creada correctamente");
-        return respuesta;
+    public HistoriaMedicaServiceImpl(HistoriaMedicaRepository historiaMedicaRepository,
+            ValidadorRelaciones validador) {
+        this.historiaMedicaRepository = historiaMedicaRepository;
+        this.validador = validador;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<HistoriaMedica> listarHistoriasPorFecha(LocalDateTime fechaInicial, LocalDateTime fechaFinal) throws BadRequestException {
-        // Paso 1. Validar que las fechas de filtro sean válidas.
-        this.validarRangoFechas(fechaInicial, fechaFinal);
-
-        // Paso 2. Consultar las historias médicas dentro del rango, ordenadas de la más reciente a la más antigua.
-        return this.historiaMedicaRepository.findByFechaCreacionBetweenOrderByFechaCreacionDesc(fechaInicial, fechaFinal);
+    @Transactional(readOnly = true)
+    public PaginaRs<HistoriaMedica> listarHistorias(HistoriaMedicaFiltroRq filtro) {
+        EstadoHistoria estado = convertirEstado(filtro.getEstado());
+        Pageable pageable = PaginacionUtil.construir(filtro, COLUMNAS_ORDEN, "fecha");
+        return PaginaRs.desde(historiaMedicaRepository.findAll(
+                HistoriaMedicaSpecification.conFiltros(filtro, estado), pageable));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MiRespuestaRS actualizarHistoriaMedica(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
-        // Paso 1. Validar el objeto de entrada.
-        this.validarObjetoEntrada(historiaMedicaRq);
-
-        if (historiaMedicaRq.getHistoriaId() == null) {
-            throw new BadRequestException("El ID de la historia médica no puede estar vacío");
-        }
-
-        // Paso 2. Validar que la historia médica exista.
-        Optional<HistoriaMedica> optHistoria = this.historiaMedicaRepository.findById(historiaMedicaRq.getHistoriaId());
-        if (optHistoria.isEmpty()) {
-            throw new BadRequestException("La historia médica con ID " + historiaMedicaRq.getHistoriaId() + " no existe en la base de datos");
-        }
-
-        // Paso 3. Validar que la mascota exista.
-        Mascota mascota = this.obtenerMascota(historiaMedicaRq.getMascotaId());
-
-        // Paso 4. Validar que el médico exista.
-        Medico medico = this.obtenerMedico(historiaMedicaRq.getMedicoId());
-
-        // Paso 5. Actualizar y guardar la historia médica.
-        HistoriaMedica historiaMedica = optHistoria.get();
-        historiaMedica.setDiagnostico(historiaMedicaRq.getDiagnostico());
-        historiaMedica.setTratamiento(historiaMedicaRq.getTratamiento());
-        historiaMedica.setMascota(mascota);
-        historiaMedica.setMedico(medico);
-        historiaMedica.setFechaModificacion(LocalDateTime.now());
-
-        this.historiaMedicaRepository.save(historiaMedica);
-
-        // Paso 6. Retornar la respuesta de la operación.
-        MiRespuestaRS respuesta = new MiRespuestaRS();
-        respuesta.setStatus(200);
-        respuesta.setMessage("Historia médica actualizada correctamente");
-        return respuesta;
+    @Transactional(readOnly = true)
+    public HistoriaMedica consultarHistoria(Long historiaId) {
+        return validador.obtenerHistoria(historiaId);
     }
 
     /**
-     * Valida que el objeto de entrada de una historia médica tenga los
-     * datos obligatorios.
-     *
-     * @param historiaMedicaRq objeto a validar.
-     * @throws BadRequestException si algún dato obligatorio falta o es inválido.
+     * {@inheritDoc}
      */
-    private void validarObjetoEntrada(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
-        if (historiaMedicaRq == null) {
-            throw new BadRequestException("El objeto de entrada no puede estar vacío");
+    @Override
+    @Transactional
+    public MiRespuestaRS crearHistoria(HistoriaMedicaRq rq) {
+        // Paso 1. Campos obligatorios.
+        ValidacionUtil.obligatorio(rq, "historia clínica");
+        ValidacionUtil.obligatorio(rq.getFechaConsulta(), "fecha y hora de la consulta");
+        String motivo = ValidacionUtil.textoObligatorio(rq.getMotivoConsulta(), "motivo de consulta", LONGITUD_MOTIVO);
+        String diagnostico = ValidacionUtil.textoObligatorio(rq.getDiagnostico(), "diagnóstico", LONGITUD_TEXTO);
+        String observaciones = ValidacionUtil.textoOpcional(rq.getObservaciones(), "observaciones", LONGITUD_TEXTO);
+
+        // Paso 2. Cliente, mascota y veterinario existen y la mascota es del cliente.
+        Mascota mascota = validador.obtenerMascotaDeCliente(rq.getMascotaId(), rq.getClienteId());
+        Medico medico = validador.obtenerMedico(rq.getMedicoId());
+
+        // Paso 3. La cita existe, es de la misma mascota, está atendida y no tiene historia.
+        Cita cita = validador.obtenerCita(rq.getCitaId());
+        if (!Objects.equals(cita.getMascota().getMascotaId(), mascota.getMascotaId())) {
+            throw new BadRequestException("La cita seleccionada no corresponde a la mascota " + mascota.getNombreMascota() + ".");
         }
-        if (historiaMedicaRq.getDiagnostico() == null || historiaMedicaRq.getDiagnostico().trim().isEmpty()) {
-            throw new BadRequestException("El diagnóstico no puede estar vacío");
+        if (cita.getEstado() != EstadoCita.ATENDIDA) {
+            throw new ConflictException("Solo se puede registrar la historia clínica de una cita ATENDIDA. "
+                    + "La cita está en estado " + cita.getEstado() + ".");
         }
-        if (historiaMedicaRq.getTratamiento() == null || historiaMedicaRq.getTratamiento().trim().isEmpty()) {
-            throw new BadRequestException("El tratamiento no puede estar vacío");
+        if (historiaMedicaRepository.existsByCitaCitaId(cita.getCitaId())) {
+            throw new ConflictException("La cita seleccionada ya tiene una historia clínica registrada.");
         }
-        if (historiaMedicaRq.getMascotaId() == null) {
-            throw new BadRequestException("El ID de la mascota no puede estar vacío");
+
+        // Paso 4. La fecha de la consulta debe estar entre el día de la cita y el momento actual.
+        LocalDateTime fechaConsulta = rq.getFechaConsulta().truncatedTo(ChronoUnit.MINUTES);
+        if (fechaConsulta.toLocalDate().isBefore(cita.getFechaCita().toLocalDate())) {
+            throw new BadRequestException("La fecha de la consulta no puede ser anterior a la fecha de la cita.");
         }
-        if (historiaMedicaRq.getMedicoId() == null) {
-            throw new BadRequestException("El ID del médico no puede estar vacío");
+        if (fechaConsulta.isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("La fecha de la consulta no puede ser futura.");
         }
+
+        // Paso 5. Guardar.
+        HistoriaMedica historia = new HistoriaMedica();
+        historia.setCita(cita);
+        historia.setMascota(mascota);
+        historia.setMedico(medico);
+        historia.setFechaConsulta(fechaConsulta);
+        historia.setMotivoConsulta(motivo);
+        historia.setDiagnostico(diagnostico);
+        historia.setObservaciones(observaciones);
+        historia.setEstado(EstadoHistoria.ABIERTA);
+        historia.setFechaCreacion(LocalDateTime.now());
+        historiaMedicaRepository.save(historia);
+
+        return new MiRespuestaRS(HttpStatus.CREATED.value(), "Historia clínica creada correctamente.",
+                historia.getHistoriaId());
     }
 
     /**
-     * Valida que un rango de fechas sea válido (ninguna sea nula y la
-     * fecha inicial no sea posterior a la final).
-     *
-     * @param fechaInicial fecha inicial del rango.
-     * @param fechaFinal   fecha final del rango.
-     * @throws BadRequestException si el rango de fechas es inválido.
+     * {@inheritDoc}
      */
-    private void validarRangoFechas(LocalDateTime fechaInicial, LocalDateTime fechaFinal) throws BadRequestException {
-        if (fechaInicial == null || fechaFinal == null) {
-            throw new BadRequestException("La fecha inicial y la fecha final son obligatorias");
+    @Override
+    @Transactional
+    public MiRespuestaRS cerrarHistoria(Long historiaId) {
+        HistoriaMedica historia = validador.obtenerHistoria(historiaId);
+        if (historia.getEstado() == EstadoHistoria.CERRADA) {
+            throw new ConflictException("La historia clínica ya está cerrada.");
         }
-        if (fechaInicial.isAfter(fechaFinal)) {
-            throw new BadRequestException("La fecha inicial no puede ser posterior a la fecha final");
-        }
+        historia.setEstado(EstadoHistoria.CERRADA);
+        historia.setFechaModificacion(LocalDateTime.now());
+        historiaMedicaRepository.save(historia);
+        return new MiRespuestaRS(HttpStatus.OK.value(), "Historia clínica cerrada correctamente.", historiaId);
     }
 
     /**
-     * Obtiene una mascota por su ID o lanza una excepción si no existe.
-     *
-     * @param mascotaId ID de la mascota a buscar.
-     * @return la mascota encontrada.
-     * @throws BadRequestException si la mascota no existe.
+     * {@inheritDoc}
      */
-    private Mascota obtenerMascota(Long mascotaId) throws BadRequestException {
-        Optional<Mascota> optMascota = this.mascotaRepository.findById(mascotaId);
-        if (optMascota.isEmpty()) {
-            throw new BadRequestException("La mascota con ID " + mascotaId + " no existe en la base de datos");
-        }
-        return optMascota.get();
+    @Override
+    @Transactional(readOnly = true)
+    public List<HistoriaMedica> listarPorMascota(Long mascotaId) {
+        validador.obtenerMascota(mascotaId);
+        return historiaMedicaRepository.findByMascotaMascotaIdOrderByFechaConsultaDesc(mascotaId);
     }
 
     /**
-     * Obtiene un médico por su ID o lanza una excepción si no existe.
+     * Convierte el texto del filtro de estado en el enum correspondiente.
      *
-     * @param medicoId ID del médico a buscar.
-     * @return el médico encontrado.
-     * @throws BadRequestException si el médico no existe.
+     * @param estado texto recibido (puede ser vacío).
+     * @return estado, o null si no se filtra por estado.
+     * @throws BadRequestException si el texto no es un estado válido.
      */
-    private Medico obtenerMedico(Long medicoId) throws BadRequestException {
-        Optional<Medico> optMedico = this.medicoRepository.findById(medicoId);
-        if (optMedico.isEmpty()) {
-            throw new BadRequestException("El médico con ID " + medicoId + " no existe en la base de datos");
+    private EstadoHistoria convertirEstado(String estado) {
+        if (estado == null || estado.isBlank()) {
+            return null;
         }
-        return optMedico.get();
+        try {
+            return EstadoHistoria.valueOf(estado.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("El estado '" + estado + "' no es válido. Valores permitidos: ABIERTA, CERRADA.");
+        }
     }
 }

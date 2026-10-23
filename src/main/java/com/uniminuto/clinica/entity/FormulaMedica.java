@@ -10,11 +10,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Entidad que representa una fórmula médica del inventario de la
- * Clínica Veterinaria (medicamento formulado a una mascota por un médico).
+ * Fórmula médica emitida por un veterinario dentro de una historia clínica.
+ * Como siempre está ligada a información clínica, nunca se elimina
+ * físicamente: se inactiva con el campo {@link #activo}.
  */
 @Entity
 @Table(name = "formula_medica")
@@ -22,12 +25,39 @@ import java.time.LocalDateTime;
 public class FormulaMedica {
 
     /**
-     * Identificador único de la fórmula médica.
+     * Identificador de la fórmula.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "formula_id")
     private Long formulaId;
+
+    /**
+     * Mascota a la que se le formula el medicamento.
+     */
+    @ManyToOne
+    @JoinColumn(name = "mascota_id", nullable = false)
+    private Mascota mascota;
+
+    /**
+     * Historia clínica (consulta) en la que se emitió la fórmula.
+     */
+    @ManyToOne
+    @JoinColumn(name = "historia_id", nullable = false)
+    private HistoriaMedica historiaMedica;
+
+    /**
+     * Veterinario que emite la fórmula.
+     */
+    @ManyToOne
+    @JoinColumn(name = "medico_id", nullable = false)
+    private Medico medico;
+
+    /**
+     * Fecha de emisión de la fórmula.
+     */
+    @Column(name = "fecha_emision", nullable = false)
+    private LocalDate fechaEmision;
 
     /**
      * Nombre del medicamento formulado.
@@ -36,46 +66,50 @@ public class FormulaMedica {
     private String medicamento;
 
     /**
-     * Dosis indicada para el medicamento (ej: "5 mg cada 12 horas").
+     * Cantidad de la dosis (por ejemplo 2.5).
      */
-    @Column(name = "dosis", nullable = false, length = 100)
-    private String dosis;
+    @Column(name = "dosis", nullable = false, precision = 10, scale = 2)
+    private BigDecimal dosis;
 
     /**
-     * Indicaciones adicionales sobre el suministro del medicamento.
+     * Unidad de la dosis (mg, ml, tableta...).
      */
-    @Column(name = "indicaciones", columnDefinition = "TEXT")
+    @Column(name = "unidad_dosis", nullable = false, length = 20)
+    private String unidadDosis;
+
+    /**
+     * Frecuencia de administración expresada en horas (cada N horas).
+     */
+    @Column(name = "frecuencia_horas", nullable = false)
+    private Integer frecuenciaHoras;
+
+    /**
+     * Duración del tratamiento en días.
+     */
+    @Column(name = "duracion_dias", nullable = false)
+    private Integer duracionDias;
+
+    /**
+     * Indicaciones para el cliente.
+     */
+    @Column(name = "indicaciones", nullable = false, columnDefinition = "TEXT")
     private String indicaciones;
 
     /**
-     * Cantidad de unidades disponibles en el inventario para esta fórmula.
+     * Indica si la fórmula está vigente. Una fórmula inactiva no se puede editar.
      */
-    @Column(name = "cantidad", nullable = false)
-    private Integer cantidad;
+    @Column(name = "activo", nullable = false)
+    private Boolean activo;
 
     /**
-     * Fecha en la que se creó/registró la fórmula médica en el inventario.
+     * Fecha de creación del registro.
      */
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     /**
-     * Fecha de la última modificación de la fórmula médica.
+     * Fecha de la última modificación del registro.
      */
     @Column(name = "fecha_modificacion")
     private LocalDateTime fechaModificacion;
-
-    /**
-     * Mascota a la que se le formula el medicamento.
-     */
-    @ManyToOne
-    @JoinColumn(name = "mascota_id")
-    private Mascota mascota;
-
-    /**
-     * Médico que formula el medicamento.
-     */
-    @ManyToOne
-    @JoinColumn(name = "medico_id")
-    private Medico medico;
 }

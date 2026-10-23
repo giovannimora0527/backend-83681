@@ -1,45 +1,49 @@
 package com.uniminuto.clinica.service;
 
 import com.uniminuto.clinica.entity.AnotacionHistoria;
-import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.AnotacionHistoriaRq;
+import com.uniminuto.clinica.models.FiltroPaginadoRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
-
-import java.util.List;
+import com.uniminuto.clinica.models.PaginaRs;
 
 /**
- * Servicio para la gestión de anotaciones de historia médica de la
- * Clínica Veterinaria.
+ * Servicio de negocio para las anotaciones de las historias clínicas.
  */
 public interface AnotacionHistoriaService {
 
     /**
-     * Crea una nueva anotación de historia médica.
+     * Agrega una anotación a una historia clínica abierta.
      *
-     * @param anotacionHistoriaRq datos de la anotación a crear.
-     * @return respuesta con el resultado de la operación.
-     * @throws BadRequestException si los datos de entrada son inválidos.
+     * @param rq datos de la anotación.
+     * @return respuesta con el id de la anotación creada.
      */
-    MiRespuestaRS crearAnotacion(AnotacionHistoriaRq anotacionHistoriaRq) throws BadRequestException;
+    MiRespuestaRS crearAnotacion(AnotacionHistoriaRq rq);
 
     /**
-     * Lista las anotaciones asociadas a una historia médica, ordenadas
-     * de la más reciente a la más antigua.
+     * Lista las anotaciones de una historia clínica, paginadas y filtradas.
+     * Por defecto de la más reciente a la más antigua.
      *
-     * @param historiaId identificador de la historia médica.
-     * @return lista de anotaciones de la historia médica.
-     * @throws BadRequestException si el identificador es inválido o la
-     *                              historia médica no existe.
+     * @param historiaId identificador de la historia.
+     * @param filtro     filtros, página y ordenamiento.
+     * @return página de anotaciones.
      */
-    List<AnotacionHistoria> listarAnotacionesPorHistoria(Long historiaId) throws BadRequestException;
+    PaginaRs<AnotacionHistoria> listarPorHistoria(Long historiaId, FiltroPaginadoRq filtro);
 
     /**
-     * Actualiza una anotación de historia médica existente.
+     * Lista el histórico completo de anotaciones de una mascota (de todas sus
+     * historias clínicas), paginado y filtrado.
      *
-     * @param anotacionHistoriaRq datos de la anotación a actualizar.
-     * @return respuesta con el resultado de la operación.
-     * @throws BadRequestException si los datos de entrada son inválidos o
-     *                              la anotación no existe.
+     * @param mascotaId identificador de la mascota.
+     * @param filtro    filtros, página y ordenamiento.
+     * @return página de anotaciones.
      */
-    MiRespuestaRS actualizarAnotacion(AnotacionHistoriaRq anotacionHistoriaRq) throws BadRequestException;
+    PaginaRs<AnotacionHistoria> listarPorMascota(Long mascotaId, FiltroPaginadoRq filtro);
+
+    /**
+     * Consulta el detalle de una anotación.
+     *
+     * @param anotacionId identificador de la anotación.
+     * @return anotación encontrada.
+     */
+    AnotacionHistoria consultarAnotacion(Long anotacionId);
 }

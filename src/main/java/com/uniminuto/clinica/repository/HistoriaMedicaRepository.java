@@ -2,24 +2,30 @@ package com.uniminuto.clinica.repository;
 
 import com.uniminuto.clinica.entity.HistoriaMedica;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * Repositorio de la entidad {@link HistoriaMedica}.
  */
-@Repository
-public interface HistoriaMedicaRepository extends JpaRepository<HistoriaMedica, Long> {
+public interface HistoriaMedicaRepository extends JpaRepository<HistoriaMedica, Long>,
+        JpaSpecificationExecutor<HistoriaMedica> {
 
     /**
-     * Busca las historias médicas creadas entre una fecha inicial y una
-     * fecha final, ordenadas de la más reciente a la más antigua.
+     * Indica si una cita ya tiene historia clínica registrada.
      *
-     * @param fechaInicial fecha inicial del rango de búsqueda.
-     * @param fechaFinal   fecha final del rango de búsqueda.
-     * @return lista de historias médicas encontradas en el rango, ordenadas descendentemente.
+     * @param citaId cita a revisar.
+     * @return true si ya existe una historia para la cita.
      */
-    List<HistoriaMedica> findByFechaCreacionBetweenOrderByFechaCreacionDesc(LocalDateTime fechaInicial, LocalDateTime fechaFinal);
+    boolean existsByCitaCitaId(Long citaId);
+
+    /**
+     * Lista las historias clínicas de una mascota, de la más reciente a la más
+     * antigua. Se usa en el combo dependiente del formulario de fórmulas.
+     *
+     * @param mascotaId mascota a consultar.
+     * @return historias de la mascota.
+     */
+    List<HistoriaMedica> findByMascotaMascotaIdOrderByFechaConsultaDesc(Long mascotaId);
 }

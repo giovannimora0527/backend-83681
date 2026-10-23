@@ -2,15 +2,14 @@ package com.uniminuto.clinica.apicontroller;
 
 import com.uniminuto.clinica.api.AnotacionHistoriaApi;
 import com.uniminuto.clinica.entity.AnotacionHistoria;
-import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.AnotacionHistoriaRq;
+import com.uniminuto.clinica.models.FiltroPaginadoRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.PaginaRs;
 import com.uniminuto.clinica.service.AnotacionHistoriaService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * Controlador REST que implementa {@link AnotacionHistoriaApi}.
@@ -19,32 +18,43 @@ import java.util.List;
 public class AnotacionHistoriaApiController implements AnotacionHistoriaApi {
 
     /**
-     * Servicio de anotaciones de historia médica.
+     * Servicio de anotaciones.
      */
-    @Autowired
-    private AnotacionHistoriaService anotacionHistoriaService;
+    private final AnotacionHistoriaService anotacionService;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ResponseEntity<MiRespuestaRS> guardarAnotacion(AnotacionHistoriaRq anotacionHistoriaRq) throws BadRequestException {
-        return ResponseEntity.ok(this.anotacionHistoriaService.crearAnotacion(anotacionHistoriaRq));
+    public AnotacionHistoriaApiController(AnotacionHistoriaService anotacionService) {
+        this.anotacionService = anotacionService;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<List<AnotacionHistoria>> listarAnotacionesPorHistoria(Long historiaId) throws BadRequestException {
-        return ResponseEntity.ok(this.anotacionHistoriaService.listarAnotacionesPorHistoria(historiaId));
+    public ResponseEntity<MiRespuestaRS> crearAnotacion(AnotacionHistoriaRq rq) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(anotacionService.crearAnotacion(rq));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<MiRespuestaRS> actualizarAnotacion(AnotacionHistoriaRq anotacionHistoriaRq) throws BadRequestException {
-        return ResponseEntity.ok(this.anotacionHistoriaService.actualizarAnotacion(anotacionHistoriaRq));
+    public ResponseEntity<PaginaRs<AnotacionHistoria>> listarPorHistoria(Long historiaId, FiltroPaginadoRq filtro) {
+        return ResponseEntity.ok(anotacionService.listarPorHistoria(historiaId, filtro));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<PaginaRs<AnotacionHistoria>> listarPorMascota(Long mascotaId, FiltroPaginadoRq filtro) {
+        return ResponseEntity.ok(anotacionService.listarPorMascota(mascotaId, filtro));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<AnotacionHistoria> consultarAnotacion(Long anotacionId) {
+        return ResponseEntity.ok(anotacionService.consultarAnotacion(anotacionId));
     }
 }

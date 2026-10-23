@@ -1,3 +1,7 @@
+> **Segundo parcial:** la documentación vigente (modelo de datos, endpoints, reglas y decisiones) está en
+> [`DOCUMENTO_PARCIAL2.md`](DOCUMENTO_PARCIAL2.md) y el script de base de datos en `sql/clinica_parcial2.sql`.
+> Lo que sigue corresponde al primer parcial.
+
 # Backend Clínica Veterinaria — Primer Parcial Programación Web (NRC 83861)
 
 Este proyecto es el **base entregado por el docente** (Cliente, Mascota, Médico,

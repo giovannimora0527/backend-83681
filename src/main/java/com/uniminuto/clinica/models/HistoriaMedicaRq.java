@@ -2,36 +2,51 @@ package com.uniminuto.clinica.models;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
- * Objeto de solicitud (request) para crear o actualizar una historia
- * médica.
+ * Datos para crear una historia clínica a partir de una cita atendida.
  */
 @Data
 public class HistoriaMedicaRq {
 
     /**
-     * Identificador de la historia médica. Requerido únicamente al
-     * actualizar.
+     * Cliente dueño de la mascota.
      */
-    private Long historiaId;
+    private Long clienteId;
 
     /**
-     * Diagnóstico registrado en la historia médica.
-     */
-    private String diagnostico;
-
-    /**
-     * Tratamiento indicado en la historia médica.
-     */
-    private String tratamiento;
-
-    /**
-     * Identificador de la mascota a la que pertenece la historia médica.
+     * Mascota atendida. Debe pertenecer al cliente.
      */
     private Long mascotaId;
 
     /**
-     * Identificador del médico que registra la historia médica.
+     * Cita atendida que origina la historia. Debe ser de la misma mascota.
+     */
+    private Long citaId;
+
+    /**
+     * Veterinario que realizó la consulta.
      */
     private Long medicoId;
+
+    /**
+     * Fecha y hora de la consulta.
+     */
+    private LocalDateTime fechaConsulta;
+
+    /**
+     * Motivo de la consulta.
+     */
+    private String motivoConsulta;
+
+    /**
+     * Diagnóstico.
+     */
+    private String diagnostico;
+
+    /**
+     * Observaciones generales (opcional).
+     */
+    private String observaciones;
 }

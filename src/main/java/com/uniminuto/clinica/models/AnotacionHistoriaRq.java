@@ -2,31 +2,41 @@ package com.uniminuto.clinica.models;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
- * Objeto de solicitud (request) para crear o actualizar una anotación
- * de historia médica.
+ * Datos para agregar una anotación a una historia clínica existente.
  */
 @Data
 public class AnotacionHistoriaRq {
 
     /**
-     * Identificador de la anotación. Requerido únicamente al actualizar.
-     */
-    private Long anotacionId;
-
-    /**
-     * Observación u anotación realizada sobre la historia médica.
-     */
-    private String observacion;
-
-    /**
-     * Identificador de la historia médica a la que pertenece la
-     * anotación.
+     * Historia clínica a la que se agrega la anotación.
      */
     private Long historiaId;
 
     /**
-     * Identificador del médico que realiza la anotación.
+     * Veterinario que registra la anotación.
      */
     private Long medicoId;
+
+    /**
+     * Fecha y hora de la anotación.
+     */
+    private LocalDateTime fechaAnotacion;
+
+    /**
+     * Descripción de lo observado o realizado.
+     */
+    private String descripcion;
+
+    /**
+     * Observación adicional.
+     */
+    private String observacion;
+
+    /**
+     * Diagnóstico o evolución del paciente.
+     */
+    private String diagnosticoEvolucion;
 }

@@ -1,7 +1,18 @@
 package com.uniminuto.clinica.serviceimpl;
 
+import com.uniminuto.clinica.entity.Cita;
+import com.uniminuto.clinica.entity.Cliente;
+import com.uniminuto.clinica.entity.EstadoCita;
 import com.uniminuto.clinica.entity.FormulaMedica;
+import com.uniminuto.clinica.entity.HistoriaMedica;
+import com.uniminuto.clinica.entity.Mascota;
+import com.uniminuto.clinica.entity.Medico;
+import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.exception.ConflictException;
+import com.uniminuto.clinica.models.FormulaMedicaRq;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.repository.FormulaMedicaRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,67 +20,179 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.times;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Pruebas unitarias para {@link FormulaMedicaServiceImpl}.
- * Cubre el Requerimiento 1 del parcial: listar las fórmulas médicas
- * del inventario ordenadas de la más reciente a la más antigua.
+ * Pruebas unitarias de las reglas de negocio de {@link FormulaMedicaServiceImpl}.
  */
 @ExtendWith(MockitoExtension.class)
 class FormulaMedicaServiceImplTest {
 
+    /**
+     * Repositorio simulado de fórmulas.
+     */
     @Mock
-    private FormulaMedicaRepository formulaMedicaRepository;
-
-    @InjectMocks
-    private FormulaMedicaServiceImpl formulaMedicaService;
+    private FormulaMedicaRepository formulaRepository;
 
     /**
-     * El servicio debe delegar en el repositorio y retornar la lista
-     * ya ordenada por fecha de creación descendente.
+     * Validador simulado de relaciones.
      */
-    @Test
-    @DisplayName("listarFormulasMedicas retorna la lista ordenada entregada por el repositorio")
-    void listarFormulasMedicas_debeRetornarListaOrdenada() {
-        FormulaMedica reciente = new FormulaMedica();
-        reciente.setFormulaId(2L);
-        reciente.setFechaCreacion(LocalDateTime.now());
+    @Mock
+    private ValidadorRelaciones validador;
 
-        FormulaMedica antigua = new FormulaMedica();
-        antigua.setFormulaId(1L);
-        antigua.setFechaCreacion(LocalDateTime.now().minusDays(5));
+    /**
+     * Servicio bajo prueba.
+     */
+    @InjectMocks
+    private FormulaMedicaServiceImpl formulaService;
 
-        List<FormulaMedica> listaOrdenada = List.of(reciente, antigua);
-        when(formulaMedicaRepository.findAllByOrderByFechaCreacionDesc()).thenReturn(listaOrdenada);
+    /**
+     * Mascota de prueba.
+     */
+    private Mascota mascota;
 
-        List<FormulaMedica> resultado = formulaMedicaService.listarFormulasMedicas();
+    /**
+     * Veterinario de prueba.
+     */
+    private Medico medico;
 
-        assertNotNull(resultado);
-        assertEquals(2, resultado.size());
-        assertEquals(reciente.getFormulaId(), resultado.get(0).getFormulaId());
-        verify(formulaMedicaRepository, times(1)).findAllByOrderByFechaCreacionDesc();
+    /**
+     * Historia clínica de la mascota (consulta de hace 5 días).
+     */
+    private HistoriaMedica historia;
+
+    /**
+     * Prepara los datos comunes de cada prueba.
+     */
+    @BeforeEach
+    void setUp() {
+        Cliente cliente = DatosPrueba.cliente(1L);
+        mascota = DatosPrueba.mascota(10L, cliente);
+        medico = DatosPrueba.medico(5L);
+        Cita cita = DatosPrueba.cita(3L, mascota, medico,
+                LocalDateTime.now().minusDays(5).truncatedTo(ChronoUnit.HOURS), EstadoCita.ATENDIDA);
+        historia = DatosPrueba.historia(7L, cita);
     }
 
     /**
-     * Si no hay fórmulas médicas registradas, el servicio debe retornar
-     * una lista vacía en lugar de fallar.
+     * Construye una solicitud válida de fórmula.
+     *
+     * @return solicitud de prueba.
      */
+    private FormulaMedicaRq solicitudValida() {
+        FormulaMedicaRq rq = new FormulaMedicaRq();
+        rq.setClienteId(1L);
+        rq.setMascotaId(10L);
+        rq.setHistoriaId(7L);
+        rq.setMedicoId(5L);
+        rq.setFechaEmision(LocalDate.now());
+        rq.setMedicamento("Amoxicilina");
+        rq.setDosis(new BigDecimal("250"));
+        rq.setUnidadDosis("mg");
+        rq.setFrecuenciaHoras(12);
+        rq.setDuracionDias(7);
+        rq.setIndicaciones("Dar con comida");
+        return rq;
+    }
+
+    /**
+     * Configura los simulacros de mascota, veterinario e historia.
+     */
+    private void simularRelaciones() {
+        when(validador.obtenerMascotaDeCliente(10L, 1L)).thenReturn(mascota);
+        when(validador.obtenerMedico(5L)).thenReturn(medico);
+        when(validador.obtenerHistoria(7L)).thenReturn(historia);
+    }
+
     @Test
-    @DisplayName("listarFormulasMedicas retorna lista vacía cuando no hay fórmulas registradas")
-    void listarFormulasMedicas_sinRegistros_debeRetornarListaVacia() {
-        when(formulaMedicaRepository.findAllByOrderByFechaCreacionDesc()).thenReturn(List.of());
+    @DisplayName("Crea una fórmula válida y la deja activa")
+    void crearFormulaValida() {
+        simularRelaciones();
+        when(formulaRepository.existeFormulaActiva(eq(7L), eq("Amoxicilina"), isNull())).thenReturn(false);
 
-        List<FormulaMedica> resultado = formulaMedicaService.listarFormulasMedicas();
+        MiRespuestaRS rs = formulaService.crearFormula(solicitudValida());
 
-        assertNotNull(resultado);
-        assertEquals(0, resultado.size());
+        assertEquals(201, rs.getStatus());
+        verify(formulaRepository).save(any(FormulaMedica.class));
+    }
+
+    @Test
+    @DisplayName("No asocia la fórmula a una consulta de otra mascota")
+    void crearFormulaConsultaDeOtraMascota() {
+        historia.setMascota(DatosPrueba.mascota(99L, DatosPrueba.cliente(2L)));
+        simularRelaciones();
+        assertThrows(BadRequestException.class, () -> formulaService.crearFormula(solicitudValida()));
+        verify(formulaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("La fecha de emisión no puede ser anterior a la consulta")
+    void crearFormulaFechaAnteriorConsulta() {
+        simularRelaciones();
+        FormulaMedicaRq rq = solicitudValida();
+        rq.setFechaEmision(historia.getFechaConsulta().toLocalDate().minusDays(1));
+        assertThrows(BadRequestException.class, () -> formulaService.crearFormula(rq));
+    }
+
+    @Test
+    @DisplayName("La dosis debe ser mayor que cero")
+    void crearFormulaDosisInvalida() {
+        FormulaMedicaRq rq = solicitudValida();
+        rq.setDosis(BigDecimal.ZERO);
+        assertThrows(BadRequestException.class, () -> formulaService.crearFormula(rq));
+    }
+
+    @Test
+    @DisplayName("La duración del tratamiento debe estar entre 1 y 365 días")
+    void crearFormulaDuracionInvalida() {
+        FormulaMedicaRq rq = solicitudValida();
+        rq.setDuracionDias(0);
+        assertThrows(BadRequestException.class, () -> formulaService.crearFormula(rq));
+    }
+
+    @Test
+    @DisplayName("No permite dos fórmulas activas del mismo medicamento en la misma consulta")
+    void crearFormulaDuplicada() {
+        simularRelaciones();
+        when(formulaRepository.existeFormulaActiva(eq(7L), eq("Amoxicilina"), isNull())).thenReturn(true);
+        assertThrows(ConflictException.class, () -> formulaService.crearFormula(solicitudValida()));
+    }
+
+    @Test
+    @DisplayName("Una fórmula inactiva no se puede editar")
+    void editarFormulaInactiva() {
+        FormulaMedica formula = new FormulaMedica();
+        formula.setFormulaId(1L);
+        formula.setActivo(false);
+        when(formulaRepository.findById(1L)).thenReturn(Optional.of(formula));
+        assertThrows(ConflictException.class, () -> formulaService.editarFormula(1L, solicitudValida()));
+    }
+
+    @Test
+    @DisplayName("Inactiva una fórmula en lugar de eliminarla")
+    void inactivarFormula() {
+        FormulaMedica formula = new FormulaMedica();
+        formula.setFormulaId(1L);
+        formula.setActivo(true);
+        when(formulaRepository.findById(1L)).thenReturn(Optional.of(formula));
+
+        formulaService.inactivarFormula(1L);
+
+        assertFalse(formula.getActivo());
+        verify(formulaRepository).save(formula);
     }
 }

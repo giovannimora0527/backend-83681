@@ -1,219 +1,910 @@
 {
   "info": {
-    "name": "Clinica Veterinaria API",
-    "description": "Colección de pruebas para los servicios REST de la Clínica Veterinaria (Spring Boot). Base URL usa la variable de colección {{base_url}}.",
+    "name": "Clínica Veterinaria API - Segundo Parcial",
+    "description": "Servicios REST del segundo parcial. Ejecute antes sql/clinica_parcial2.sql. Reemplace los valores entre <> por fechas válidas.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:8080/clinica/v1",
-      "type": "string"
+      "value": "http://localhost:8080/clinica/v1"
     }
   ],
   "item": [
     {
-      "name": "Formula Medica",
+      "name": "Clientes y mascotas",
       "item": [
         {
-          "name": "Listar formulas medicas (orden desc por fecha creacion)",
+          "name": "Listar clientes",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/formula-medica/listar-ordenado",
-              "host": ["{{base_url}}"],
-              "path": ["formula-medica", "listar-ordenado"]
+              "raw": "{{base_url}}/cliente/all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cliente",
+                "all"
+              ]
             }
-          },
-          "response": []
+          }
+        },
+        {
+          "name": "Consultar cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cliente/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cliente",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mascotas de un cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cliente/1/mascotas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cliente",
+                "1",
+                "mascotas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar mascota",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mascota/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "mascota",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar veterinarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/medico/all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "medico",
+                "all"
+              ]
+            }
+          }
         }
       ]
     },
     {
-      "name": "Cita",
+      "name": "Citas",
       "item": [
         {
-          "name": "Filtrar citas por rango de fechas (orden desc)",
+          "name": "Listar citas (paginado/filtros)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/cita/filtrar?fechaInicial=2026-01-01T00:00:00&fechaFinal=2026-12-31T23:59:59",
-              "host": ["{{base_url}}"],
-              "path": ["cita", "filtrar"],
+              "raw": "{{base_url}}/cita/listar?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc&estado=PENDIENTE&texto=&medicoId=&fechaDesde=&fechaHasta=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita",
+                "listar"
+              ],
               "query": [
-                { "key": "fechaInicial", "value": "2026-01-01T00:00:00" },
-                { "key": "fechaFinal", "value": "2026-12-31T23:59:59" }
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamanio",
+                  "value": "10"
+                },
+                {
+                  "key": "ordenarPor",
+                  "value": "fecha"
+                },
+                {
+                  "key": "direccion",
+                  "value": "desc"
+                },
+                {
+                  "key": "estado",
+                  "value": "PENDIENTE"
+                },
+                {
+                  "key": "texto",
+                  "value": ""
+                },
+                {
+                  "key": "medicoId",
+                  "value": ""
+                },
+                {
+                  "key": "fechaDesde",
+                  "value": ""
+                },
+                {
+                  "key": "fechaHasta",
+                  "value": ""
+                }
               ]
             }
-          },
-          "response": []
+          }
+        },
+        {
+          "name": "Consultar cita",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cita/8",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita",
+                "8"
+              ]
+            }
+          }
         },
         {
           "name": "Crear cita",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": {
+              "raw": "{{base_url}}/cita",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fechaCita\": \"2026-09-20T10:30:00\",\n  \"motivo\": \"Control de vacunación\",\n  \"estado\": \"PENDIENTE\",\n  \"mascotaId\": 1,\n  \"medicoId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/cita/guardar",
-              "host": ["{{base_url}}"],
-              "path": ["cita", "guardar"]
+              "raw": "{\n  \"clienteId\": 1,\n  \"mascotaId\": 1,\n  \"medicoId\": 1,\n  \"fechaCita\": \"2030-01-15T09:00:00\",\n  \"motivo\": \"Control general\",\n  \"estado\": \"PENDIENTE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Actualizar cita",
+          "name": "Crear cita - veterinario ocupado (409)",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": {
+              "raw": "{{base_url}}/cita",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"citaId\": 1,\n  \"fechaCita\": \"2026-09-21T15:00:00\",\n  \"motivo\": \"Control de vacunación (reprogramada)\",\n  \"estado\": \"CONFIRMADA\",\n  \"mascotaId\": 1,\n  \"medicoId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/cita/actualizar",
-              "host": ["{{base_url}}"],
-              "path": ["cita", "actualizar"]
+              "raw": "{\n  \"clienteId\": 2,\n  \"mascotaId\": 3,\n  \"medicoId\": 1,\n  \"fechaCita\": \"2030-01-15T09:10:00\",\n  \"motivo\": \"Choque de horario\",\n  \"estado\": \"PENDIENTE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          },
-          "response": []
+          }
+        },
+        {
+          "name": "Crear cita - mascota de otro cliente (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cita",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": 1,\n  \"mascotaId\": 3,\n  \"medicoId\": 2,\n  \"fechaCita\": \"2030-01-16T09:00:00\",\n  \"motivo\": \"Prueba\",\n  \"estado\": \"PENDIENTE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Editar cita",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cita/8",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita",
+                "8"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": 1,\n  \"mascotaId\": 1,\n  \"medicoId\": 4,\n  \"fechaCita\": \"2030-01-20T10:00:00\",\n  \"motivo\": \"Control post vacunación\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cambiar estado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cita/8/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita",
+                "8",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"CONFIRMADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cancelar cita",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cita/8/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita",
+                "8",
+                "estado"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"CANCELADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reactivar cita cancelada",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cita/7/reactivar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita",
+                "7",
+                "reactivar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fechaCita\": \"2030-02-01T09:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Citas atendidas sin historia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/cita/mascota/5/atendidas-sin-historia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "cita",
+                "mascota",
+                "5",
+                "atendidas-sin-historia"
+              ]
+            }
+          }
         }
       ]
     },
     {
-      "name": "Historia Medica",
+      "name": "Historias clínicas",
       "item": [
         {
-          "name": "Crear historia medica",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"diagnostico\": \"Otitis leve\",\n  \"tratamiento\": \"Limpieza ótica y gotas antibióticas\",\n  \"mascotaId\": 1,\n  \"medicoId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/historia-medica/guardar",
-              "host": ["{{base_url}}"],
-              "path": ["historia-medica", "guardar"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Listar historias medicas por rango de fechas (orden desc)",
+          "name": "Listar historias",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/historia-medica/listar?fechaInicial=2026-01-01T00:00:00&fechaFinal=2026-12-31T23:59:59",
-              "host": ["{{base_url}}"],
-              "path": ["historia-medica", "listar"],
+              "raw": "{{base_url}}/historia-medica/listar?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc&estado=&texto=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "historia-medica",
+                "listar"
+              ],
               "query": [
-                { "key": "fechaInicial", "value": "2026-01-01T00:00:00" },
-                { "key": "fechaFinal", "value": "2026-12-31T23:59:59" }
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamanio",
+                  "value": "10"
+                },
+                {
+                  "key": "ordenarPor",
+                  "value": "fecha"
+                },
+                {
+                  "key": "direccion",
+                  "value": "desc"
+                },
+                {
+                  "key": "estado",
+                  "value": ""
+                },
+                {
+                  "key": "texto",
+                  "value": ""
+                }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Actualizar historia medica",
+          "name": "Consultar historia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/historia-medica/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "historia-medica",
+                "2"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear historia (cita atendida)",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": {
+              "raw": "{{base_url}}/historia-medica",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "historia-medica"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"historiaId\": 1,\n  \"diagnostico\": \"Otitis leve resuelta\",\n  \"tratamiento\": \"Finalizado tratamiento antibiótico\",\n  \"mascotaId\": 1,\n  \"medicoId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/historia-medica/actualizar",
-              "host": ["{{base_url}}"],
-              "path": ["historia-medica", "actualizar"]
+              "raw": "{\n  \"clienteId\": 3,\n  \"mascotaId\": 5,\n  \"citaId\": 5,\n  \"medicoId\": 1,\n  \"fechaConsulta\": \"<fecha de la cita 5>T11:10:00\",\n  \"motivoConsulta\": \"Desparasitación\",\n  \"diagnostico\": \"Paciente sano\",\n  \"observaciones\": \"Repetir en 3 meses\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          },
-          "response": []
+          }
+        },
+        {
+          "name": "Historias de una mascota",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/historia-medica/mascota/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "historia-medica",
+                "mascota",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cerrar historia",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/historia-medica/3/cerrar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "historia-medica",
+                "3",
+                "cerrar"
+              ]
+            }
+          }
         }
       ]
     },
     {
-      "name": "Anotacion Historia",
+      "name": "Anotaciones",
       "item": [
         {
-          "name": "Crear anotacion de historia",
+          "name": "Crear anotación",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": {
+              "raw": "{{base_url}}/anotacion-historia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anotacion-historia"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"observacion\": \"Se observa mejoría notable tras 5 días de tratamiento\",\n  \"historiaId\": 1,\n  \"medicoId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/anotacion-historia/guardar",
-              "host": ["{{base_url}}"],
-              "path": ["anotacion-historia", "guardar"]
+              "raw": "{\n  \"historiaId\": 2,\n  \"medicoId\": 3,\n  \"fechaAnotacion\": \"<fecha y hora actual>\",\n  \"descripcion\": \"Control\",\n  \"observacion\": \"Sin lesiones\",\n  \"diagnosticoEvolucion\": \"Evolución favorable\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Listar anotaciones de una historia (orden desc)",
+          "name": "Anotaciones de una historia",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/anotacion-historia/listar?historiaId=1",
-              "host": ["{{base_url}}"],
-              "path": ["anotacion-historia", "listar"],
+              "raw": "{{base_url}}/anotacion-historia/historia/2?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc&texto=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anotacion-historia",
+                "historia",
+                "2"
+              ],
               "query": [
-                { "key": "historiaId", "value": "1" }
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamanio",
+                  "value": "10"
+                },
+                {
+                  "key": "ordenarPor",
+                  "value": "fecha"
+                },
+                {
+                  "key": "direccion",
+                  "value": "desc"
+                },
+                {
+                  "key": "texto",
+                  "value": ""
+                }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Actualizar anotacion de historia",
+          "name": "Histórico de anotaciones de una mascota",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/anotacion-historia/mascota/1?pagina=0&tamanio=10&ordenarPor=fecha&direccion=desc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anotacion-historia",
+                "mascota",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamanio",
+                  "value": "10"
+                },
+                {
+                  "key": "ordenarPor",
+                  "value": "fecha"
+                },
+                {
+                  "key": "direccion",
+                  "value": "desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar anotación",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/anotacion-historia/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "anotacion-historia",
+                "1"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fórmulas médicas",
+      "item": [
+        {
+          "name": "Listar fórmulas (resumen)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/formula-medica/listar?pagina=0&tamanio=10&ordenarPor=creacion&direccion=desc&activo=true&texto=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "formula-medica",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "pagina",
+                  "value": "0"
+                },
+                {
+                  "key": "tamanio",
+                  "value": "10"
+                },
+                {
+                  "key": "ordenarPor",
+                  "value": "creacion"
+                },
+                {
+                  "key": "direccion",
+                  "value": "desc"
+                },
+                {
+                  "key": "activo",
+                  "value": "true"
+                },
+                {
+                  "key": "texto",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Consultar fórmula (detalle)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/formula-medica/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "formula-medica",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear fórmula",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
+            "url": {
+              "raw": "{{base_url}}/formula-medica",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "formula-medica"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"anotacionId\": 1,\n  \"observacion\": \"Observación corregida: mejoría total, alta médica\",\n  \"historiaId\": 1,\n  \"medicoId\": 1\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/anotacion-historia/actualizar",
-              "host": ["{{base_url}}"],
-              "path": ["anotacion-historia", "actualizar"]
+              "raw": "{\n  \"clienteId\": 1,\n  \"mascotaId\": 1,\n  \"historiaId\": 4,\n  \"medicoId\": 4,\n  \"fechaEmision\": \"<fecha de hoy>\",\n  \"medicamento\": \"Omeprazol\",\n  \"dosis\": 10,\n  \"unidadDosis\": \"mg\",\n  \"frecuenciaHoras\": 24,\n  \"duracionDias\": 7,\n  \"indicaciones\": \"En ayunas\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          },
-          "response": []
+          }
+        },
+        {
+          "name": "Editar fórmula",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/formula-medica/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "formula-medica",
+                "1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": 2,\n  \"mascotaId\": 2,\n  \"historiaId\": 2,\n  \"medicoId\": 3,\n  \"fechaEmision\": \"<fecha de la consulta 2>\",\n  \"medicamento\": \"Prednisolona\",\n  \"dosis\": 2.5,\n  \"unidadDosis\": \"mg\",\n  \"frecuenciaHoras\": 24,\n  \"duracionDias\": 10,\n  \"indicaciones\": \"Con comida\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Inactivar fórmula",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/formula-medica/1/inactivar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "formula-medica",
+                "1",
+                "inactivar"
+              ]
+            }
+          }
         }
       ]
     }

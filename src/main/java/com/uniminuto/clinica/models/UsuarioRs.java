@@ -1,6 +1,5 @@
 package com.uniminuto.clinica.models;
 
-import jakarta.persistence.Column;
 import lombok.Data;
 
 import java.time.LocalDateTime;

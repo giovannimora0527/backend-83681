@@ -1,46 +1,57 @@
 package com.uniminuto.clinica.service;
 
 import com.uniminuto.clinica.entity.HistoriaMedica;
-import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.HistoriaMedicaFiltroRq;
 import com.uniminuto.clinica.models.HistoriaMedicaRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.PaginaRs;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Servicio para la gestión de historias médicas de la Clínica
- * Veterinaria.
+ * Servicio de negocio para la gestión de historias clínicas (consultas).
  */
 public interface HistoriaMedicaService {
 
     /**
-     * Crea una nueva historia médica en el sistema.
+     * Lista las historias clínicas paginadas, filtradas y ordenadas. Por
+     * defecto se ordena por fecha y hora de la consulta descendente.
      *
-     * @param historiaMedicaRq datos de la historia médica a crear.
-     * @return respuesta con el resultado de la operación.
-     * @throws BadRequestException si los datos de entrada son inválidos.
+     * @param filtro filtros, página y ordenamiento.
+     * @return página de historias clínicas.
      */
-    MiRespuestaRS crearHistoriaMedica(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException;
+    PaginaRs<HistoriaMedica> listarHistorias(HistoriaMedicaFiltroRq filtro);
 
     /**
-     * Lista las historias médicas creadas entre una fecha inicial y una
-     * fecha final, organizadas de la más reciente a la más antigua.
+     * Consulta una historia clínica por su identificador.
      *
-     * @param fechaInicial fecha inicial del rango a filtrar.
-     * @param fechaFinal   fecha final del rango a filtrar.
-     * @return lista de historias médicas dentro del rango solicitado.
-     * @throws BadRequestException si las fechas son inválidas.
+     * @param historiaId identificador de la historia.
+     * @return historia encontrada.
      */
-    List<HistoriaMedica> listarHistoriasPorFecha(LocalDateTime fechaInicial, LocalDateTime fechaFinal) throws BadRequestException;
+    HistoriaMedica consultarHistoria(Long historiaId);
 
     /**
-     * Actualiza una historia médica existente en el sistema.
+     * Crea una historia clínica a partir de una cita atendida.
      *
-     * @param historiaMedicaRq datos de la historia médica a actualizar.
-     * @return respuesta con el resultado de la operación.
-     * @throws BadRequestException si los datos de entrada son inválidos o
-     *                              la historia médica no existe.
+     * @param rq datos de la historia.
+     * @return respuesta con el id de la historia creada.
      */
-    MiRespuestaRS actualizarHistoriaMedica(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException;
+    MiRespuestaRS crearHistoria(HistoriaMedicaRq rq);
+
+    /**
+     * Cierra una historia clínica: a partir de ese momento no admite nuevas anotaciones.
+     *
+     * @param historiaId identificador de la historia.
+     * @return respuesta de la operación.
+     */
+    MiRespuestaRS cerrarHistoria(Long historiaId);
+
+    /**
+     * Lista las historias clínicas de una mascota (combo dependiente del
+     * formulario de fórmulas médicas).
+     *
+     * @param mascotaId identificador de la mascota.
+     * @return historias de la mascota, de la más reciente a la más antigua.
+     */
+    List<HistoriaMedica> listarPorMascota(Long mascotaId);
 }

@@ -2,21 +2,29 @@ package com.uniminuto.clinica.repository;
 
 import com.uniminuto.clinica.entity.FormulaMedica;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repositorio de la entidad {@link FormulaMedica}.
  */
-@Repository
-public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Long> {
+public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Long>,
+        JpaSpecificationExecutor<FormulaMedica> {
 
     /**
-     * Lista todas las fórmulas médicas del inventario ordenadas por fecha
-     * de creación, de la más reciente a la más antigua.
+     * Indica si ya existe una fórmula activa con el mismo medicamento en la
+     * misma historia clínica (para evitar fórmulas duplicadas).
      *
-     * @return lista de fórmulas médicas ordenadas descendentemente.
+     * @param historiaId       historia clínica.
+     * @param medicamento      nombre del medicamento (sin distinguir mayúsculas).
+     * @param formulaIdExcluir fórmula que se está editando; null al crear.
+     * @return true si ya existe una fórmula igual.
      */
-    List<FormulaMedica> findAllByOrderByFechaCreacionDesc();
+    @Query("SELECT COUNT(f) > 0 FROM FormulaMedica f WHERE f.historiaMedica.historiaId = :historiaId "
+            + "AND LOWER(f.medicamento) = LOWER(:medicamento) AND f.activo = true "
+            + "AND (:formulaIdExcluir IS NULL OR f.formulaId <> :formulaIdExcluir)")
+    boolean existeFormulaActiva(@Param("historiaId") Long historiaId,
+                                @Param("medicamento") String medicamento,
+                                @Param("formulaIdExcluir") Long formulaIdExcluir);
 }

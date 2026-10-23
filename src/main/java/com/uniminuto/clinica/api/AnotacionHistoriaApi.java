@@ -1,71 +1,63 @@
 package com.uniminuto.clinica.api;
 
 import com.uniminuto.clinica.entity.AnotacionHistoria;
-import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.AnotacionHistoriaRq;
+import com.uniminuto.clinica.models.FiltroPaginadoRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.PaginaRs;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.List;
 
 /**
- * Contrato REST para la gestión de anotaciones de historia médica de la
- * Clínica Veterinaria.
+ * Contrato REST para las anotaciones de historias clínicas.
+ * Ruta base: {@code /clinica/v1/anotacion-historia}.
  */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/anotacion-historia")
 public interface AnotacionHistoriaApi {
 
     /**
-     * Crea una nueva anotación de historia médica.
+     * Agrega una anotación a una historia clínica.
      *
-     * @param anotacionHistoriaRq datos de la anotación a crear.
-     * @return respuesta con el resultado de la operación.
-     * @throws BadRequestException excepción en caso de error de negocio.
+     * @param rq datos de la anotación.
+     * @return 201 con el id creado; 400, 404 o 409 si incumple una regla.
      */
-    @PostMapping(value = "/guardar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> guardarAnotacion(
-            @RequestBody AnotacionHistoriaRq anotacionHistoriaRq
-    )
-            throws BadRequestException;
+    @PostMapping(produces = {"application/json"}, consumes = {"application/json"})
+    ResponseEntity<MiRespuestaRS> crearAnotacion(@RequestBody AnotacionHistoriaRq rq);
 
     /**
-     * Lista las anotaciones asociadas a una historia médica, ordenadas
-     * de la más reciente a la más antigua.
+     * Lista las anotaciones de una historia clínica.
      *
-     * @param historiaId identificador de la historia médica.
-     * @return lista de anotaciones de la historia médica.
-     * @throws BadRequestException excepción en caso de error de negocio.
+     * @param historiaId identificador de la historia.
+     * @param filtro     filtros recibidos como query params.
+     * @return página de anotaciones (200) o 404 si la historia no existe.
      */
-    @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<List<AnotacionHistoria>> listarAnotacionesPorHistoria(
-            @RequestParam("historiaId") Long historiaId
-    )
-            throws BadRequestException;
+    @GetMapping(value = "/historia/{historiaId}", produces = {"application/json"})
+    ResponseEntity<PaginaRs<AnotacionHistoria>> listarPorHistoria(@PathVariable("historiaId") Long historiaId,
+                                                                  FiltroPaginadoRq filtro);
 
     /**
-     * Actualiza una anotación de historia médica almacenada en el
-     * sistema.
+     * Lista el histórico de anotaciones de una mascota.
      *
-     * @param anotacionHistoriaRq datos de la anotación a actualizar.
-     * @return respuesta con el resultado de la operación.
-     * @throws BadRequestException excepción en caso de error de negocio.
+     * @param mascotaId identificador de la mascota.
+     * @param filtro    filtros recibidos como query params.
+     * @return página de anotaciones (200) o 404 si la mascota no existe.
      */
-    @PostMapping(value = "/actualizar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> actualizarAnotacion(
-            @RequestBody AnotacionHistoriaRq anotacionHistoriaRq
-    )
-            throws BadRequestException;
+    @GetMapping(value = "/mascota/{mascotaId}", produces = {"application/json"})
+    ResponseEntity<PaginaRs<AnotacionHistoria>> listarPorMascota(@PathVariable("mascotaId") Long mascotaId,
+                                                                 FiltroPaginadoRq filtro);
+
+    /**
+     * Consulta el detalle de una anotación.
+     *
+     * @param anotacionId identificador de la anotación.
+     * @return anotación (200) o 404 si no existe.
+     */
+    @GetMapping(value = "/{anotacionId}", produces = {"application/json"})
+    ResponseEntity<AnotacionHistoria> consultarAnotacion(@PathVariable("anotacionId") Long anotacionId);
 }

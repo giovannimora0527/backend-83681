@@ -2,6 +2,8 @@ package com.uniminuto.clinica.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,8 +15,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Entidad que representa una cita médica de una mascota en la Clínica
- * Veterinaria.
+ * Cita médica programada para una mascota con un veterinario.
+ * El cliente de la cita se obtiene a través de la mascota
+ * (cita.mascota.cliente), así no se duplica la información ni puede quedar
+ * una cita con un cliente distinto al dueño de la mascota.
  */
 @Entity
 @Table(name = "cita")
@@ -22,7 +26,7 @@ import java.time.LocalDateTime;
 public class Cita {
 
     /**
-     * Identificador único de la cita.
+     * Identificador de la cita.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,44 +34,45 @@ public class Cita {
     private Long citaId;
 
     /**
-     * Fecha y hora en la que está programada/se realizó la cita.
+     * Fecha y hora de la cita.
      */
     @Column(name = "fecha_cita", nullable = false)
     private LocalDateTime fechaCita;
 
     /**
-     * Motivo de la cita.
+     * Motivo de la consulta.
      */
     @Column(name = "motivo", nullable = false, length = 255)
     private String motivo;
 
     /**
-     * Estado de la cita (ej: PROGRAMADA, ATENDIDA, CANCELADA).
+     * Estado actual de la cita.
      */
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 30)
-    private String estado;
+    private EstadoCita estado;
 
     /**
-     * Fecha en la que se creó el registro de la cita.
+     * Fecha de creación del registro.
      */
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
     /**
-     * Fecha de la última modificación del registro de la cita.
+     * Fecha de la última modificación del registro.
      */
     @Column(name = "fecha_modificacion")
     private LocalDateTime fechaModificacion;
 
     /**
-     * Mascota a la que corresponde la cita.
+     * Mascota que asiste a la cita.
      */
     @ManyToOne
     @JoinColumn(name = "mascota_id", nullable = false)
     private Mascota mascota;
 
     /**
-     * Médico que atiende la cita.
+     * Veterinario que atiende la cita.
      */
     @ManyToOne
     @JoinColumn(name = "medico_id", nullable = false)

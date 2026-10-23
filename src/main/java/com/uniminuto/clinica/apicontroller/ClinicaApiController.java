@@ -2,7 +2,6 @@ package com.uniminuto.clinica.apicontroller;
 
 import com.uniminuto.clinica.api.ClinicaApi;
 import com.uniminuto.clinica.service.ClinicaService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.apache.coyote.BadRequestException;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,8 +10,11 @@ import com.uniminuto.clinica.models.MiRespuestaRS;
 @RestController
 public class ClinicaApiController implements ClinicaApi {
 
-    @Autowired
-    private ClinicaService clinicaService;
+    private final ClinicaService clinicaService;
+
+    public ClinicaApiController(ClinicaService clinicaService) {
+        this.clinicaService = clinicaService;
+    }
 
     @Override
     public ResponseEntity<String> testService() throws BadRequestException {

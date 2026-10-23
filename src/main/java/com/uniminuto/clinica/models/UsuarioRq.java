@@ -2,7 +2,6 @@ package com.uniminuto.clinica.models;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
 
 @Data
 public class UsuarioRq {

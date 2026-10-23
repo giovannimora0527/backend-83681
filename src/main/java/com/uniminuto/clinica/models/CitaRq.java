@@ -5,38 +5,39 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Objeto de solicitud (request) para crear o actualizar una cita.
+ * Datos para crear o editar una cita.
  */
 @Data
 public class CitaRq {
 
     /**
-     * Identificador de la cita. Requerido únicamente al actualizar.
+     * Cliente dueño de la mascota.
      */
-    private Long citaId;
+    private Long clienteId;
 
     /**
-     * Fecha y hora en la que está programada la cita.
-     */
-    private LocalDateTime fechaCita;
-
-    /**
-     * Motivo de la cita.
-     */
-    private String motivo;
-
-    /**
-     * Estado de la cita.
-     */
-    private String estado;
-
-    /**
-     * Identificador de la mascota asociada a la cita.
+     * Mascota que asistirá a la cita. Debe pertenecer al cliente.
      */
     private Long mascotaId;
 
     /**
-     * Identificador del médico que atiende la cita.
+     * Veterinario que atenderá la cita.
      */
     private Long medicoId;
+
+    /**
+     * Fecha y hora de la cita (formato yyyy-MM-ddTHH:mm:ss).
+     */
+    private LocalDateTime fechaCita;
+
+    /**
+     * Motivo de la consulta.
+     */
+    private String motivo;
+
+    /**
+     * Estado inicial de la cita. Solo se usa al crear; para cambiarlo después
+     * se usa el servicio de cambio de estado.
+     */
+    private String estado;
 }

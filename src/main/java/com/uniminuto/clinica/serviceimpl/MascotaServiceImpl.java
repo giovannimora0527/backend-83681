@@ -4,14 +4,17 @@ import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.entity.Raza;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.exception.ConflictException;
+import com.uniminuto.clinica.exception.NotFoundException;
 import com.uniminuto.clinica.models.MascotaRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.repository.ClienteRepository;
+import com.uniminuto.clinica.repository.CitaRepository;
 import com.uniminuto.clinica.repository.MascotaRepository;
 import com.uniminuto.clinica.repository.RazaRepository;
 import com.uniminuto.clinica.service.MascotaService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,14 +23,20 @@ import java.util.Optional;
 @Service
 public class MascotaServiceImpl implements MascotaService {
 
-    @Autowired
-    private MascotaRepository mascotaRepository;
+    private final MascotaRepository mascotaRepository;
 
-    @Autowired
-    private RazaRepository razaRepository;
+    private final RazaRepository razaRepository;
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    private final ClienteRepository clienteRepository;
+    private final CitaRepository citaRepository;
+
+    public MascotaServiceImpl(MascotaRepository mascotaRepository, RazaRepository razaRepository,
+            ClienteRepository clienteRepository, CitaRepository citaRepository) {
+        this.mascotaRepository = mascotaRepository;
+        this.razaRepository = razaRepository;
+        this.clienteRepository = clienteRepository;
+        this.citaRepository = citaRepository;
+    }
 
     @Override
     public List<Mascota> getListarMascotas() {
@@ -80,14 +89,8 @@ public class MascotaServiceImpl implements MascotaService {
         mascota.setCliente(optCliente.get());
         mascota.setFechaRegistro(LocalDateTime.now());
 
-        this.mascotaRepository.save(mascota);
-
-        // Paso 4. Retornar la respuesta
-        MiRespuestaRS respuesta = new MiRespuestaRS();
-        respuesta.setStatus(200);
-        respuesta.setMessage("Mascota guardada correctamente");
-
-        return respuesta;
+        mascota = this.mascotaRepository.save(mascota);
+        return new MiRespuestaRS(200, "Mascota guardada correctamente", mascota.getMascotaId());
     }
 
     @Override
@@ -120,13 +123,39 @@ public class MascotaServiceImpl implements MascotaService {
         mascota.setFechaModificacion(LocalDateTime.now());
 
         this.mascotaRepository.save(mascota);
+        return new MiRespuestaRS(200, "Mascota actualizada correctamente", mascota.getMascotaId());
+    }
 
-        // Paso 4. Retornar la respuesta
-        MiRespuestaRS respuesta = new MiRespuestaRS();
-        respuesta.setStatus(200);
-        respuesta.setMessage("Mascota actualizada correctamente");
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Mascota consultarMascota(Long mascotaId) {
+        return mascotaRepository.findById(mascotaId)
+                .orElseThrow(() -> new NotFoundException("La mascota con id " + mascotaId + " no existe."));
+    }
 
-        return respuesta;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Mascota> listarMascotasPorCliente(Long clienteId) {
+        if (!clienteRepository.existsById(clienteId)) {
+            throw new NotFoundException("El cliente con id " + clienteId + " no existe.");
+        }
+        return mascotaRepository.findByClienteIdOrderByNombreMascotaAsc(clienteId);
+    }
+
+    @Override
+    @Transactional
+    public MiRespuestaRS eliminarMascota(Long mascotaId) {
+        Mascota mascota = mascotaRepository.findById(mascotaId)
+                .orElseThrow(() -> new NotFoundException("La mascota con id " + mascotaId + " no existe."));
+        if (citaRepository.existsByMascota_MascotaId(mascotaId)) {
+            throw new ConflictException("No se puede eliminar la mascota porque tiene citas o historias asociadas.");
+        }
+        mascotaRepository.delete(mascota);
+        return new MiRespuestaRS(200, "Mascota eliminada correctamente.", mascotaId);
     }
 
     private void validarObjetoEntrada(MascotaRq mascotaRq) throws BadRequestException {

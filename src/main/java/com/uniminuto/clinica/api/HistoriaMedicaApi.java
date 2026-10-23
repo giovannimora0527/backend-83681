@@ -1,74 +1,71 @@
 package com.uniminuto.clinica.api;
 
 import com.uniminuto.clinica.entity.HistoriaMedica;
-import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.HistoriaMedicaFiltroRq;
 import com.uniminuto.clinica.models.HistoriaMedicaRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
-import org.springframework.format.annotation.DateTimeFormat;
+import com.uniminuto.clinica.models.PaginaRs;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Contrato REST para la gestión de historias médicas de la Clínica
- * Veterinaria.
+ * Contrato REST para la gestión de historias clínicas.
+ * Ruta base: {@code /clinica/v1/historia-medica}.
  */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/historia-medica")
 public interface HistoriaMedicaApi {
 
     /**
-     * Crea una nueva historia médica en el sistema.
+     * Lista las historias clínicas paginadas, filtradas y ordenadas.
      *
-     * @param historiaMedicaRq datos de la historia médica a crear.
-     * @return respuesta con el resultado de la operación.
-     * @throws BadRequestException excepción en caso de error de negocio.
+     * @param filtro filtros recibidos como query params.
+     * @return página de historias (200).
      */
-    @PostMapping(value = "/guardar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> guardarHistoriaMedica(
-            @RequestBody HistoriaMedicaRq historiaMedicaRq
-    )
-            throws BadRequestException;
+    @GetMapping(value = "/listar", produces = {"application/json"})
+    ResponseEntity<PaginaRs<HistoriaMedica>> listarHistorias(HistoriaMedicaFiltroRq filtro);
 
     /**
-     * Lista las historias médicas dada una fecha inicial y una fecha
-     * final, organizadas de la más reciente a la más antigua.
+     * Consulta una historia clínica por su id.
      *
-     * @param fechaInicial fecha inicial del rango a filtrar.
-     * @param fechaFinal   fecha final del rango a filtrar.
-     * @return lista de historias médicas encontradas.
-     * @throws BadRequestException excepción en caso de error de negocio.
+     * @param historiaId identificador de la historia.
+     * @return historia (200) o 404 si no existe.
      */
-    @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<List<HistoriaMedica>> listarHistoriasPorFecha(
-            @RequestParam("fechaInicial") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaInicial,
-            @RequestParam("fechaFinal") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFinal
-    )
-            throws BadRequestException;
+    @GetMapping(value = "/{historiaId}", produces = {"application/json"})
+    ResponseEntity<HistoriaMedica> consultarHistoria(@PathVariable("historiaId") Long historiaId);
 
     /**
-     * Actualiza una historia médica almacenada en el sistema.
+     * Crea una historia clínica a partir de una cita atendida.
      *
-     * @param historiaMedicaRq datos de la historia médica a actualizar.
-     * @return respuesta con el resultado de la operación.
-     * @throws BadRequestException excepción en caso de error de negocio.
+     * @param rq datos de la historia.
+     * @return 201 con el id creado; 400, 404 o 409 si incumple una regla.
      */
-    @PostMapping(value = "/actualizar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> actualizarHistoriaMedica(
-            @RequestBody HistoriaMedicaRq historiaMedicaRq
-    )
-            throws BadRequestException;
+    @PostMapping(produces = {"application/json"}, consumes = {"application/json"})
+    ResponseEntity<MiRespuestaRS> crearHistoria(@RequestBody HistoriaMedicaRq rq);
+
+    /**
+     * Cierra una historia clínica.
+     *
+     * @param historiaId identificador de la historia.
+     * @return 200; 409 si ya estaba cerrada.
+     */
+    @PatchMapping(value = "/{historiaId}/cerrar", produces = {"application/json"})
+    ResponseEntity<MiRespuestaRS> cerrarHistoria(@PathVariable("historiaId") Long historiaId);
+
+    /**
+     * Lista las historias clínicas de una mascota.
+     *
+     * @param mascotaId identificador de la mascota.
+     * @return historias (200) o 404 si la mascota no existe.
+     */
+    @GetMapping(value = "/mascota/{mascotaId}", produces = {"application/json"})
+    ResponseEntity<List<HistoriaMedica>> listarPorMascota(@PathVariable("mascotaId") Long mascotaId);
 }

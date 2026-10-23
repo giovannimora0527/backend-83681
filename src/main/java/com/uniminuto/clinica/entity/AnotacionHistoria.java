@@ -13,8 +13,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Entidad que representa una anotación asociada a una historia médica
- * ({@link HistoriaMedica}) de la Clínica Veterinaria.
+ * Anotación (evolución) registrada dentro de una historia clínica.
+ * Una historia clínica puede tener muchas anotaciones.
  */
 @Entity
 @Table(name = "anotacion_historia")
@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class AnotacionHistoria {
 
     /**
-     * Identificador único de la anotación.
+     * Identificador de la anotación.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,34 +30,46 @@ public class AnotacionHistoria {
     private Long anotacionId;
 
     /**
-     * Observación u anotación realizada sobre la historia médica.
-     */
-    @Column(name = "observacion", nullable = false, columnDefinition = "TEXT")
-    private String observacion;
-
-    /**
-     * Fecha en la que se creó la anotación.
-     */
-    @Column(name = "fecha_creacion")
-    private LocalDateTime fechaCreacion;
-
-    /**
-     * Fecha de la última modificación de la anotación.
-     */
-    @Column(name = "fecha_modificacion")
-    private LocalDateTime fechaModificacion;
-
-    /**
-     * Historia médica a la que pertenece la anotación.
+     * Historia clínica a la que pertenece la anotación.
      */
     @ManyToOne
     @JoinColumn(name = "historia_id", nullable = false)
     private HistoriaMedica historiaMedica;
 
     /**
-     * Médico que realiza la anotación.
+     * Veterinario que registra la anotación.
      */
     @ManyToOne
     @JoinColumn(name = "medico_id", nullable = false)
     private Medico medico;
+
+    /**
+     * Fecha y hora de la anotación.
+     */
+    @Column(name = "fecha_anotacion", nullable = false)
+    private LocalDateTime fechaAnotacion;
+
+    /**
+     * Descripción de lo observado o realizado.
+     */
+    @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")
+    private String descripcion;
+
+    /**
+     * Observación adicional del veterinario.
+     */
+    @Column(name = "observacion", nullable = false, columnDefinition = "TEXT")
+    private String observacion;
+
+    /**
+     * Diagnóstico o evolución del paciente.
+     */
+    @Column(name = "diagnostico_evolucion", nullable = false, columnDefinition = "TEXT")
+    private String diagnosticoEvolucion;
+
+    /**
+     * Fecha de creación del registro.
+     */
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
 }

@@ -1,6 +1,5 @@
 package com.uniminuto.clinica.api;
 
-import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MascotaRq;
@@ -56,6 +55,15 @@ public interface MascotaApi {
     )
             throws BadRequestException;
 
+    /**
+     * Consulta una mascota por su identificador.
+     *
+     * @param mascotaId identificador de la mascota.
+     * @return mascota encontrada (200) o 404 si no existe.
+     */
+    @GetMapping(value = "/{mascotaId}", produces = {"application/json"})
+    ResponseEntity<Mascota> consultarMascota(@PathVariable("mascotaId") Long mascotaId);
+
     @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -63,4 +71,7 @@ public interface MascotaApi {
             @RequestBody MascotaRq mascotaRq
     )
             throws BadRequestException;
+
+    @DeleteMapping(value = "/eliminar/{mascotaId}", produces = {"application/json"})
+    ResponseEntity<MiRespuestaRS> eliminarMascota(@PathVariable("mascotaId") Long mascotaId);
 }

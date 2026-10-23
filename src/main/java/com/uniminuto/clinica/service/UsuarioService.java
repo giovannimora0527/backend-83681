@@ -13,4 +13,6 @@ public interface UsuarioService {
     MiRespuestaRS crearUsuario(UsuarioRq usuarioRq);
 
     MiRespuestaRS actualizarUsuario(UsuarioRq usuarioRq);
+
+    MiRespuestaRS eliminarUsuario(Long id);
 }

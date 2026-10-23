@@ -2,13 +2,15 @@ package com.uniminuto.clinica.apicontroller;
 
 import com.uniminuto.clinica.api.FormulaMedicaApi;
 import com.uniminuto.clinica.entity.FormulaMedica;
-import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.FormulaMedicaFiltroRq;
+import com.uniminuto.clinica.models.FormulaMedicaResumenRs;
+import com.uniminuto.clinica.models.FormulaMedicaRq;
+import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.PaginaRs;
 import com.uniminuto.clinica.service.FormulaMedicaService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * Controlador REST que implementa {@link FormulaMedicaApi}.
@@ -19,14 +21,49 @@ public class FormulaMedicaApiController implements FormulaMedicaApi {
     /**
      * Servicio de fórmulas médicas.
      */
-    @Autowired
-    private FormulaMedicaService formulaMedicaService;
+    private final FormulaMedicaService formulaService;
+
+    public FormulaMedicaApiController(FormulaMedicaService formulaService) {
+        this.formulaService = formulaService;
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<List<FormulaMedica>> listarFormulasMedicas() throws BadRequestException {
-        return ResponseEntity.ok(this.formulaMedicaService.listarFormulasMedicas());
+    public ResponseEntity<PaginaRs<FormulaMedicaResumenRs>> listarFormulas(FormulaMedicaFiltroRq filtro) {
+        return ResponseEntity.ok(formulaService.listarFormulas(filtro));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<FormulaMedica> consultarFormula(Long formulaId) {
+        return ResponseEntity.ok(formulaService.consultarFormula(formulaId));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<MiRespuestaRS> crearFormula(FormulaMedicaRq rq) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(formulaService.crearFormula(rq));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<MiRespuestaRS> editarFormula(Long formulaId, FormulaMedicaRq rq) {
+        return ResponseEntity.ok(formulaService.editarFormula(formulaId, rq));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<MiRespuestaRS> inactivarFormula(Long formulaId) {
+        return ResponseEntity.ok(formulaService.inactivarFormula(formulaId));
     }
 }
