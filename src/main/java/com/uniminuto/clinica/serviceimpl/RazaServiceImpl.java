@@ -42,16 +42,50 @@ public class RazaServiceImpl implements RazaService {
     }
 
     @Override
+    public MiRespuestaRS actualizarRaza(RazaRq razaRq) throws BadRequestException {
+        if (razaRq == null) {
+            throw new BadRequestException("El objeto de entrada no puede ser nulo.");
+        }
+        if (razaRq.getRazaId() == null) {
+            throw new BadRequestException("El ID de la raza es obligatorio para actualizar.");
+        }
+        validarRazaRq(razaRq);
+
+        Raza existente = razaRepository.findById(razaRq.getRazaId())
+                .orElseThrow(() -> new BadRequestException(
+                        "La raza con ID " + razaRq.getRazaId() + " no existe."));
+
+        Optional<Raza> duplicada = razaRepository.findByEspecieAndNombre(
+                razaRq.getEspecie(), razaRq.getNombre());
+        if (duplicada.isPresent() && !duplicada.get().getRazaId().equals(existente.getRazaId())) {
+            throw new BadRequestException("La raza ya existe para la especie especificada.");
+        }
+
+        existente.setEspecie(razaRq.getEspecie());
+        existente.setNombre(razaRq.getNombre());
+        existente.setFechaModificacion(LocalDateTime.now());
+        razaRepository.save(existente);
+
+        MiRespuestaRS respuesta = new MiRespuestaRS();
+        respuesta.setStatus(200);
+        respuesta.setMessage("Raza actualizada correctamente");
+        return respuesta;
+    }
+
+    @Override
     public List<Raza> listarRazas() throws BadRequestException {
         return razaRepository.findAll().stream().sorted((r1, r2) -> r1.getNombre().compareToIgnoreCase(r2
                 .getNombre())).toList();
     }
 
     private void validarRazaRq(RazaRq razaRq) throws BadRequestException {
-        if (razaRq.getNombre() == null || razaRq.getNombre().isEmpty()) {
+        if (razaRq == null) {
+            throw new BadRequestException("El objeto de entrada no puede ser nulo.");
+        }
+        if (razaRq.getNombre() == null || razaRq.getNombre().isBlank()) {
             throw new BadRequestException("El nombre de la raza es obligatorio.");
         }
-        if (razaRq.getEspecie() == null || razaRq.getEspecie().isEmpty()) {
+        if (razaRq.getEspecie() == null || razaRq.getEspecie().isBlank()) {
             throw new BadRequestException("La especie de la raza es obligatoria.");
         }
     }
