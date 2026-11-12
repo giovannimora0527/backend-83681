@@ -1,16 +1,18 @@
 package com.uniminuto.clinica.service;
 
-import com.uniminuto.clinica.entity.AnotacionHistoria;
-import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.AnotacionHistoriaRq;
+import com.uniminuto.clinica.models.AnotacionHistoriaRs;
 import com.uniminuto.clinica.models.MiRespuestaRS;
+
 import java.util.List;
 
 public interface AnotacionHistoriaService {
 
-    List<AnotacionHistoria> listarAnotaciones() throws BadRequestException;
+    List<AnotacionHistoriaRs> listarAnotaciones();
 
-    List<AnotacionHistoria> listarAnotacionesPorHistoria(Long historiaId) throws BadRequestException;
+    List<AnotacionHistoriaRs> buscarPorHistoria(Long historiaId);
 
-    MiRespuestaRS crearAnotacionHistoria(AnotacionHistoriaRq request) throws BadRequestException;
+    MiRespuestaRS crearAnotacionHistoria(AnotacionHistoriaRq anotacionHistoriaRq);
+
+    MiRespuestaRS actualizarAnotacionHistoria(AnotacionHistoriaRq anotacionHistoriaRq);
 }

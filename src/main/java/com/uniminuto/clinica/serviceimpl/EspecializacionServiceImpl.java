@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Locale;
 
 @Service
 public class EspecializacionServiceImpl implements EspecializacionService {
@@ -22,6 +23,21 @@ public class EspecializacionServiceImpl implements EspecializacionService {
         return especializacionRepository.findAll().stream()
                 .sorted((e1, e2) -> e1.getNombre()
                         .compareToIgnoreCase(e2.getNombre())).toList();
+    }
+
+    @Override
+    public List<Especializacion> buscarEspecializaciones(String termino) {
+        String busqueda = termino == null ? "" : termino.trim().toLowerCase(Locale.ROOT);
+        return listarEspecializaciones().stream()
+                .filter(item -> busqueda.isEmpty()
+                        || contiene(item.getNombre(), busqueda)
+                        || contiene(item.getDescripcion(), busqueda)
+                        || contiene(item.getCodigoEspecializacion(), busqueda))
+                .toList();
+    }
+
+    private boolean contiene(String valor, String busqueda) {
+        return valor != null && valor.toLowerCase(Locale.ROOT).contains(busqueda);
     }
 
     @Override

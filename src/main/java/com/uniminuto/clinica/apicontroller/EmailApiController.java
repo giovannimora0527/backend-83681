@@ -26,6 +26,6 @@ public class EmailApiController implements EmailApi {
 
     @Override
     public ResponseEntity<TestRs> testEmail() throws BadRequestException {
-        return ResponseEntity.ok(emailService.testService());
+      return ResponseEntity.ok(emailService.testService());
     }
 }

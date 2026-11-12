@@ -39,4 +39,7 @@ public class Medico {
     @ManyToOne
     @JoinColumn(name = "especializacion_id", nullable = false)
     private Especializacion especializacion;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean estado;
 }

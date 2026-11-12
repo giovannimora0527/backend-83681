@@ -12,6 +12,8 @@ public interface UsuarioService {
 
     List<UsuarioRs> obtenerUsuariosOrdenados();
 
+    List<UsuarioRs> buscarUsuarios(String termino);
+
     MiRespuestaRS crearUsuario(UsuarioRq usuarioRq);
 
     MiRespuestaRS actualizarUsuario(UsuarioRq usuarioRq);

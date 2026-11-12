@@ -3,10 +3,11 @@ package com.uniminuto.clinica.apicontroller;
 import com.uniminuto.clinica.api.ClienteApi;
 import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.service.ClienteService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
@@ -16,14 +17,23 @@ public class ClienteApiController implements ClienteApi {
     @Autowired
     private ClienteService clienteService;
 
-
     @Override
     public ResponseEntity<List<Cliente>> listarClientes() throws BadRequestException {
-        return ResponseEntity.ok(this.clienteService.listarClientes());
+        return ResponseEntity.ok(clienteService.listarClientes());
     }
 
     @Override
-    public ResponseEntity<Cliente> getClientesByNumeroDocumento(String numeroDocumento) throws BadRequestException {
-        return ResponseEntity.ok(this.clienteService.getClienteByNumeroDocumento(numeroDocumento));
+    public ResponseEntity<Cliente> buscarClientesPorDocumento(String documento) throws BadRequestException {
+        return ResponseEntity.ok(clienteService.buscarClientesPorDocumento(documento));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> crearCliente(Cliente cliente) {
+        return ResponseEntity.ok(clienteService.crearCliente(cliente));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> actualizarCliente(Cliente cliente) {
+        return ResponseEntity.ok(clienteService.actualizarCliente(cliente));
     }
 }

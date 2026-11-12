@@ -9,13 +9,9 @@ import java.util.List;
 @Repository
 public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Long> {
 
-    List<FormulaMedica> findAllByOrderByFechaCreacionRegistroDesc();
-
     List<FormulaMedica> findAllByOrderByFechaCreacionRegistroAsc();
 
-    List<FormulaMedica> findAllByActivoTrueOrderByFechaCreacionRegistroDesc();
+    List<FormulaMedica> findByCita_IdInOrderByFechaCreacionRegistroDesc(List<Long> citaIds);
 
-    java.util.Optional<FormulaMedica> findByIdAndActivoTrue(Long id);
-
-
+    List<FormulaMedica> findAllByOrderByFechaCreacionRegistroDesc();
 }

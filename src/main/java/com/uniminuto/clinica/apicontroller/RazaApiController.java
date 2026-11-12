@@ -24,7 +24,17 @@ public class RazaApiController implements RazaApi {
     }
 
     @Override
+    public ResponseEntity<MiRespuestaRS> actualizarRaza(RazaRq razaRq) throws BadRequestException {
+        return ResponseEntity.ok(this.razaService.actualizarRaza(razaRq));
+    }
+
+    @Override
     public ResponseEntity<List<Raza>> listarRazas() throws BadRequestException {
         return ResponseEntity.ok(this.razaService.listarRazas());
+    }
+
+    @Override
+    public ResponseEntity<List<Raza>> buscarRazas(String termino) {
+        return ResponseEntity.ok(this.razaService.buscarRazas(termino));
     }
 }

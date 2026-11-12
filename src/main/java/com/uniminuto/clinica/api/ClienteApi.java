@@ -2,9 +2,13 @@ package com.uniminuto.clinica.api;
 
 import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -21,10 +25,19 @@ public interface ClienteApi {
             throws BadRequestException;
 
 
-    @GetMapping(value = "/buscar-by-numero-documento",
+    @GetMapping(value = "/buscar-por-documento",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<Cliente> getClientesByNumeroDocumento(
-            @RequestParam("numeroDocumento") String numeroDocumento)
+    ResponseEntity<Cliente> buscarClientesPorDocumento(
+            @RequestParam String documento
+    )
             throws BadRequestException;
+
+    @PostMapping(value = {"/crear", "/guardar"},
+            produces = {"application/json"}, consumes = {"application/json"})
+    ResponseEntity<MiRespuestaRS> crearCliente(@RequestBody Cliente cliente) throws BadRequestException;
+
+    @PutMapping(value = "/actualizar",
+            produces = {"application/json"}, consumes = {"application/json"})
+    ResponseEntity<MiRespuestaRS> actualizarCliente(@RequestBody Cliente cliente) throws BadRequestException;
 }

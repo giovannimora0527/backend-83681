@@ -1,7 +1,6 @@
 package com.uniminuto.clinica.api;
 
 import com.uniminuto.clinica.entity.Especializacion;
-import com.uniminuto.clinica.entity.Raza;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -22,6 +22,12 @@ public interface EspecializacionApi {
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<Especializacion>> listarEspecializaciones()
+            throws BadRequestException;
+
+    @GetMapping(value = "/buscar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<List<Especializacion>> buscarEspecializaciones(@RequestParam String termino)
             throws BadRequestException;
 
 

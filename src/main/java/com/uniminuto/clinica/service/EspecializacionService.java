@@ -11,6 +11,8 @@ public interface EspecializacionService {
 
     List<Especializacion> listarEspecializaciones();
 
+    List<Especializacion> buscarEspecializaciones(String termino);
+
     MiRespuestaRS crearEspecializacion(Especializacion especializacion)
             throws BadRequestException;
 

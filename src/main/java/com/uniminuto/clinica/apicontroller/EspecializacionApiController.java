@@ -23,6 +23,11 @@ public class EspecializacionApiController implements EspecializacionApi {
     }
 
     @Override
+    public ResponseEntity<List<Especializacion>> buscarEspecializaciones(String termino) {
+        return ResponseEntity.ok(this.especializacionService.buscarEspecializaciones(termino));
+    }
+
+    @Override
     public ResponseEntity<MiRespuestaRS> crearEspecializacion(Especializacion especializacion) throws BadRequestException {
         return ResponseEntity.ok(this.especializacionService.crearEspecializacion(especializacion));
     }

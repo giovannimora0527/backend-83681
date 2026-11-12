@@ -3,9 +3,12 @@ package com.uniminuto.clinica.apicontroller;
 import com.uniminuto.clinica.api.MedicamentoApi;
 import com.uniminuto.clinica.entity.Medicamento;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.MedicamentoRq;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.service.MedicamentoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -17,8 +20,23 @@ public class MedicamentoApiController implements MedicamentoApi {
     private MedicamentoService medicamentoService;
 
     @Override
-    public ResponseEntity<List<Medicamento>> listarMedicamentos()
-            throws BadRequestException {
+    public ResponseEntity<List<Medicamento>> listarMedicamentos() throws BadRequestException {
         return ResponseEntity.ok(medicamentoService.listarMedicamentos());
     }
+
+    @Override
+    public ResponseEntity<List<Medicamento>> buscarMedicamentos(String termino) {
+        return ResponseEntity.ok(medicamentoService.buscarMedicamentos(termino));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> crearMedicamento(MedicamentoRq medicamentoRq) {
+        return ResponseEntity.ok(medicamentoService.crearMedicamento(medicamentoRq));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> actualizarMedicamento(MedicamentoRq medicamentoRq) {
+        return ResponseEntity.ok(medicamentoService.actualizarMedicamento(medicamentoRq));
+    }
+
 }

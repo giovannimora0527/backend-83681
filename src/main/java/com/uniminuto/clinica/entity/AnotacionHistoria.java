@@ -15,23 +15,23 @@ public class AnotacionHistoria {
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @ManyToOne
     @JoinColumn(name = "historia_id", nullable = false)
+    @ManyToOne
     private HistoriaMedica historia;
 
-    @ManyToOne
     @JoinColumn(name = "medico_id", nullable = false)
+    @ManyToOne
     private Medico medico;
 
     @Column(name = "fecha_hora", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime fechaHora;
+    private LocalDateTime fecha;
 
     @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(columnDefinition = "TEXT")
-    private String observacion;
+    @Column(name = "diagnostico_evolucion", nullable = false, columnDefinition = "TEXT")
+    private String diagnostico;
 
-    @Column(name = "diagnostico_evolucion", columnDefinition = "TEXT", nullable = false)
-    private String diagnosticoEvolucion;
+    @Column(name = "observacion", columnDefinition = "TEXT")
+    private String observaciones;
 }

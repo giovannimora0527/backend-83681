@@ -25,6 +25,11 @@ public class UsuarioApiController implements UsuarioApi {
     }
 
     @Override
+    public ResponseEntity<List<UsuarioRs>> buscarUsuarios(String termino) {
+        return ResponseEntity.ok(this.usuarioService.buscarUsuarios(termino));
+    }
+
+    @Override
     public ResponseEntity<MiRespuestaRS> guardar(UsuarioRq usuarioRq) throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.crearUsuario(usuarioRq));
     }

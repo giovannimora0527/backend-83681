@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Locale;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -33,6 +34,21 @@ public class UsuarioServiceImpl implements UsuarioService {
         return convertirUsuarioToUsuarioRs(usuarios);
     }
 
+    @Override
+    public List<UsuarioRs> buscarUsuarios(String termino) {
+        String busqueda = termino == null ? "" : termino.trim().toLowerCase(Locale.ROOT);
+        return obtenerUsuariosOrdenados().stream()
+                .filter(usuario -> busqueda.isEmpty()
+                        || contiene(usuario.getUsername(), busqueda)
+                        || contiene(usuario.getEmail(), busqueda)
+                        || contiene(usuario.getRol(), busqueda))
+                .toList();
+    }
+
+    private boolean contiene(String valor, String busqueda) {
+        return valor != null && valor.toLowerCase(Locale.ROOT).contains(busqueda);
+    }
+
     private List<UsuarioRs> convertirUsuarioToUsuarioRs(List<Usuario> usuarios) {
         return usuarios.stream().map(usuario -> {
             UsuarioRs usuarioRs = new UsuarioRs();
@@ -48,7 +64,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public MiRespuestaRS crearUsuario(UsuarioRq usuarioRq) {
-        this.validarUsuario(usuarioRq);
+        this.validarUsuario(usuarioRq, true);
 
         if (this.usuarioRepository.existsByUsername(usuarioRq.getUsername())) {
             throw new BadRequestException("El nombre de usuario ya existe");
@@ -83,7 +99,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public MiRespuestaRS actualizarUsuario(UsuarioRq usuarioRq) {
-        this.validarUsuario(usuarioRq);
+        this.validarUsuario(usuarioRq, false);
 
         Optional<Usuario> optUser = this.usuarioRepository.findById(usuarioRq.getId());
         if (optUser.isEmpty()) {
@@ -111,6 +127,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioExistente.setEmail(usuarioRq.getEmail());
         usuarioExistente.setActivo(usuarioRq.getActivo());
         usuarioExistente.setPerfil(optPerfil.get());
+        if (usuarioRq.getPassword() != null && !usuarioRq.getPassword().isBlank()) {
+            usuarioExistente.setPasswordHash(PasswordUtil.generarMD5(usuarioRq.getPassword()));
+        }
         usuarioRepository.save(usuarioExistente);
 
         MiRespuestaRS rta = new MiRespuestaRS();
@@ -120,18 +139,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         return rta;
     }
 
-    private void validarUsuario(UsuarioRq usuarioRq) throws BadRequestException {
+    private void validarUsuario(UsuarioRq usuarioRq, boolean requierePassword) throws BadRequestException {
         if (usuarioRq == null) {
             throw new BadRequestException("El usuario no puede estar vacío");
         }
         if (usuarioRq.getUsername() == null || usuarioRq.getUsername().isEmpty()) {
             throw new BadRequestException("El nombre de usuario no puede estar vacío");
         }
-        if (usuarioRq.getPassword() == null || usuarioRq.getPassword().isEmpty()) {
+        if (requierePassword && (usuarioRq.getPassword() == null || usuarioRq.getPassword().isEmpty())) {
             throw new BadRequestException("La contraseña no puede estar vacía");
         }
-        if (usuarioRq.getRol() == null || usuarioRq.getRol().isEmpty()) {
-            throw new BadRequestException("El rol no puede estar vacío");
+        if (usuarioRq.getPerfilId() == null || usuarioRq.getPerfilId() <= 0) {
+            throw new BadRequestException("El perfil es obligatorio.");
         }
         if (usuarioRq.getEmail() == null || usuarioRq.getEmail().isEmpty()) {
             throw new BadRequestException("El correo electrónico no puede estar vacío");

@@ -23,7 +23,7 @@ public class Session {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "token", columnDefinition = "TEXT")
+    @Column(name = "token", nullable = false, length = 500)
     private String token;
 
     @Column(name = "fecha_ini_sesion")
