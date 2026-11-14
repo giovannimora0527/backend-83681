@@ -43,4 +43,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      */
     Optional<Usuario> findByUsername(String username);
 
+    @EntityGraph(attributePaths = "perfil")
+    Optional<Usuario> findOneById(Long id);
+
 }

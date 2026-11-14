@@ -24,4 +24,6 @@ public class FormulaRq {
       private String frecuencia;
 
       private String duracion;
+
+      private Integer cantidadPrescrita;
 }
