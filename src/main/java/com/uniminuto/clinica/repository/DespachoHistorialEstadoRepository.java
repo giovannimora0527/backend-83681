@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/** Acceso al historial inmutable de cambios de estado de los despachos. */
 @Repository
 public interface DespachoHistorialEstadoRepository extends JpaRepository<DespachoHistorialEstado, Long> {
 

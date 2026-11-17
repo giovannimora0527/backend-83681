@@ -14,6 +14,7 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 
+/** Cambio de estado de despacho con su usuario, fecha y motivo. */
 @Entity
 @Table(name = "despacho_historial_estado")
 @Data

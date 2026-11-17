@@ -1,11 +1,11 @@
 {
     "schema_version": 2,
-    "commit": "a47726af14bb7343db9f507628cb7aa392adf158",
-    "indexed_at": "2026-11-13T17:39:41Z",
+    "commit": "4e6abf62fd2d136a44566b8b5569e196eb60cdd5",
+    "indexed_at": "2026-11-17T14:23:26Z",
     "project": "C-Users-Acer-Documents-Proyecto-Programacion-backend26-83681",
-    "nodes": 1857,
-    "edges": 7188,
-    "original_size": 11403264,
-    "compressed_size": 1506017,
+    "nodes": 2123,
+    "edges": 8108,
+    "original_size": 12713984,
+    "compressed_size": 1734720,
     "compression_level": 3
 }

@@ -353,10 +353,13 @@ public class CargaMasivaInventarioServiceImpl implements CargaMasivaInventarioSe
         catch (RuntimeException exception) { throw new BadRequestException("La identidad no contiene un id de usuario válido."); }
         Usuario usuario = usuarioRepository.findOneById(usuarioId)
                 .orElseThrow(() -> new BadRequestException("El usuario responsable no existe."));
+        String perfil = java.text.Normalizer.normalize(usuario.getPerfil() == null ? "" : usuario.getPerfil().getNombre(),
+                        java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").trim().toUpperCase(Locale.ROOT).replace(' ', '_');
         if (!Boolean.TRUE.equals(usuario.getActivo()) || usuario.getPerfil() == null
                 || !Boolean.TRUE.equals(usuario.getPerfil().getActivo())
-                || "DESPACHO_MEDICO".equalsIgnoreCase(usuario.getPerfil().getNombre().replace(' ', '_'))) {
-            throw new BadRequestException("El usuario no tiene permisos para cargar inventario.");
+                || !("ADMIN".equals(perfil) || "ADMINISTRADOR".equals(perfil))) {
+            throw new BadRequestException("Solo el perfil ADMIN puede cargar inventario de forma masiva.");
         }
         return usuario;
     }

@@ -10,7 +10,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /** Representa el encabezado de una fórmula médica almacenado en la base clínica. */
 @Entity
@@ -72,4 +75,30 @@ public class FormulaMedica {
 
     @Transient
     private String estadoDispensacion = "PENDIENTE";
+
+    /** Nombre completo del médico para la vista de despacho. */
+    @Transient
+    private String medicoNombre;
+
+    /** Identificador del propietario asociado a la cita de la fórmula. */
+    @Transient
+    private Long propietarioId;
+
+    /** Nombre completo del propietario asociado a la cita de la fórmula. */
+    @Transient
+    private String propietarioNombre;
+
+    /** Identificador de la mascota atendida. */
+    @Transient
+    private Long mascotaId;
+
+    /** Nombre de la mascota atendida. */
+    @Transient
+    private String mascotaNombre;
+
+    /** Detalles prescritos con disponibilidad y lotes de despacho enriquecidos. */
+    @Transient
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<FormulaDetalle> detallesDespacho;
 }

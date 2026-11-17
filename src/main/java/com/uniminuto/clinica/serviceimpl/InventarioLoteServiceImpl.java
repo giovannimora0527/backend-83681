@@ -15,6 +15,7 @@ import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.service.InventarioLoteService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -48,6 +49,7 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
     @Override
     @Transactional(readOnly = true)
     public List<InventarioLote> listarLotes() {
+        validarConsultaLotes();
         return inventarioLoteRepository.findAllByOrderByFechaVencimientoAsc();
     }
 
@@ -55,6 +57,7 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
     @Override
     @Transactional(readOnly = true)
     public List<InventarioLote> listarLotesPorMedicamento(Long medicamentoId) {
+        validarConsultaLotes();
         validarId(medicamentoId, "medicamento");
         validarMedicamento(medicamentoId);
         return inventarioLoteRepository.findByMedicamento_IdOrderByFechaVencimientoAsc(medicamentoId);
@@ -64,6 +67,7 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
     @Override
     @Transactional(readOnly = true)
     public InventarioLote consultarLote(Long id) {
+        validarConsultaLotes();
         return obtenerLote(id);
     }
 
@@ -108,6 +112,7 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
     @Override
     @Transactional
     public MiRespuestaRS actualizarLote(Long id, InventarioLoteActualizacionRq inventarioLoteRq) {
+        validarAdministradorActual();
         validarId(id, "lote");
         validarActualizacionRq(inventarioLoteRq);
         InventarioLote inventarioLote = obtenerLote(id);
@@ -137,6 +142,7 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
     @Override
     @Transactional
     public MiRespuestaRS desactivarLote(Long id) {
+        validarAdministradorActual();
         InventarioLote inventarioLote = obtenerLote(id);
         if (inventarioLote.getCantidad() != null && inventarioLote.getCantidad() > 0) {
             throw new BadRequestException("No se puede desactivar un lote que todavía tiene existencias.");
@@ -215,10 +221,44 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
                 .orElseThrow(() -> new BadRequestException("El usuario responsable no existe."));
         if (!Boolean.TRUE.equals(usuario.getActivo()) || usuario.getPerfil() == null
                 || !Boolean.TRUE.equals(usuario.getPerfil().getActivo())
-                || "DESPACHO_MEDICO".equalsIgnoreCase(usuario.getPerfil().getNombre().replace(' ', '_'))) {
-            throw new BadRequestException("El usuario no tiene permisos para registrar entradas de inventario.");
+                || !esAdministrador(usuario.getPerfil().getNombre())) {
+            throw new BadRequestException("Solo el perfil ADMIN puede modificar lotes de inventario.");
         }
         return usuario;
+    }
+
+    /** Solo administración y despacho médico pueden consultar lotes. */
+    private void validarConsultaLotes() {
+        if (!tienePerfil("ADMIN", "DESPACHO_MEDICO")) {
+            throw new BadRequestException("El perfil no tiene permiso para consultar lotes de inventario.");
+        }
+    }
+
+    /** Verifica el perfil actual para operaciones de modificación sin recibir datos del cliente. */
+    private void validarAdministradorActual() {
+        if (!tienePerfil("ADMIN", "ADMINISTRADOR")) {
+            throw new BadRequestException("Solo el perfil ADMIN puede modificar lotes de inventario.");
+        }
+    }
+
+    /** Comprueba si la autenticación actual contiene uno de los perfiles permitidos. */
+    private boolean tienePerfil(String... perfiles) {
+        var autenticacion = SecurityContextHolder.getContext().getAuthentication();
+        return autenticacion != null && autenticacion.isAuthenticated()
+                && autenticacion.getAuthorities().stream().map(authority -> normalizarPerfil(authority.getAuthority()))
+                .anyMatch(rol -> java.util.Arrays.stream(perfiles).anyMatch(perfil -> rol.equals("ROLE_" + perfil)));
+    }
+
+    /** Normaliza el nombre de perfil eliminando tildes y espacios. */
+    private String normalizarPerfil(String nombre) {
+        return java.text.Normalizer.normalize(nombre == null ? "" : nombre, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").trim().toUpperCase(Locale.ROOT).replace(' ', '_');
+    }
+
+    /** Reconoce los nombres ADMIN y ADMINISTRADOR como el rol administrativo. */
+    private boolean esAdministrador(String nombre) {
+        String perfil = normalizarPerfil(nombre);
+        return "ADMIN".equals(perfil) || "ADMINISTRADOR".equals(perfil);
     }
 
     /** Devuelve el saldo actual no nulo del medicamento. */

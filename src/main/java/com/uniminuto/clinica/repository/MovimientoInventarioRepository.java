@@ -19,4 +19,7 @@ public interface MovimientoInventarioRepository extends JpaRepository<Movimiento
 
     /** Encuentra la salida asociada con un detalle de despacho. */
     Optional<MovimientoInventario> findByDespachoDetalle_Id(Long despachoDetalleId);
+
+    /** Encuentra el movimiento de reversión asociado a una salida original. */
+    Optional<MovimientoInventario> findFirstByMovimientoOriginal_Id(Long movimientoOriginalId);
 }

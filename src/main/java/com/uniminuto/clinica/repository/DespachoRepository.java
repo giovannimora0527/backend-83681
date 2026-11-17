@@ -11,12 +11,16 @@ import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 
+/** Consultas y bloqueos de los encabezados de despacho. */
 @Repository
 public interface DespachoRepository extends JpaRepository<Despacho, Long> {
 
     List<Despacho> findAllByOrderByIdDesc();
 
     List<Despacho> findByFormulaIdOrderByIdDesc(Long formulaId);
+
+    /** Busca el proceso activo más reciente de una fórmula. */
+    Optional<Despacho> findFirstByFormulaIdAndEstadoInOrderByIdDesc(Long formulaId, List<String> estados);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select d from Despacho d where d.id = :id")

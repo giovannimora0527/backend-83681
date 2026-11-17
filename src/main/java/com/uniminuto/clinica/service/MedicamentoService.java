@@ -7,6 +7,7 @@ import com.uniminuto.clinica.models.MiRespuestaRS;
 
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
 
 /** Define los casos de uso de administración y consulta de medicamentos. */
 public interface MedicamentoService {
@@ -29,6 +30,9 @@ public interface MedicamentoService {
 
     /** Consulta la existencia utilizable y si alcanza para una cantidad requerida. */
     Map<String, Object> consultarDisponibilidad(Long medicamentoId, Integer cantidadRequerida);
+
+    /** Genera el informe de inventario en formato Excel con filtros opcionales. */
+    byte[] exportarInventarioExcel(String tipo, LocalDate desde, LocalDate hasta);
 
     MiRespuestaRS crearMedicamento(MedicamentoRq medicamentoRq, String usuarioResponsableId);
 

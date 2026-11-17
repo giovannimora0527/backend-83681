@@ -17,6 +17,7 @@ import lombok.ToString;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/** Encabezado del proceso de preparación y entrega de una fórmula médica. */
 @Entity
 @Table(name = "despacho", uniqueConstraints = {
         @UniqueConstraint(name = "uk_numero_despacho", columnNames = "numero_despacho"),
@@ -65,6 +66,32 @@ public class Despacho {
 
     @Column(name = "observacion", columnDefinition = "TEXT")
     private String observacion;
+
+    /** Número legible de la fórmula relacionado con este despacho. */
+    @jakarta.persistence.Transient
+    private String numeroFormula;
+
+    /** Fecha de emisión de la fórmula relacionada. */
+    @jakarta.persistence.Transient
+    private LocalDateTime fechaGeneracionFormula;
+
+    /** Nombre completo del médico que generó la fórmula. */
+    @jakarta.persistence.Transient
+    private String medicoNombre;
+
+    /** Nombre completo del propietario de la mascota. */
+    @jakarta.persistence.Transient
+    private String propietarioNombre;
+
+    /** Nombre de la mascota del despacho. */
+    @jakarta.persistence.Transient
+    private String mascotaNombre;
+
+    /** Detalles cargados para consulta del historial de despacho. */
+    @jakarta.persistence.Transient
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<DespachoDetalle> detallesTrazabilidad;
 
     @OneToMany(mappedBy = "despacho")
     @ToString.Exclude
