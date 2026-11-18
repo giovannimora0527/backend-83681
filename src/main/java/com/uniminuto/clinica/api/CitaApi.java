@@ -1,8 +1,8 @@
 package com.uniminuto.clinica.api;
 
-import com.uniminuto.clinica.entity.Cita;
-import com.uniminuto.clinica.exception.BadRequestException;
-import com.uniminuto.clinica.models.CitaRq;
+import com.uniminuto.clinica.entity.EstadoCita;
+import com.uniminuto.clinica.models.CitaMedicaRq;
+import com.uniminuto.clinica.models.CitaMedicaRs;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,77 +14,27 @@ import java.util.List;
 @RequestMapping("/cita")
 public interface CitaApi {
 
-    /**
-     * Metodo test del servicio.
-     *
-     * @return Servicio funcionando correctamente.
-     * @throws BadRequestException excepcion.
-     */
-    @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<List<Cita>> listarCitas()
-            throws BadRequestException;
+    @GetMapping("/calendario")
+    ResponseEntity<List<CitaMedicaRs>> calendario(@RequestParam Long medicoId,
+                                                   @RequestParam LocalDateTime fechaInicio,
+                                                   @RequestParam LocalDateTime fechaFin);
 
+    @GetMapping("/historial")
+    ResponseEntity<List<CitaMedicaRs>> historial(@RequestParam Integer mascotaId);
 
-    /**
-     * Metodo test del servicio.
-     *
-     * @return Servicio funcionando correctamente.
-     * @throws BadRequestException excepcion.
-     */
-    @GetMapping(value = "/listar-rango",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<List<Cita>> listarCitasRango(
-            @RequestParam LocalDateTime fechaInicio,
-            @RequestParam LocalDateTime fechaFin
-    )
-            throws BadRequestException;
+    @PostMapping
+    ResponseEntity<MiRespuestaRS> crearCita(@RequestBody CitaMedicaRq cita);
 
+    @PutMapping("/{id}")
+    ResponseEntity<MiRespuestaRS> actualizarCita(@PathVariable Long id,
+                                                  @RequestBody CitaMedicaRq cita);
 
-    /**
-     * Lista las citas de una mascota.
-     *
-     * @param mascotaId id de la mascota.
-     * @return citas de la mascota ordenadas por fecha descendente.
-     * @throws BadRequestException excepcion.
-     */
-    @GetMapping(value = "/listar-por-mascota",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<List<Cita>> listarCitasPorMascota(
-            @RequestParam Integer mascotaId
-    )
-            throws BadRequestException;
+    @PatchMapping("/{id}/estado")
+    ResponseEntity<MiRespuestaRS> cambiarEstado(@PathVariable Long id,
+                                                @RequestParam EstadoCita estado);
 
-
-    /**
-     * Metodo test del servicio.
-     *
-     * @return Servicio funcionando correctamente.
-     * @throws BadRequestException excepcion.
-     */
-    @PostMapping(value = "/crear",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> crearCita(
-            @RequestBody CitaRq cita
-    )
-            throws BadRequestException;
-
-
-    /**
-     * Metodo test del servicio.
-     *
-     * @return Servicio funcionando correctamente.
-     * @throws BadRequestException excepcion.
-     */
-    @PostMapping(value = "/actualizar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<MiRespuestaRS> actualizarCita(
-            @RequestBody CitaRq cita
-    )
-            throws BadRequestException;
+    @GetMapping("/reporte.xlsx")
+    ResponseEntity<byte[]> reporteExcel(@RequestParam Long medicoId,
+                                        @RequestParam LocalDateTime fechaInicio,
+                                        @RequestParam LocalDateTime fechaFin);
 }

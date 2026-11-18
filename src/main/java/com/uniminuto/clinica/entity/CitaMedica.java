@@ -5,8 +5,8 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "cita")
+@MappedSuperclass
+@Deprecated
 @Data
 public class CitaMedica {
     @Id

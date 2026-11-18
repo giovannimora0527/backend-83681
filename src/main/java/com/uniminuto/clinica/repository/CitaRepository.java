@@ -4,21 +4,26 @@ import com.uniminuto.clinica.entity.Cita;
 import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.entity.Medico;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface CitaRepository extends JpaRepository<Cita, Long> {
 
-    List<Cita> findByFechaHoraBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
+    @Query("SELECT c FROM Cita c WHERE c.medico = :medico AND c.fechaHoraInicio >= :inicio AND c.fechaHoraInicio < :fin ORDER BY c.fechaHoraInicio")
+    List<Cita> findByMedicoAndRange(@Param("medico") Medico medico,
+                                    @Param("inicio") LocalDateTime inicio,
+                                    @Param("fin") LocalDateTime fin);
 
-    Optional<Cita> findByMascotaAndMedico(Mascota mascota, Medico medico);
+    @Query("SELECT c FROM Cita c WHERE c.medico = :medico AND c.estado <> com.uniminuto.clinica.entity.EstadoCita.CANCELADA")
+    List<Cita> findActiveByMedico(@Param("medico") Medico medico);
 
-    List<Cita> findByMedicoAndFechaHoraBetween(Medico medico, LocalDateTime fechaInicio, LocalDateTime fechaFin);
+    @Query("SELECT c FROM Cita c WHERE c.mascota = :mascota AND c.estado <> com.uniminuto.clinica.entity.EstadoCita.CANCELADA")
+    List<Cita> findActiveByMascota(@Param("mascota") Mascota mascota);
 
-    List<Cita> findByMascotaOrderByFechaHoraDesc(Mascota mascota);
-
+    List<Cita> findByMascotaOrderByFechaHoraInicioDesc(Mascota mascota);
 }

@@ -34,12 +34,16 @@ public class Cita {
     @JoinColumn(name = "medico_id", nullable = false)
     private Medico medico;
 
-    @Column(name = "fecha_hora", nullable = false)
-    private LocalDateTime fechaHora;
+    @Column(name = "fecha_hora_inicio", nullable = false)
+    private LocalDateTime fechaHoraInicio;
 
+    @Column(name = "fecha_hora_fin", nullable = false)
+    private LocalDateTime fechaHoraFin;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 20)
-    private String estado;
+    private EstadoCita estado;
 
-    @Column(name = "motivo", columnDefinition = "TEXT")
-    private String motivo;
+    @Column(name = "motivo_consulta", nullable = false, columnDefinition = "TEXT")
+    private String motivoConsulta;
 }
