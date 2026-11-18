@@ -29,6 +29,9 @@ public class FormulaMedica {
     @Column(name = "indicaciones", columnDefinition = "TEXT")
     private String indicaciones;
 
+    @Column(name = "cantidad_solicitada")
+    private Integer cantidadSolicitada;
+
     @Column(name = "fecha_creacion_registro", nullable = false)
     private LocalDateTime fechaCreacionRegistro;
 

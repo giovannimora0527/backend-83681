@@ -17,6 +17,8 @@ public class FormulaRq {
 
       private String indicaciones;
 
+      private Integer cantidadSolicitada;
+
       private LocalDateTime fechaCreacionRegistro;
 
       private LocalDateTime fechaModificacionRegistro;

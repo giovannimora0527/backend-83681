@@ -44,6 +44,7 @@ public class FormulaServiceImpl implements FormulaService {
         formulaNueva.setMedicamento(medicamento);
         formulaNueva.setDosis(formulaRq.getDosis());
         formulaNueva.setIndicaciones(formulaRq.getIndicaciones());
+        formulaNueva.setCantidadSolicitada(formulaRq.getCantidadSolicitada() == null ? 1 : formulaRq.getCantidadSolicitada());
         formulaNueva.setDuracion(formulaRq.getDuracion());
         formulaNueva.setFrecuencia(formulaRq.getFrecuencia());
         formulaNueva.setFechaCreacionRegistro(LocalDateTime.now());
@@ -85,6 +86,7 @@ public class FormulaServiceImpl implements FormulaService {
         formulaExistente.setMedicamento(medicamento);
         formulaExistente.setDosis(formulaRq.getDosis());
         formulaExistente.setIndicaciones(formulaRq.getIndicaciones());
+        formulaExistente.setCantidadSolicitada(formulaRq.getCantidadSolicitada() == null ? 1 : formulaRq.getCantidadSolicitada());
         formulaExistente.setDuracion(formulaRq.getDuracion());
         formulaExistente.setFrecuencia(formulaRq.getFrecuencia());
         formulaExistente.setFechaActualizacionRegistro(LocalDateTime.now());
@@ -109,6 +111,9 @@ public class FormulaServiceImpl implements FormulaService {
         }
         if (formulaRq.getIndicaciones() == null || formulaRq.getIndicaciones().isEmpty()) {
             throw new BadRequestException("Las indicaciones de la fórmula son obligatorias.");
+        }
+        if (formulaRq.getCantidadSolicitada() != null && formulaRq.getCantidadSolicitada() <= 0) {
+            throw new BadRequestException("La cantidad solicitada debe ser mayor a cero.");
         }
         if(formulaRq.getDuracion() == null || formulaRq.getDuracion().isEmpty()) {
             throw new BadRequestException("La duración de la fórmula es obligatoria.");
