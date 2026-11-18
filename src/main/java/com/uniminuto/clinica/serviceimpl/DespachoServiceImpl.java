@@ -32,6 +32,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
@@ -159,6 +160,7 @@ public class DespachoServiceImpl implements DespachoService {
         validarUsuarioDespacho(usuarioResponsableId);
         validarId(formulaId, "fórmula");
         FormulaMedica formula = enriquecerFormulaPendiente(formulaId);
+        validarCitaParaEntrega(formula.getCita().getEstado());
         if (formula.getDetallesDespacho().stream().noneMatch(detalle -> detalle.getCantidadPendiente() > 0)) {
             throw new BadRequestException("La fórmula ya no tiene cantidades pendientes de entrega.");
         }
@@ -167,13 +169,14 @@ public class DespachoServiceImpl implements DespachoService {
 
     /** {@inheritDoc} */
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Despacho prepararDespacho(DespachoRq despachoRq, String usuarioResponsableId) {
         if (despachoRq == null) {
             throw new BadRequestException("La información del despacho es obligatoria.");
         }
         validarId(despachoRq.getFormulaId(), "fórmula");
         Usuario usuario = validarUsuarioDespacho(usuarioResponsableId);
+        bloquearCitaParaEntrega(despachoRq.getFormulaId());
         Long formulaId = bloquearFormulaVigente(despachoRq.getFormulaId());
         List<FormulaDetalle> detallesFormula = formulaDetalleRepository.findByFormulaIdOrderByIdAsc(formulaId);
         if (detallesFormula.isEmpty()) {
@@ -215,12 +218,16 @@ public class DespachoServiceImpl implements DespachoService {
 
     /** {@inheritDoc} */
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Despacho confirmarDespacho(Long despachoId, List<LineaConfirmacion> detalles,
                                       String claveIdempotencia, String observacion,
                                       String usuarioResponsableId) {
         Usuario usuario = validarUsuarioDespacho(usuarioResponsableId);
-        Despacho despacho = despachoRepository.findLockedById(validarId(despachoId, "despacho"))
+        validarId(despachoId, "despacho");
+        Long formulaOrigen = despachoRepository.buscarFormulaId(despachoId)
+                .orElseThrow(() -> new BadRequestException("El despacho no existe."));
+        bloquearCitaParaEntrega(formulaOrigen);
+        Despacho despacho = despachoRepository.findLockedById(despachoId)
                 .orElseThrow(() -> new BadRequestException("El despacho no existe."));
         if (!List.of(ESTADO_EN_PREPARACION, ESTADO_PARCIAL,
                 ESTADO_PENDIENTE_DISPONIBILIDAD).contains(despacho.getEstado())) {
@@ -375,6 +382,9 @@ public class DespachoServiceImpl implements DespachoService {
         if (ESTADO_CANCELADO.equals(despacho.getEstado())) {
             throw new BadRequestException("El despacho ya está cancelado.");
         }
+        if (!despachoDetalleRepository.buscarFacturasVigentes(despachoId).isEmpty()) {
+            throw new BadRequestException("Anula la factura vigente antes de revertir el despacho.");
+        }
 
         String observacion = limpiar(cancelacionRq == null ? null : cancelacionRq.getObservacion());
         if (observacion == null) {
@@ -409,6 +419,35 @@ public class DespachoServiceImpl implements DespachoService {
         return respuesta(detalles.isEmpty()
                 ? "Preparación de despacho cancelada sin afectar el inventario."
                 : "Despacho cancelado y cantidades devueltas al inventario.");
+    }
+
+    @Override
+    @Transactional
+    public MiRespuestaRS cerrarPendientes(Long despachoId, DespachoCancelarRq solicitud, String usuarioResponsableId) {
+        Usuario usuario = validarUsuarioDespacho(usuarioResponsableId);
+        String observacion = limpiar(solicitud == null ? null : solicitud.getObservacion());
+        if (observacion == null) {
+            throw new BadRequestException("Justifica por qué el cliente no retirará las cantidades pendientes.");
+        }
+        Despacho despacho = despachoRepository.findLockedById(validarId(despachoId, "despacho"))
+                .orElseThrow(() -> new BadRequestException("El despacho no existe."));
+        if (!ESTADO_PARCIAL.equals(despacho.getEstado()) || despacho.getFechaDespacho() == null) {
+            throw new BadRequestException("Se requiere un despacho parcial confirmado.");
+        }
+        long formulaId = bloquearFormulaVigente(despacho.getFormulaId());
+        var detalles = formulaDetalleRepository.findByFormulaIdOrderByIdAsc(formulaId);
+        if (!tieneCantidadesPendientes(detalles)) {
+            throw new BadRequestException("La fórmula ya no tiene cantidades pendientes.");
+        }
+        FormulaMedica formula = formulaMedicaRepository.findById(formulaId)
+                .orElseThrow(() -> new BadRequestException("La fórmula no existe."));
+        var ahora = LocalDateTime.now();
+        formula.setEstado("COMPLETA");
+        formula.setFechaActualizacionRegistro(ahora);
+        formulaMedicaRepository.save(formula);
+        guardarHistorial(despacho, ESTADO_PARCIAL, ESTADO_PARCIAL, usuario,
+                "Cierre de cantidades pendientes: " + observacion, ahora);
+        return respuesta("Se cerraron las cantidades pendientes sin modificar las entregas registradas.");
     }
 
     /** {@inheritDoc} */
@@ -749,6 +788,19 @@ public class DespachoServiceImpl implements DespachoService {
                 .replaceAll("\\p{M}", "")
                 .replaceAll("[^\\x20-\\x7E]", " ")
                 .trim();
+    }
+
+    private void bloquearCitaParaEntrega(Long formulaId) {
+        Long citaId = formulaDetalleRepository.buscarCitaIdPorFormula(formulaId)
+                .orElseThrow(() -> new BadRequestException("La fórmula no existe."));
+        validarCitaParaEntrega(citaRepository.bloquearEstado(citaId)
+                .orElseThrow(() -> new BadRequestException("La cita de la fórmula no existe.")));
+    }
+
+    private void validarCitaParaEntrega(String estado) {
+        if ("CANCELADA".equals(estado)) {
+            throw new BadRequestException("No se pueden dispensar medicamentos de una cita cancelada.");
+        }
     }
 
     private long bloquearFormulaVigente(Long formulaId) {

@@ -68,6 +68,9 @@ public class FormulaMedica {
     private String duracion;
 
     @Transient
+    private String viaAdministracion;
+
+    @Transient
     private Integer cantidadPrescrita;
 
     @Transient

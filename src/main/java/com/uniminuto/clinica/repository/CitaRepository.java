@@ -4,14 +4,26 @@ import com.uniminuto.clinica.entity.Cita;
 import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.entity.Medico;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Consulta la agenda y el historial de citas. Protege la cita mientras se actualiza su
+ * programación o su atención.
+ */
 @Repository
 public interface CitaRepository extends JpaRepository<Cita, Long> {
+
+    @Query(value = "SELECT id FROM cita WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<Long> bloquearPorId(Long id);
+
+    @Query(value = "SELECT estado FROM cita WHERE id = :id FOR UPDATE", nativeQuery = true)
+    Optional<String> bloquearEstado(Long id);
 
     List<Cita> findByFechaHoraBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
@@ -20,5 +32,17 @@ public interface CitaRepository extends JpaRepository<Cita, Long> {
     List<Cita> findByMedicoAndFechaHoraBetween(Medico medico, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
     List<Cita> findByMascotaOrderByFechaHoraDesc(Mascota mascota);
+
+    List<Cita> findByMedicoIdOrderByFechaHoraAsc(Long medicoId);
+
+    @Query(value = """
+            SELECT c.* FROM cita c
+            WHERE (:medicoId IS NULL OR c.medico_id = :medicoId)
+              AND c.fecha_hora < :fin
+              AND COALESCE(c.hora_fin, DATE_ADD(c.fecha_hora, INTERVAL c.duracion_minutos MINUTE)) > :inicio
+            ORDER BY c.fecha_hora, c.id
+            """, nativeQuery = true)
+    List<Cita> listarIntervalo(@Param("medicoId") Long medicoId, @Param("inicio") LocalDateTime inicio,
+                               @Param("fin") LocalDateTime fin);
 
 }

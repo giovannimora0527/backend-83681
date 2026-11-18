@@ -2,13 +2,24 @@ package com.uniminuto.clinica.service;
 
 import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.CuentaMedicoRs;
 import com.uniminuto.clinica.models.MedicoRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+/** Define las operaciones del directorio veterinario y el vínculo de las cuentas con los médicos. */
 public interface MedicoService {
+
+    List<CuentaMedicoRs> listarCuentasDisponibles();
+
+    Optional<CuentaMedicoRs> consultarCuenta(Long medicoId);
+
+    CuentaMedicoRs vincularCuenta(Long medicoId, Long usuarioId);
+
+    void desvincularCuenta(Long medicoId);
 
     List<Medico> listarMedicos();
 

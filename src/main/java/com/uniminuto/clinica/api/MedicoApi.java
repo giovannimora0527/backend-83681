@@ -2,14 +2,18 @@ package com.uniminuto.clinica.api;
 
 import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.CuentaMedicoRq;
+import com.uniminuto.clinica.models.CuentaMedicoRs;
 import com.uniminuto.clinica.models.MedicoRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,9 +21,25 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Expone el directorio veterinario y permite a Administración consultar y gestionar el vínculo
+ * entre cada médico y su cuenta.
+ */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/medico")
 public interface MedicoApi {
+
+    @GetMapping("/cuentas-disponibles")
+    List<CuentaMedicoRs> listarCuentasDisponibles();
+
+    @GetMapping("/{medicoId}/cuenta")
+    ResponseEntity<CuentaMedicoRs> consultarCuenta(@PathVariable Long medicoId);
+
+    @PutMapping("/{medicoId}/cuenta")
+    CuentaMedicoRs vincularCuenta(@PathVariable Long medicoId, @RequestBody CuentaMedicoRq solicitud);
+
+    @DeleteMapping("/{medicoId}/cuenta")
+    ResponseEntity<Void> desvincularCuenta(@PathVariable Long medicoId);
 
     @GetMapping(value = "/listar-disponibles",
             produces = {"application/json"},

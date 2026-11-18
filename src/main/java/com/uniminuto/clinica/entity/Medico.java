@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/** Representa al veterinario, su especialidad y su estado en el directorio clínico. */
 @Entity
 @Table(name = "medico")
 @Data
@@ -40,6 +41,6 @@ public class Medico {
     @JoinColumn(name = "especializacion_id", nullable = false)
     private Especializacion especializacion;
 
-    @Column(name = "activo", nullable = false)
+    @Column(name = "estado", nullable = false)
     private Boolean estado;
 }

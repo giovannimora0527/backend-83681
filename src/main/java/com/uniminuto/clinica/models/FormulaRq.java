@@ -4,6 +4,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Datos del formulario individual de prescripción, incluida la vía de administración y la cantidad
+ * prescrita.
+ */
 @Data
 public class FormulaRq {
 
@@ -24,6 +28,8 @@ public class FormulaRq {
       private String frecuencia;
 
       private String duracion;
+
+      private String viaAdministracion;
 
       private Integer cantidadPrescrita;
 }

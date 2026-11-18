@@ -15,6 +15,9 @@ import java.util.Optional;
 @Repository
 public interface DespachoRepository extends JpaRepository<Despacho, Long> {
 
+    @Query("select d.formulaId from Despacho d where d.id = :id")
+    Optional<Long> buscarFormulaId(@Param("id") Long id);
+
     List<Despacho> findAllByOrderByIdDesc();
 
     List<Despacho> findByFormulaIdOrderByIdDesc(Long formulaId);

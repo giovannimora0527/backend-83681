@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.util.List;
 
+/** Historia clínica y notas de seguimiento asociadas. */
 @Data
 public class HistoriaMedicaRs {
     private HistoriaMedica historia;

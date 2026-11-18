@@ -13,6 +13,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Representa al paciente y su relación con el propietario y la raza para la agenda y el historial
+ * clínico.
+ */
 @Entity
 @Table(name = "mascota")
 @Data
@@ -21,7 +25,7 @@ public class Mascota {
     @Id
     @Column(name = "mascota_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer mascotaId;
+    private Long mascotaId;
 
     @Column(name = "nombre_mascota")
     private String nombreMascota;

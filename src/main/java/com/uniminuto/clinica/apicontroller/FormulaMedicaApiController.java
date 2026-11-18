@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/** Delega las consultas y la edición individual de fórmulas en el servicio de formulación. */
 @RestController
 public class FormulaMedicaApiController implements FormulaMedicaApi {
 

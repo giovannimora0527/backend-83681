@@ -10,14 +10,40 @@ import java.util.Optional;
 import jakarta.persistence.LockModeType;
 import java.time.LocalDate;
 
+/**
+ * Consulta los encabezados de fórmula y la disponibilidad de medicamentos. También identifica las
+ * fórmulas con entregas registradas.
+ */
 @Repository
 public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Long> {
+
+    @org.springframework.data.jpa.repository.Query(value = """
+            SELECT LEAST(m.stock_actual, COALESCE(SUM(l.cantidad), 0))
+            FROM medicamento m LEFT JOIN inventario_lote l ON l.medicamento_id = m.id
+                AND l.activo = 1 AND l.fecha_vencimiento >= :fecha
+            WHERE m.id = :medicamentoId
+            GROUP BY m.id, m.stock_actual
+            """, nativeQuery = true)
+    Optional<Long> existenciasDisponibles(Long medicamentoId, LocalDate fecha);
+
+    @org.springframework.data.jpa.repository.Query(value = """
+            SELECT COUNT(*) FROM despacho_detalle dd
+                JOIN formula_detalle fd ON fd.id = dd.formula_detalle_id
+                WHERE fd.formula_id = :formulaId AND dd.cantidad_entregada > 0
+            """, nativeQuery = true)
+    long contarEntregas(Long formulaId);
+
+    Optional<FormulaMedica> findByIdAndCita_Id(Long id, Long citaId);
 
     List<FormulaMedica> findAllByOrderByFechaCreacionRegistroAsc();
 
     List<FormulaMedica> findByCita_IdInOrderByFechaCreacionRegistroDesc(List<Long> citaIds);
 
     List<FormulaMedica> findAllByOrderByFechaCreacionRegistroDesc();
+
+    List<FormulaMedica> findByMedico_IdOrderByFechaCreacionRegistroDesc(Long medicoId);
+
+    boolean existsByCita_Id(Long citaId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @org.springframework.data.jpa.repository.Query("select f from FormulaMedica f where f.id = :id")
@@ -28,7 +54,7 @@ public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Lo
             + "JOIN cita c ON c.id = f.cita_id "
             + "JOIN cliente cl ON cl.cliente_id = c.cliente_id "
             + "JOIN mascota m ON m.mascota_id = c.mascota_id "
-            + "WHERE f.activo = 1 AND f.estado = 'VIGENTE' "
+            + "WHERE f.activo = 1 AND f.estado = 'VIGENTE' AND c.estado <> 'CANCELADA' "
             + "AND (:fechaGeneracion IS NULL OR DATE(f.fecha_emision) = :fechaGeneracion) "
             + "AND (:filtro IS NULL OR TRIM(:filtro) = '' "
             + "OR LOWER(f.numero_formula) LIKE CONCAT('%', LOWER(:filtro), '%') "

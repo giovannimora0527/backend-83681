@@ -7,6 +7,7 @@ import com.uniminuto.clinica.models.MiRespuestaRS;
 
 import java.util.List;
 
+/** Define la consulta y actualización del historial clínico asociado a las citas. */
 public interface HistoriaService {
 
     List<HistoriaMedicaRs> getAllHistorias();

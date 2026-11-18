@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/** Consulta y guarda el catálogo de especialidades veterinarias. */
 @Repository
 public interface EspecializacionRepository extends JpaRepository<Especializacion,Long> {
 

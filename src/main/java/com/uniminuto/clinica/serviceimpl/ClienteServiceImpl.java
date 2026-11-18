@@ -3,6 +3,7 @@ package com.uniminuto.clinica.serviceimpl;
 import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.repository.ClienteRepository;
+import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private ClienteRepository clienteRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Override
     public List<Cliente> listarClientes() throws BadRequestException {
@@ -39,6 +42,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     public MiRespuestaRS crearCliente(Cliente cliente) {
         validarCliente(cliente);
+        validarUsuario(cliente.getUsuarioId(), null);
         String documento = cliente.getNumeroDocumento().trim();
         if (clienteRepository.existsByNumeroDocumento(documento)) {
             throw new BadRequestException("Ya existe un cliente con ese número de documento.");
@@ -73,10 +77,28 @@ public class ClienteServiceImpl implements ClienteService {
         existente.setGenero(limpiar(cliente.getGenero()));
         existente.setTelefono(limpiar(cliente.getTelefono()));
         existente.setDireccion(limpiar(cliente.getDireccion()));
-        if (cliente.getUsuarioId() != null) existente.setUsuarioId(cliente.getUsuarioId());
+        if (cliente.getUsuarioId() != null) {
+            validarUsuario(cliente.getUsuarioId(), existente.getId());
+            existente.setUsuarioId(cliente.getUsuarioId());
+        }
         if (cliente.getActivo() != null) existente.setActivo(cliente.getActivo());
         clienteRepository.save(existente);
         return respuesta("Cliente actualizado correctamente.");
+    }
+
+    private void validarUsuario(Long usuarioId, Long clienteId) {
+        if (usuarioId == null) {
+            return;
+        }
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw new BadRequestException("El usuario asociado al cliente no existe.");
+        }
+        boolean vinculadoAOtroCliente = clienteRepository.findByUsuarioId(usuarioId)
+                .filter(cliente -> !cliente.getId().equals(clienteId))
+                .isPresent();
+        if (vinculadoAOtroCliente) {
+            throw new BadRequestException("El usuario ya está asociado a otro cliente.");
+        }
     }
 
     private void validarCliente(Cliente cliente) {

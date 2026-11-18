@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Recibe las solicitudes de historia clínica y delega las validaciones de acceso y edición al
+ * servicio.
+ */
 @RestController
 public class HistoriaClinicaApiController implements HistoriaApi {
 

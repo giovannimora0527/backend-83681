@@ -2,6 +2,7 @@ package com.uniminuto.clinica.models;
 
 import lombok.Data;
 
+/** Datos clínicos de una nota y sus referencias a la atención y al paciente. */
 @Data
 public class AnotacionHistoriaRq {
     private Long id;
@@ -11,5 +12,5 @@ public class AnotacionHistoriaRq {
     private String descripcion;
     private String diagnostico;
     private String observaciones;
-    private Integer mascotaId;
+    private Long mascotaId;
 }

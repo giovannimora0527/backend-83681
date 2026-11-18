@@ -9,6 +9,10 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Consulta el directorio veterinario y permite proteger la asignación de un médico durante la
+ * programación de una cita.
+ */
 @Repository
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
 

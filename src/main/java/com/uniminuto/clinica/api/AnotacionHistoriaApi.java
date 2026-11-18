@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+/** Expone las notas clínicas que pueden consultarse como parte de los antecedentes del paciente. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/anotacion-historia")
 public interface AnotacionHistoriaApi {

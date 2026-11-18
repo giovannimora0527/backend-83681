@@ -1,5 +1,8 @@
 package com.uniminuto.clinica.api;
 
+import com.uniminuto.clinica.models.InformeInventarioRs;
+import java.io.IOException;
+
 import com.uniminuto.clinica.entity.Medicamento;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MedicamentoRq;
@@ -99,6 +102,18 @@ public interface MedicamentoApi {
             @RequestParam(defaultValue = "TODOS") String tipo,
             @RequestParam(required = false) LocalDate desde,
             @RequestParam(required = false) LocalDate hasta);
+
+    @GetMapping(value = "/informes", produces = "application/json")
+    InformeInventarioRs consultarInformeInventario(
+            @RequestParam(defaultValue = "TODOS") String tipo,
+            @RequestParam(required = false) LocalDate desde,
+            @RequestParam(required = false) LocalDate hasta);
+
+    @GetMapping(value = "/informes/exportar-pdf", produces = "application/pdf")
+    ResponseEntity<byte[]> exportarInformeInventarioPdf(
+            @RequestParam(defaultValue = "TODOS") String tipo,
+            @RequestParam(required = false) LocalDate desde,
+            @RequestParam(required = false) LocalDate hasta) throws IOException;
 
     /** Resumen de inventario sin relaciones JPA, con precios y existencia actual. */
     @Data

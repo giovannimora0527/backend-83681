@@ -153,6 +153,12 @@ public class DespachoApiController implements DespachoApi {
                 despachoId, cancelacionRq, usuarioResponsableId));
     }
 
+    @Override
+    public ResponseEntity<MiRespuestaRS> cerrarPendientes(Long despachoId, DespachoCancelarRq solicitud,
+                                                         String usuarioResponsableId) {
+        return ResponseEntity.ok(despachoService.cerrarPendientes(despachoId, solicitud, usuarioResponsableId));
+    }
+
     /** {@inheritDoc} */
     @Override
     public ResponseEntity<byte[]> descargarComprobante(Long despachoId, String usuarioResponsableId) {

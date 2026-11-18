@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/** Consulta los medicamentos prescritos en cada fórmula y sus vínculos con la cita. */
 @Repository
 public interface FormulaDetalleRepository extends JpaRepository<FormulaDetalle, Long> {
 

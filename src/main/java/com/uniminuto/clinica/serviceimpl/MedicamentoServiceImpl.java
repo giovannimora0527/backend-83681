@@ -6,6 +6,7 @@ import com.uniminuto.clinica.entity.MovimientoInventario;
 import com.uniminuto.clinica.entity.Usuario;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MedicamentoRq;
+import com.uniminuto.clinica.models.InformeInventarioRs;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.repository.InventarioLoteRepository;
 import com.uniminuto.clinica.repository.MedicamentoRepository;
@@ -19,6 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,6 +44,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class MedicamentoServiceImpl implements MedicamentoService {
 
     private static final Pattern CODIGO_PRODUCTO = Pattern.compile("^[A-Za-z0-9]{8}$");
+    private static final int DIAS_PROXIMO_VENCIMIENTO_EXCEL = 30;
     private final MedicamentoRepository medicamentoRepository;
     private final UsuarioRepository usuarioRepository;
     private final InventarioLoteRepository inventarioLoteRepository;
@@ -105,7 +109,9 @@ public class MedicamentoServiceImpl implements MedicamentoService {
     @Transactional(readOnly = true)
     public List<Medicamento> listarStockBajo() {
         validarConsultaMedicamentos();
-        return medicamentoRepository.buscarMedicamentosConStockBajo();
+        return medicamentoRepository.findAllByOrderByNombreAsc().stream()
+                .filter(medicamento -> stockBajo(cantidadDisponible(medicamento), medicamento.getStockMinimo()))
+                .toList();
     }
 
     /** {@inheritDoc} */
@@ -143,10 +149,13 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         return resultado;
     }
 
-    /** {@inheritDoc} */
     @Override
     @Transactional(readOnly = true)
-    public byte[] exportarInventarioExcel(String tipo, LocalDate desde, LocalDate hasta) {
+    public InformeInventarioRs consultarInformeInventario(String tipo, LocalDate desde, LocalDate hasta) {
+        return prepararInformeInventario(tipo, desde, hasta);
+    }
+
+    private InformeInventarioRs prepararInformeInventario(String tipo, LocalDate desde, LocalDate hasta) {
         validarAccesoInformeInventario();
         validarRangoFechas(desde, hasta);
         String filtro = tipo == null || tipo.isBlank() ? "TODOS" : tipo.trim().toUpperCase(Locale.ROOT);
@@ -155,16 +164,43 @@ public class MedicamentoServiceImpl implements MedicamentoService {
             throw new BadRequestException("El tipo de informe debe ser TODOS, BAJO, AGOTADO, PROXIMO_VENCER, VENCIDO, ENTRADAS o SALIDAS.");
         }
 
+        var generado = LocalDateTime.now(ZoneId.of("America/Bogota"));
+        var hoy = generado.toLocalDate();
+        var lotes = inventarioLoteRepository.findAllByOrderByFechaVencimientoAsc();
+        var lotesPorMedicamento = lotes.stream()
+                .filter(lote -> lote.getMedicamento() != null && lote.getMedicamento().getId() != null)
+                .collect(java.util.stream.Collectors.groupingBy(lote -> lote.getMedicamento().getId()));
+        var existencias = prepararExistencias(filtro, lotesPorMedicamento, hoy);
+        var detallesLote = prepararLotes(filtro, lotes, hoy);
+        var movimientos = prepararMovimientos(filtro, desde, hasta);
+        var totales = new InformeInventarioRs.Totales(
+                sumarColumna(existencias, "Existencia actual").longValueExact(),
+                sumarColumna(existencias, "Disponible para dispensar").longValueExact(),
+                sumarColumna(existencias, "Valor inventario costo (COP)"),
+                sumarColumna(existencias, "Valor inventario venta (COP)"),
+                sumarMovimientos(movimientos, "ENTRADA"),
+                sumarMovimientos(movimientos, "SALIDA"));
+        return new InformeInventarioRs(generado, filtro, desde, hasta, "COP",
+                List.of(existencias, detallesLote, movimientos), totales);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportarInventarioExcel(String tipo, LocalDate desde, LocalDate hasta) {
+        var informe = prepararInformeInventario(tipo, desde, hasta);
         try (Workbook libro = new XSSFWorkbook(); ByteArrayOutputStream salida = new ByteArrayOutputStream()) {
             CellStyle encabezado = estiloEncabezado(libro);
-            List<InventarioLote> lotes = inventarioLoteRepository.findAllByOrderByFechaVencimientoAsc();
-            Map<Long, List<InventarioLote>> lotesPorMedicamento = lotes.stream()
-                    .filter(lote -> lote.getMedicamento() != null && lote.getMedicamento().getId() != null)
-                    .collect(java.util.stream.Collectors.groupingBy(lote -> lote.getMedicamento().getId()));
-            crearHojaParametros(libro, encabezado, filtro, desde, hasta);
-            crearHojaExistencias(libro, encabezado, filtro, lotesPorMedicamento);
-            crearHojaLotes(libro, encabezado, filtro, lotes);
-            crearHojaMovimientos(libro, encabezado, filtro, desde, hasta);
+            crearHojaParametros(libro, encabezado, informe);
+            for (var seccion : informe.secciones()) {
+                var hoja = escribirSeccion(libro, encabezado, seccion);
+                if ("Existencias".equals(seccion.nombre())) {
+                    formatearMoneda(libro, hoja, 8, 9, 10, 11);
+                } else if ("Lotes".equals(seccion.nombre())) {
+                    formatearMoneda(libro, hoja, 5, 6);
+                }
+            }
+            escribirSeccion(libro, encabezado,
+                    new InformeInventarioRs.Seccion("Totales", List.of("Concepto", "Total"), informe.filasTotales()));
             libro.write(salida);
             return salida.toByteArray();
         } catch (IOException exception) {
@@ -172,104 +208,123 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         }
     }
 
-    /** Crea la hoja que documenta los filtros aplicados al archivo. */
-    private void crearHojaParametros(Workbook libro, CellStyle encabezado, String filtro,
-                                     LocalDate desde, LocalDate hasta) {
-        Sheet hoja = libro.createSheet("Parámetros");
-        escribirEncabezados(hoja, encabezado, "Parámetro", "Valor");
-        escribirFila(hoja, 1, "Generado", LocalDateTime.now().toString());
-        escribirFila(hoja, 2, "Tipo de informe", filtro);
-        escribirFila(hoja, 3, "Desde", desde == null ? "Sin límite" : desde.toString());
-        escribirFila(hoja, 4, "Hasta", hasta == null ? "Sin límite" : hasta.toString());
-        escribirFila(hoja, 5, "Moneda", "COP");
-        hoja.setColumnWidth(0, 6500);
-        hoja.setColumnWidth(1, 7000);
+    private Sheet escribirSeccion(Workbook libro, CellStyle encabezado, InformeInventarioRs.Seccion seccion) {
+        Sheet hoja = libro.createSheet(seccion.nombre());
+        escribirEncabezados(hoja, encabezado, seccion.columnas().toArray(String[]::new));
+        int indiceFila = 1;
+        for (var datos : seccion.filas()) {
+            Row fila = hoja.createRow(indiceFila++);
+            for (int columna = 0; columna < datos.size(); columna++) {
+                poner(fila, columna, datos.get(columna));
+            }
+        }
+        finalizarHoja(hoja, seccion.columnas().size());
+        return hoja;
     }
 
-    /** Crea el resumen por producto con existencias, precios y valoración. */
+    private BigDecimal sumarColumna(InformeInventarioRs.Seccion seccion, String nombre) {
+        int columna = seccion.columnas().indexOf(nombre);
+        return seccion.filas().stream().map(fila -> new BigDecimal(fila.get(columna).toString()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private long sumarMovimientos(InformeInventarioRs.Seccion movimientos, String tipo) {
+        int tipoColumna = movimientos.columnas().indexOf("Tipo");
+        int cantidadColumna = movimientos.columnas().indexOf("Cantidad");
+        return movimientos.filas().stream().filter(fila -> tipo.equalsIgnoreCase((String) fila.get(tipoColumna)))
+                .mapToLong(fila -> ((Number) fila.get(cantidadColumna)).longValue()).sum();
+    }
+
+    private void crearHojaParametros(Workbook libro, CellStyle encabezado, InformeInventarioRs informe) {
+        Sheet hoja = libro.createSheet("Parámetros");
+        escribirEncabezados(hoja, encabezado, "Parámetro", "Valor");
+        int fila = 1;
+        for (var parametro : informe.parametros()) {
+            escribirFila(hoja, fila++, parametro.get(0).toString(), parametro.get(1).toString());
+        }
+        hoja.setColumnWidth(0, 8500);
+        hoja.setColumnWidth(1, 10000);
+    }
+
     /** Construye el resumen valorizado de existencias y aplica el filtro seleccionado. */
-    private void crearHojaExistencias(Workbook libro, CellStyle encabezado, String filtro,
-                                      Map<Long, List<InventarioLote>> lotesPorMedicamento) {
-        Sheet hoja = libro.createSheet("Existencias");
+    private InformeInventarioRs.Seccion prepararExistencias(String filtro,
+                                      Map<Long, List<InventarioLote>> lotesPorMedicamento, LocalDate hoy) {
         String[] columnas = {"ID", "Código", "Medicamento / producto", "Tipo", "Presentación", "Registro Invima",
                 "Existencia actual", "Stock mínimo", "Costo unitario (COP)", "Precio venta (COP)",
-                "Valor inventario costo (COP)", "Valor inventario venta (COP)", "Estado"};
-        escribirEncabezados(hoja, encabezado, columnas);
-        int fila = 1;
-        LocalDate hoy = LocalDate.now();
+                "Valor inventario costo (COP)", "Valor inventario venta (COP)", "Estado",
+                "Disponible para dispensar"};
+        var filas = new ArrayList<List<Object>>();
         for (Medicamento medicamento : medicamentoRepository.findAllByOrderByNombreAsc()) {
             int stock = medicamento.getCantidadActual() == null ? 0 : medicamento.getCantidadActual();
             int minimo = medicamento.getStockMinimo() == null ? 0 : medicamento.getStockMinimo();
-            boolean bajo = stock > 0 && stock <= minimo;
-            boolean agotado = stock == 0;
             List<InventarioLote> lotes = lotesPorMedicamento.getOrDefault(medicamento.getId(), List.of());
-            boolean vencido = tieneLoteConVencimiento(lotes, hoy, true);
-            boolean proximo = tieneLoteProximoAVencer(lotes, hoy);
+            int disponible = cantidadDisponible(medicamento, lotes.stream()
+                    .filter(lote -> loteDisponible(lote, hoy)).mapToLong(InventarioLote::getCantidad).sum());
+            boolean bajo = stockBajo(disponible, minimo);
+            boolean agotado = disponible == 0;
+            boolean vencido = lotes.stream().anyMatch(lote -> loteVencido(lote, hoy));
+            boolean proximo = lotes.stream().anyMatch(lote -> loteProximoAVencer(lote, hoy));
             if (!coincideFiltroExistencia(filtro, bajo, agotado, proximo, vencido)) {
                 continue;
             }
-            Row row = hoja.createRow(fila++);
-            int col = 0;
-            poner(row, col++, medicamento.getId());
-            poner(row, col++, medicamento.getCodigo());
-            poner(row, col++, medicamento.getNombre());
-            poner(row, col++, medicamento.getTipoProducto());
-            poner(row, col++, medicamento.getPresentacion());
-            poner(row, col++, medicamento.getRegistroInvima());
-            poner(row, col++, stock);
-            poner(row, col++, minimo);
-            poner(row, col++, medicamento.getPrecioCompra());
-            poner(row, col++, medicamento.getPrecioVenta());
-            poner(row, col++, multiplicar(medicamento.getPrecioCompra(), stock));
-            poner(row, col++, multiplicar(medicamento.getPrecioVenta(), stock));
-            poner(row, col, estadoInventario(stock, minimo, vencido, proximo));
+            var costoAdquisicion = lotes.stream().filter(this::loteConUnidades)
+                    .map(lote -> multiplicar(lote.getPrecioCompraLote(), lote.getCantidad()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            filas.add(java.util.Arrays.asList(
+                    medicamento.getId(),
+                    medicamento.getCodigo(),
+                    medicamento.getNombre(),
+                    medicamento.getTipoProducto(),
+                    medicamento.getPresentacion(),
+                    medicamento.getRegistroInvima(),
+                    stock,
+                    minimo,
+                    medicamento.getPrecioCompra(),
+                    medicamento.getPrecioVenta(),
+                    costoAdquisicion,
+                    multiplicar(medicamento.getPrecioVenta(), disponible),
+                    estadoInventario(disponible, minimo, vencido, proximo),
+                    disponible));
         }
-        finalizarHoja(hoja, columnas.length);
-        formatearMoneda(libro, hoja, 8, 9, 10, 11);
+        return new InformeInventarioRs.Seccion("Existencias", List.of(columnas), filas);
     }
 
     /** Construye el detalle de lotes con fechas, cantidades y estado de vencimiento. */
-    private void crearHojaLotes(Workbook libro, CellStyle encabezado, String filtro, List<InventarioLote> lotes) {
-        Sheet hoja = libro.createSheet("Lotes");
+    private InformeInventarioRs.Seccion prepararLotes(String filtro, List<InventarioLote> lotes,
+                                 LocalDate hoy) {
         String[] columnas = {"ID lote", "ID medicamento", "Medicamento", "Número de lote", "Cantidad",
                 "Costo unitario (COP)", "Valor del lote (COP)", "Fecha ingreso", "Fecha vencimiento", "Activo", "Estado"};
-        escribirEncabezados(hoja, encabezado, columnas);
-        LocalDate hoy = LocalDate.now();
-        int fila = 1;
+        var filas = new ArrayList<List<Object>>();
         for (InventarioLote lote : lotes) {
             boolean expirado = lote.getFechaVencimiento() != null && lote.getFechaVencimiento().isBefore(hoy);
-            boolean proximo = lote.getFechaVencimiento() != null && !expirado
-                    && !lote.getFechaVencimiento().isAfter(hoy.plusDays(30));
-            if ("VENCIDO".equals(filtro) && !expirado || "PROXIMO_VENCER".equals(filtro) && !proximo) {
+            boolean proximo = loteProximoAVencer(lote, hoy);
+            if ("VENCIDO".equals(filtro) && !loteVencido(lote, hoy)
+                    || "PROXIMO_VENCER".equals(filtro) && !proximo) {
                 continue;
             }
-            Row row = hoja.createRow(fila++);
-            int col = 0;
-            poner(row, col++, lote.getId());
-            poner(row, col++, lote.getMedicamento() == null ? null : lote.getMedicamento().getId());
-            poner(row, col++, lote.getMedicamento() == null ? null : lote.getMedicamento().getNombre());
-            poner(row, col++, lote.getNumeroLote());
             int cantidad = lote.getCantidad() == null ? 0 : lote.getCantidad();
-            poner(row, col++, cantidad);
-            poner(row, col++, lote.getPrecioCompraLote());
-            poner(row, col++, multiplicar(lote.getPrecioCompraLote(), cantidad));
-            poner(row, col++, lote.getFechaIngreso());
-            poner(row, col++, lote.getFechaVencimiento());
-            poner(row, col++, Boolean.TRUE.equals(lote.getActivo()) ? "Sí" : "No");
-            poner(row, col, expirado ? "VENCIDO" : proximo ? "PRÓXIMO A VENCER" : "VIGENTE");
+            filas.add(java.util.Arrays.asList(
+                    lote.getId(),
+                    lote.getMedicamento() == null ? null : lote.getMedicamento().getId(),
+                    lote.getMedicamento() == null ? null : lote.getMedicamento().getNombre(),
+                    lote.getNumeroLote(),
+                    cantidad,
+                    lote.getPrecioCompraLote(),
+                    multiplicar(lote.getPrecioCompraLote(), cantidad),
+                    lote.getFechaIngreso(),
+                    lote.getFechaVencimiento(),
+                    Boolean.TRUE.equals(lote.getActivo()) ? "Sí" : "No",
+                    expirado ? "VENCIDO" : proximo ? "PRÓXIMO A VENCER" : "VIGENTE"));
         }
-        finalizarHoja(hoja, columnas.length);
-        formatearMoneda(libro, hoja, 5, 6);
+        return new InformeInventarioRs.Seccion("Lotes", List.of(columnas), filas);
     }
 
     /** Construye el historial de movimientos y aplica el rango de fechas solicitado. */
-    private void crearHojaMovimientos(Workbook libro, CellStyle encabezado, String filtro,
+    private InformeInventarioRs.Seccion prepararMovimientos(String filtro,
                                        LocalDate desde, LocalDate hasta) {
-        Sheet hoja = libro.createSheet("Movimientos");
         String[] columnas = {"ID movimiento", "Fecha", "Tipo", "ID medicamento", "Medicamento", "ID lote",
                 "Lote", "Cantidad", "Usuario responsable", "Fórmula", "Despacho", "Observación"};
-        escribirEncabezados(hoja, encabezado, columnas);
-        int fila = 1;
+        var filas = new ArrayList<List<Object>>();
         for (MovimientoInventario movimiento : movimientoInventarioRepository
                 .findAllByOrderByFechaMovimientoDescIdDesc()) {
             LocalDate fecha = movimiento.getFechaMovimiento() == null ? null
@@ -282,22 +337,21 @@ public class MedicamentoServiceImpl implements MedicamentoService {
                     || "SALIDAS".equals(filtro) && !tipoMovimiento.equals("SALIDA")) {
                 continue;
             }
-            Row row = hoja.createRow(fila++);
-            int col = 0;
-            poner(row, col++, movimiento.getId());
-            poner(row, col++, movimiento.getFechaMovimiento());
-            poner(row, col++, movimiento.getTipo());
-            poner(row, col++, movimiento.getMedicamento() == null ? null : movimiento.getMedicamento().getId());
-            poner(row, col++, movimiento.getMedicamento() == null ? null : movimiento.getMedicamento().getNombre());
-            poner(row, col++, movimiento.getLote() == null ? null : movimiento.getLote().getId());
-            poner(row, col++, movimiento.getLote() == null ? null : movimiento.getLote().getNumeroLote());
-            poner(row, col++, movimiento.getCantidad());
-            poner(row, col++, movimiento.getUsuario() == null ? null : movimiento.getUsuario().getUsername());
-            poner(row, col++, movimiento.getFormula() == null ? null : movimiento.getFormula().getId());
-            poner(row, col++, movimiento.getDespacho() == null ? null : movimiento.getDespacho().getNumeroDespacho());
-            poner(row, col, movimiento.getObservacion());
+            filas.add(java.util.Arrays.asList(
+                    movimiento.getId(),
+                    movimiento.getFechaMovimiento(),
+                    movimiento.getTipo(),
+                    movimiento.getMedicamento() == null ? null : movimiento.getMedicamento().getId(),
+                    movimiento.getMedicamento() == null ? null : movimiento.getMedicamento().getNombre(),
+                    movimiento.getLote() == null ? null : movimiento.getLote().getId(),
+                    movimiento.getLote() == null ? null : movimiento.getLote().getNumeroLote(),
+                    movimiento.getCantidad(),
+                    movimiento.getUsuario() == null ? null : movimiento.getUsuario().getUsername(),
+                    movimiento.getFormula() == null ? null : movimiento.getFormula().getId(),
+                    movimiento.getDespacho() == null ? null : movimiento.getDespacho().getNumeroDespacho(),
+                    movimiento.getObservacion()));
         }
-        finalizarHoja(hoja, columnas.length);
+        return new InformeInventarioRs.Seccion("Movimientos", List.of(columnas), filas);
     }
 
     /** Aplica formato visual uniforme a las filas de encabezado. */
@@ -378,19 +432,27 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         };
     }
 
-    /** Comprueba si el medicamento tiene un lote vencido o vigente desde una fecha de corte. */
-    private boolean tieneLoteConVencimiento(List<InventarioLote> lotes, LocalDate fecha, boolean vencido) {
-        return lotes.stream()
-                .anyMatch(lote -> lote.getFechaVencimiento() != null && (vencido
-                        ? lote.getFechaVencimiento().isBefore(fecha) : !lote.getFechaVencimiento().isBefore(fecha)));
+    private boolean loteConUnidades(InventarioLote lote) {
+        return lote.getCantidad() != null && lote.getCantidad() > 0;
     }
 
-    /** Comprueba si el medicamento tiene existencias por vencer dentro de treinta días. */
-    private boolean tieneLoteProximoAVencer(List<InventarioLote> lotes, LocalDate fecha) {
-        return lotes.stream()
-                .anyMatch(lote -> lote.getCantidad() != null && lote.getCantidad() > 0
-                        && lote.getFechaVencimiento() != null && !lote.getFechaVencimiento().isBefore(fecha)
-                        && !lote.getFechaVencimiento().isAfter(fecha.plusDays(30)));
+    private boolean loteDisponible(InventarioLote lote, LocalDate fecha) {
+        return Boolean.TRUE.equals(lote.getActivo()) && loteConUnidades(lote)
+                && (lote.getFechaVencimiento() == null || !lote.getFechaVencimiento().isBefore(fecha));
+    }
+
+    private boolean loteVencido(InventarioLote lote, LocalDate fecha) {
+        return loteConUnidades(lote) && lote.getFechaVencimiento() != null
+                && lote.getFechaVencimiento().isBefore(fecha);
+    }
+
+    private boolean loteProximoAVencer(InventarioLote lote, LocalDate fecha) {
+        return loteDisponible(lote, fecha) && lote.getFechaVencimiento() != null
+                && !lote.getFechaVencimiento().isAfter(fecha.plusDays(DIAS_PROXIMO_VENCIMIENTO_EXCEL));
+    }
+
+    private boolean stockBajo(int disponible, Integer minimo) {
+        return disponible > 0 && minimo != null && disponible <= minimo;
     }
 
     /** Calcula el valor total de existencias para el costo o precio indicado. */
@@ -403,7 +465,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         if (stock == 0) return "AGOTADO";
         if (vencido) return "CON LOTES VENCIDOS";
         if (proximo) return "PRÓXIMO A VENCER";
-        return stock <= minimo ? "STOCK BAJO" : "DISPONIBLE";
+        return stockBajo(stock, minimo) ? "STOCK BAJO" : "DISPONIBLE";
     }
 
     /** Comprueba que el rango de fechas del informe sea válido. */
@@ -620,6 +682,10 @@ public class MedicamentoServiceImpl implements MedicamentoService {
                         medicamento.getId(), LocalDate.now()).stream()
                 .mapToLong(lote -> Math.max(0, lote.getCantidad() == null ? 0 : lote.getCantidad()))
                 .sum();
+        return cantidadDisponible(medicamento, lotesDisponibles);
+    }
+
+    private int cantidadDisponible(Medicamento medicamento, long lotesDisponibles) {
         int saldoGeneral = medicamento.getCantidadActual() == null ? 0 : medicamento.getCantidadActual();
         return (int) Math.min(Math.max(0, saldoGeneral), Math.min(Integer.MAX_VALUE, lotesDisponibles));
     }

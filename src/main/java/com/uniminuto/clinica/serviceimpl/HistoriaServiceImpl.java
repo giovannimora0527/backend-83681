@@ -13,8 +13,12 @@ import com.uniminuto.clinica.repository.HistoriaMedicaRepository;
 import com.uniminuto.clinica.repository.FormulaMedicaRepository;
 import com.uniminuto.clinica.repository.CitaRepository;
 import com.uniminuto.clinica.service.HistoriaService;
+import com.uniminuto.clinica.service.CitaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,7 +28,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+/** Consulta el historial clínico y valida quién puede editar una atención abierta. */
 @Service
 public class HistoriaServiceImpl implements HistoriaService {
 
@@ -39,6 +45,12 @@ public class HistoriaServiceImpl implements HistoriaService {
 
     @Autowired
     private FormulaMedicaRepository formulaMedicaRepository;
+
+    @Autowired
+    private CitaService citas;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     @Override
     public List<HistoriaMedicaRs> getAllHistorias() {
@@ -96,8 +108,10 @@ public class HistoriaServiceImpl implements HistoriaService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public MiRespuestaRS guardarHistoria(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
         this.validarHistoria(historiaMedicaRq);
+        bloquearCitaEditable(historiaMedicaRq.getCitaId());
         Cita cita = this.existeCita(historiaMedicaRq);
         if (this.historiaMedicaRepository.existsByCita(cita)) {
             throw new BadRequestException("La cita ya tiene una historia clínica registrada.");
@@ -114,11 +128,21 @@ public class HistoriaServiceImpl implements HistoriaService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public MiRespuestaRS actualizarHistoria(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
         if (historiaMedicaRq == null || historiaMedicaRq.getId() == null || historiaMedicaRq.getId() <= 0) {
             throw new BadRequestException("El id de la historia clínica es obligatorio y debe ser mayor a cero.");
         }
         this.validarHistoria(historiaMedicaRq);
+        var citasOriginales = jdbc.queryForList("SELECT cita_id FROM historia_medica WHERE id = ?", Long.class,
+                historiaMedicaRq.getId());
+        if (citasOriginales.isEmpty()) {
+            throw new BadRequestException("La historia clínica con el id proporcionado no existe.");
+        }
+        Long citaOriginal = citasOriginales.getFirst();
+        Stream.of(citaOriginal, historiaMedicaRq.getCitaId()).filter(Objects::nonNull).distinct().sorted()
+                .forEach(this::bloquearCitaEditable);
+
         Cita cita = this.existeCita(historiaMedicaRq);
         Optional<HistoriaMedica> optionalHistoria = this.historiaMedicaRepository
                 .findById(historiaMedicaRq.getId());
@@ -130,6 +154,13 @@ public class HistoriaServiceImpl implements HistoriaService {
         }
 
         HistoriaMedica historiaExistente = optionalHistoria.get();
+        Long citaRegistrada = historiaExistente.getCita() == null ? null : historiaExistente.getCita().getId();
+        if (!Objects.equals(citaOriginal, citaRegistrada)) {
+            throw new BadRequestException("La cita asociada cambió. Vuelve a consultar la historia clínica.");
+        }
+        if ("FINALIZADA".equalsIgnoreCase(historiaExistente.getEstado())) {
+            throw new BadRequestException("La historia clínica ya está finalizada.");
+        }
         this.mapearHistoria(historiaExistente, historiaMedicaRq, cita);
         this.historiaMedicaRepository.save(historiaExistente);
 
@@ -137,6 +168,15 @@ public class HistoriaServiceImpl implements HistoriaService {
         rta.setStatus(200);
         rta.setMessage("Historia clínica actualizada correctamente.");
         return rta;
+    }
+
+    private void bloquearCitaEditable(Long id) {
+        if (jdbc.queryForList("SELECT id FROM cita WHERE id = ? FOR UPDATE", Long.class, id).isEmpty()) {
+            throw new BadRequestException("La cita seleccionada no existe.");
+        }
+        if ("ATENDIDA".equals(citas.detalle(id).estado())) {
+            throw new BadRequestException("La atención ya está finalizada y su historia no se puede modificar.");
+        }
     }
 
     private Cita existeCita(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
@@ -155,7 +195,9 @@ public class HistoriaServiceImpl implements HistoriaService {
         historia.setCita(cita);
         historia.setMascota(cita.getMascota());
         historia.setMedico(cita.getMedico());
-        historia.setFechaCreacion(LocalDateTime.now());
+        if (historia.getFechaCreacion() == null) {
+            historia.setFechaCreacion(LocalDateTime.now());
+        }
         historia.setDiagnostico(solicitud.getDiagnostico().trim());
         historia.setMotivoConsulta(cita.getMotivo() == null || cita.getMotivo().isBlank()
                 ? "Consulta veterinaria" : cita.getMotivo().trim());

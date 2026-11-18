@@ -2,6 +2,7 @@ package com.uniminuto.clinica.api;
 
 import com.uniminuto.clinica.entity.Especializacion;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.EspecializacionRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,6 +15,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+/**
+ * Expone la consulta, creación y edición de especialidades. La edición permite activarlas o
+ * inactivarlas.
+ */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/especializacion")
 public interface EspecializacionApi {
@@ -35,7 +40,7 @@ public interface EspecializacionApi {
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<MiRespuestaRS> crearEspecializacion(
-            @RequestBody Especializacion especializacion
+            @RequestBody EspecializacionRq especializacion
     )
             throws BadRequestException;
 
@@ -44,7 +49,7 @@ public interface EspecializacionApi {
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<MiRespuestaRS> actualizarEspecializacion(
-            @RequestBody Especializacion especializacion
+            @RequestBody EspecializacionRq especializacion
     )
             throws BadRequestException;
 }

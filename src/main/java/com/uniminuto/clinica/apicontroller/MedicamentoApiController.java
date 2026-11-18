@@ -6,16 +6,21 @@ import com.uniminuto.clinica.entity.InventarioLote;
 import com.uniminuto.clinica.entity.MovimientoInventario;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.InventarioLoteRs;
+import com.uniminuto.clinica.models.InformeInventarioRs;
 import com.uniminuto.clinica.models.MedicamentoRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.ReporteRs;
 import com.uniminuto.clinica.service.MedicamentoService;
 import com.uniminuto.clinica.service.InventarioLoteService;
 import com.uniminuto.clinica.service.MovimientoInventarioService;
+import com.uniminuto.clinica.util.ExportarReporte;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RestController;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
@@ -125,6 +130,32 @@ public class MedicamentoApiController implements MedicamentoApi {
                 .contentType(MediaType.parseMediaType(
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(archivo);
+    }
+
+    @Override
+    public InformeInventarioRs consultarInformeInventario(String tipo, LocalDate desde, LocalDate hasta) {
+        return medicamentoService.consultarInformeInventario(tipo, desde, hasta);
+    }
+
+    @Override
+    public ResponseEntity<byte[]> exportarInformeInventarioPdf(String tipo, LocalDate desde, LocalDate hasta)
+            throws IOException {
+        var informe = medicamentoService.consultarInformeInventario(tipo, desde, hasta);
+        var filas = new ArrayList<List<Object>>(informe.parametros());
+        filas.add(List.of("Totales"));
+        filas.addAll(informe.filasTotales());
+        for (var seccion : informe.secciones()) {
+            filas.add(List.of(seccion.nombre()));
+            filas.add(new ArrayList<>(seccion.columnas()));
+            seccion.filas().stream()
+                    .map(fila -> fila.stream().map(valor -> valor == null ? "" : valor).toList())
+                    .forEach(filas::add);
+        }
+        var reporte = new ReporteRs("Informe de inventario", informe.generado(), List.of(), filas);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"informe_inventario.pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(ExportarReporte.pdf(reporte));
     }
 
     /** Convierte un lote al contrato de consulta utilizado en inventario. */

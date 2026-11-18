@@ -15,23 +15,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+/** Expone la consulta de fórmulas y el registro o edición desde el formulario de un medicamento. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/formula-medica")
 public interface FormulaMedicaApi {
 
 
-    /**
-     * Metodo test del servicio.
-     *
-     * @return Servicio funcionando correctamente.
-     * @throws BadRequestException excepcion.
-     */
+    /** Lista las fórmulas visibles para la cuenta autenticada. Cada veterinario ve las que emitió. */
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<FormulaMedica>> listarFormulas()
             throws BadRequestException;
 
+    /** Busca dentro de las fórmulas visibles para la cuenta autenticada. */
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -39,11 +36,7 @@ public interface FormulaMedicaApi {
             throws BadRequestException;
 
 
-    /**
-     * Metodo para guardar una formula medica.
-     * @return
-     * @throws BadRequestException
-     */
+    /** Registra una fórmula individual con su vía de administración en una cita abierta. */
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -53,6 +46,7 @@ public interface FormulaMedicaApi {
             throws BadRequestException;
 
 
+    /** Edita una fórmula individual vigente de la misma cita si todavía no tiene entregas registradas. */
     @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})

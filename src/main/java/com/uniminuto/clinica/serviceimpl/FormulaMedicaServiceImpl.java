@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/** Consulta las fórmulas ordenadas por su fecha de registro. */
 @Service
 public class FormulaMedicaServiceImpl implements FormulaMedicaService {
 

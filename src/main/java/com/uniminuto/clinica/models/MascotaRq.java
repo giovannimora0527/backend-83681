@@ -11,7 +11,7 @@ public class MascotaRq {
     /**
      * Id unico de la mascota.
      */
-    private Integer mascotaId;
+    private Long mascotaId;
 
     /**
      * Nombre de la mascota.

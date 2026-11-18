@@ -3,19 +3,26 @@ package com.uniminuto.clinica.serviceimpl;
 import com.uniminuto.clinica.entity.Especializacion;
 import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.CuentaMedicoRs;
 import com.uniminuto.clinica.models.MedicoRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.repository.EspecializacionRepository;
 import com.uniminuto.clinica.repository.MedicoRepository;
+import com.uniminuto.clinica.repository.MedicoUsuarioRepository;
 import com.uniminuto.clinica.service.MedicoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Locale;
 
+/**
+ * Administra el directorio veterinario y verifica que cada cuenta vinculada corresponda a un solo
+ * médico.
+ */
 @Service
 public class MedicoServiceImpl implements MedicoService {
 
@@ -25,7 +32,56 @@ public class MedicoServiceImpl implements MedicoService {
     @Autowired
     private EspecializacionRepository especializacionRepository;
 
+    @Autowired
+    private MedicoUsuarioRepository medicoUsuarioRepository;
+
     private static final String ESTADO_CITA = "PROGRAMADA";
+
+    @Override
+    public List<CuentaMedicoRs> listarCuentasDisponibles() {
+        return medicoUsuarioRepository.listarDisponibles();
+    }
+
+    @Override
+    public Optional<CuentaMedicoRs> consultarCuenta(Long medicoId) {
+        if (!medicoRepository.existsById(medicoId)) {
+            throw new BadRequestException("El médico no existe.");
+        }
+        return medicoUsuarioRepository.buscarCuenta(medicoId);
+    }
+
+    @Override
+    @Transactional
+    public CuentaMedicoRs vincularCuenta(Long medicoId, Long usuarioId) {
+        if (usuarioId == null || usuarioId <= 0) {
+            throw new BadRequestException("Indica un identificador de usuario válido.");
+        }
+        exigirMedicoBloqueado(medicoId);
+        CuentaMedicoRs cuenta = medicoUsuarioRepository.bloquearCuentaMedica(usuarioId)
+                .orElseThrow(() -> new BadRequestException("El usuario debe tener una cuenta activa con perfil médico."));
+        var vinculo = medicoUsuarioRepository.bloquearVinculoPorUsuario(usuarioId);
+        if (vinculo.isPresent()) {
+            if (!vinculo.get().equals(medicoId)) {
+                throw new BadRequestException("La cuenta ya está vinculada a otro médico.");
+            }
+            return cuenta;
+        }
+        medicoUsuarioRepository.vincular(medicoId, usuarioId);
+        return cuenta;
+    }
+
+    @Override
+    @Transactional
+    public void desvincularCuenta(Long medicoId) {
+        exigirMedicoBloqueado(medicoId);
+        medicoUsuarioRepository.desvincular(medicoId);
+    }
+
+    private void exigirMedicoBloqueado(Long medicoId) {
+        if (!medicoUsuarioRepository.bloquearMedico(medicoId)) {
+            throw new BadRequestException("El médico no existe.");
+        }
+    }
 
     @Override
     public List<Medico> listarMedicos() {

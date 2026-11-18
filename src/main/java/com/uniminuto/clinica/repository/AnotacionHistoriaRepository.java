@@ -6,9 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
+/** Consulta las notas vinculadas a las historias clínicas del paciente. */
 @Repository
 public interface AnotacionHistoriaRepository extends JpaRepository<AnotacionHistoria, Long> {
     List<AnotacionHistoria> findByHistoria(HistoriaMedica historia);
+
+    List<AnotacionHistoria> findByHistoria_IdInOrderByFechaAscIdAsc(List<Long> historiaIds);
 }

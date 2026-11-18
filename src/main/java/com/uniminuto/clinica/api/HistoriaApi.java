@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+/** Expone el historial clínico y permite registrar o corregir el diagnóstico de una cita abierta. */
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/historia-clinica")
 public interface HistoriaApi {

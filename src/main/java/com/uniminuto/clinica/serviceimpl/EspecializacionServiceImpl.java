@@ -2,6 +2,7 @@ package com.uniminuto.clinica.serviceimpl;
 
 import com.uniminuto.clinica.entity.Especializacion;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.EspecializacionRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.repository.EspecializacionRepository;
 import com.uniminuto.clinica.service.EspecializacionService;
@@ -9,9 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Locale;
 
+/** Valida los datos del catálogo de especialidades y guarda su estado activo. */
 @Service
 public class EspecializacionServiceImpl implements EspecializacionService {
 
@@ -41,73 +42,66 @@ public class EspecializacionServiceImpl implements EspecializacionService {
     }
 
     @Override
-    public MiRespuestaRS crearEspecializacion(Especializacion especializacion) throws BadRequestException {
-        this.validarEspecializacion(especializacion);
-        Optional<Especializacion> especializacionExistente = especializacionRepository
-                .findByCodigoEspecializacion(especializacion.getCodigoEspecializacion());
-        if (especializacionExistente.isPresent()) {
-            throw new BadRequestException("La especialización con el código proporcionado ya existe.");
-        }
-
-        Optional<Especializacion> especializacionPorNombre = especializacionRepository
-                .findByNombre(especializacion.getNombre());
-        if (especializacionPorNombre.isPresent()) {
-            throw new BadRequestException("La especialización con el nombre proporcionado ya existe.");
-        }
-
-        especializacionRepository.save(especializacion);
-        MiRespuestaRS rta = new MiRespuestaRS();
-        rta.setMessage("Especialización creada exitosamente.");
-        rta.setStatus(200);
-        return rta;
-    }
-
-    private void validarEspecializacion(Especializacion especializacion) throws BadRequestException {
-        if (especializacion.getCodigoEspecializacion() == null || especializacion.getCodigoEspecializacion().isEmpty()) {
-            throw new BadRequestException("El código de la especialización no puede estar vacío.");
-        }
-        if (especializacion.getNombre() == null || especializacion.getNombre().isEmpty()) {
-            throw new BadRequestException("El nombre de la especialización no puede estar vacío.");
-        }
-        if (especializacion.getDescripcion() == null || especializacion.getDescripcion().isEmpty()) {
-            throw new BadRequestException("La descripción de la especialización no puede estar vacía.");
-        }
+    public MiRespuestaRS crearEspecializacion(EspecializacionRq solicitud) {
+        validarEspecializacion(solicitud);
+        var nueva = new Especializacion();
+        nueva.setActivo(Boolean.TRUE);
+        guardar(nueva, solicitud);
+        return respuesta("Especialización creada exitosamente.");
     }
 
     @Override
-    public MiRespuestaRS actualizarEspecializacion(Especializacion especializacion) throws BadRequestException {
-        this.validarEspecializacion(especializacion);
-        Optional<Especializacion> especializacionExistente = especializacionRepository
-                .findById(especializacion.getId());
-        if (especializacionExistente.isEmpty()) {
-            throw new BadRequestException("La especialización que se intenta actualizar no existe.");
+    public MiRespuestaRS actualizarEspecializacion(EspecializacionRq solicitud) {
+        validarEspecializacion(solicitud);
+        if (solicitud.id() == null || solicitud.id() <= 0) {
+            throw new BadRequestException("El identificador de la especialización es obligatorio.");
         }
-        Especializacion especializacionActual = especializacionExistente.get();
-        if (especializacionActual.getCodigoEspecializacion().equals(especializacion.getCodigoEspecializacion())) {
-            Optional<Especializacion> especializacionPorCodigo = especializacionRepository
-                    .findByCodigoEspecializacion(especializacion.getCodigoEspecializacion());
-            if (especializacionPorCodigo.isPresent() && !especializacionPorCodigo.get().getId()
-                    .equals(especializacion.getId())) {
-                throw new BadRequestException("La especialización con el código proporcionado ya existe.");
-            }
-        }
+        var especializacion = especializacionRepository.findById(solicitud.id())
+                .orElseThrow(() -> new BadRequestException("La especialización que se intenta actualizar no existe."));
+        guardar(especializacion, solicitud);
+        return respuesta("Especialización actualizada exitosamente.");
+    }
 
-        if (especializacionActual.getNombre().equals(especializacion.getNombre())) {
-            Optional<Especializacion> especializacionPorNombre = especializacionRepository
-                    .findByNombre(especializacion.getNombre());
-            if (especializacionPorNombre.isPresent() && !especializacionPorNombre.get().getId()
-                    .equals(especializacion.getId())) {
-                throw new BadRequestException("La especialización con el nombre proporcionado ya existe.");
-            }
+    private void validarEspecializacion(EspecializacionRq solicitud) {
+        if (solicitud == null || solicitud.codigoEspecializacion() == null
+                || solicitud.codigoEspecializacion().isBlank() || solicitud.codigoEspecializacion().strip().length() > 10) {
+            throw new BadRequestException("El código de la especialización es obligatorio y admite hasta 10 caracteres.");
         }
+        if (solicitud.nombre() == null || solicitud.nombre().isBlank() || solicitud.nombre().strip().length() > 100) {
+            throw new BadRequestException("El nombre de la especialización es obligatorio y admite hasta 100 caracteres.");
+        }
+        if (solicitud.descripcion() == null || solicitud.descripcion().isBlank()) {
+            throw new BadRequestException("La descripción de la especialización no puede estar vacía.");
+        }
+        if (solicitud.descripcion().strip().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 65535) {
+            throw new BadRequestException("La descripción de la especialización supera el tamaño permitido.");
+        }
+    }
 
-        especializacionActual.setCodigoEspecializacion(especializacion.getCodigoEspecializacion());
-        especializacionActual.setNombre(especializacion.getNombre());
-        especializacionActual.setDescripcion(especializacion.getDescripcion());
-        especializacionRepository.save(especializacionActual);
-        MiRespuestaRS rta = new MiRespuestaRS();
-        rta.setMessage("Especialización actualizada exitosamente.");
-        rta.setStatus(200);
-        return rta;
+    private void guardar(Especializacion especializacion, EspecializacionRq solicitud) {
+        String codigo = solicitud.codigoEspecializacion().strip();
+        String nombre = solicitud.nombre().strip();
+        if (especializacionRepository.findByCodigoEspecializacion(codigo)
+                .filter(actual -> !actual.getId().equals(especializacion.getId())).isPresent()) {
+            throw new BadRequestException("La especialización con el código proporcionado ya existe.");
+        }
+        if (especializacionRepository.findByNombre(nombre)
+                .filter(actual -> !actual.getId().equals(especializacion.getId())).isPresent()) {
+            throw new BadRequestException("La especialización con el nombre proporcionado ya existe.");
+        }
+        especializacion.setCodigoEspecializacion(codigo);
+        especializacion.setNombre(nombre);
+        especializacion.setDescripcion(solicitud.descripcion().strip());
+        if (solicitud.activo() != null) {
+            especializacion.setActivo(solicitud.activo());
+        }
+        especializacionRepository.save(especializacion);
+    }
+
+    private MiRespuestaRS respuesta(String mensaje) {
+        var respuesta = new MiRespuestaRS();
+        respuesta.setMessage(mensaje);
+        respuesta.setStatus(200);
+        return respuesta;
     }
 }

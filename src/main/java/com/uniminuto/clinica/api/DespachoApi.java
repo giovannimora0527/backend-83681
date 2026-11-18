@@ -104,6 +104,12 @@ public interface DespachoApi {
             @RequestBody DespachoCancelarRq cancelacionRq,
             @AuthenticationPrincipal String usuarioResponsableId) throws BadRequestException;
 
+    @PostMapping(value = "/{despachoId}/cerrar-pendientes", produces = "application/json", consumes = "application/json")
+    ResponseEntity<MiRespuestaRS> cerrarPendientes(
+            @PathVariable("despachoId") Long despachoId,
+            @RequestBody DespachoCancelarRq solicitud,
+            @AuthenticationPrincipal String usuarioResponsableId);
+
     /** Genera y descarga el comprobante PDF asociado al despacho. */
     @GetMapping(value = "/{despachoId}/comprobante", produces = "application/pdf")
     ResponseEntity<byte[]> descargarComprobante(

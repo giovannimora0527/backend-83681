@@ -15,6 +15,15 @@ public interface DespachoDetalleRepository extends JpaRepository<DespachoDetalle
     /** Lista las líneas de despacho ordenadas por su identificador. */
     List<DespachoDetalle> findByDespacho_IdOrderByIdAsc(Long despachoId);
 
+    @Query(value = """
+            SELECT f.id FROM factura f
+            JOIN factura_detalle fd ON fd.factura_id = f.id
+            JOIN despacho_detalle dd ON dd.id = fd.despacho_detalle_id
+            WHERE dd.despacho_id = :despachoId AND f.tipo_documento = 'FACTURA'
+              AND f.estado <> 'ANULADA' FOR UPDATE
+            """, nativeQuery = true)
+    List<Long> buscarFacturasVigentes(@Param("despachoId") Long despachoId);
+
     /** Consulta el historial de entregas de un medicamento con su despacho asociado. */
     @Query("select det from DespachoDetalle det where det.medicamento.id = :medicamentoId "
             + "order by det.despacho.fechaDespacho desc, det.id desc")
