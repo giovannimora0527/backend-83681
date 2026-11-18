@@ -1,5 +1,8 @@
 package com.uniminuto.clinica.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.CuentaMedicoRq;
@@ -25,22 +28,28 @@ import java.util.List;
  * Expone el directorio veterinario y permite a Administración consultar y gestionar el vínculo
  * entre cada médico y su cuenta.
  */
+@Tag(name = "Veterinarios y cuentas", description = "Administración gestiona médicos y vínculos de cuenta. Recepción puede consultar el directorio.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/medico")
 public interface MedicoApi {
 
+    @Operation(summary = "Listar cuentas veterinarias disponibles")
     @GetMapping("/cuentas-disponibles")
     List<CuentaMedicoRs> listarCuentasDisponibles();
 
+    @Operation(summary = "Consultar cuenta vinculada")
     @GetMapping("/{medicoId}/cuenta")
     ResponseEntity<CuentaMedicoRs> consultarCuenta(@PathVariable Long medicoId);
 
+    @Operation(summary = "Vincular cuenta con un veterinario")
     @PutMapping("/{medicoId}/cuenta")
     CuentaMedicoRs vincularCuenta(@PathVariable Long medicoId, @RequestBody CuentaMedicoRq solicitud);
 
+    @Operation(summary = "Desvincular cuenta de un veterinario")
     @DeleteMapping("/{medicoId}/cuenta")
     ResponseEntity<Void> desvincularCuenta(@PathVariable Long medicoId);
 
+    @Operation(summary = "Consultar veterinarios disponibles en un intervalo")
     @GetMapping(value = "/listar-disponibles",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -50,18 +59,21 @@ public interface MedicoApi {
             throws BadRequestException;
 
 
+    @Operation(summary = "Listar veterinarios")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<Medico>> listarTodos()
             throws BadRequestException;
 
+    @Operation(summary = "Buscar veterinarios")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<Medico>> buscarMedicos(@RequestParam String termino)
             throws BadRequestException;
 
+    @Operation(summary = "Registrar veterinario")
     @PostMapping(value = "/crear",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -70,6 +82,7 @@ public interface MedicoApi {
     )
             throws BadRequestException;
 
+    @Operation(summary = "Actualizar veterinario")
     @RequestMapping(value = "/actualizar", method = {RequestMethod.POST, RequestMethod.PUT},
             produces = {"application/json"},
             consumes = {"application/json"})

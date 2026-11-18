@@ -1,5 +1,8 @@
 package com.uniminuto.clinica.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MascotaRq;
@@ -17,6 +20,7 @@ import java.util.List;
 /**
  * API para la gestión de mascotas.
  */
+@Tag(name = "Pacientes", description = "Administración y Recepción pueden gestionar mascotas. Veterinaria tiene acceso de consulta.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/mascota")
 public interface MascotaApi {
@@ -27,6 +31,7 @@ public interface MascotaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Listar mascotas")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -40,6 +45,7 @@ public interface MascotaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Listar mascotas ordenadas")
     @GetMapping(value = "/listar-ordenado",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -54,6 +60,7 @@ public interface MascotaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Buscar mascotas por nombre")
     @GetMapping(value = "/buscar-nombre",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -68,6 +75,7 @@ public interface MascotaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Consultar mascotas de un propietario")
     @GetMapping(value = "/buscar-by-cliente",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -81,6 +89,7 @@ public interface MascotaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Consultar mascotas por raza")
     @GetMapping(value = "/buscar-by-raza",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -95,6 +104,7 @@ public interface MascotaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Registrar mascota")
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -108,6 +118,7 @@ public interface MascotaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Actualizar mascota")
     @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})

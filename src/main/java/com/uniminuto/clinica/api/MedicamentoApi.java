@@ -1,5 +1,8 @@
 package com.uniminuto.clinica.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.uniminuto.clinica.models.InformeInventarioRs;
 import java.io.IOException;
 
@@ -27,11 +30,13 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /** API REST para administrar y consultar el inventario de medicamentos y productos médicos. */
+@Tag(name = "Medicamentos e informes de inventario", description = "Administración gestiona medicamentos. Veterinaria y Despacho Médico pueden consultar. Los informes se reservan a Administración y Despacho Médico.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping({"/medicamento", "/inventario/medicamentos"})
 public interface MedicamentoApi {
 
     /** Lista todos los medicamentos y productos registrados. */
+    @Operation(summary = "Listar medicamentos")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -39,6 +44,7 @@ public interface MedicamentoApi {
             throws BadRequestException;
 
     /** Busca productos por nombre, código, descripción o presentación. */
+    @Operation(summary = "Buscar medicamentos")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -46,6 +52,7 @@ public interface MedicamentoApi {
             throws BadRequestException;
 
     /** Registra un producto y su saldo inicial como entrada trazable. */
+    @Operation(summary = "Registrar medicamento")
     @PostMapping(value = {"/crear", "/guardar"},
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -54,6 +61,7 @@ public interface MedicamentoApi {
             throws BadRequestException;
 
     /** Actualiza datos descriptivos sin permitir cambios directos del saldo. */
+    @Operation(summary = "Actualizar medicamento")
     @PutMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -62,40 +70,50 @@ public interface MedicamentoApi {
             throws BadRequestException;
 
     /** Lista productos con existencias mayores que cero. */
+    @Operation(summary = "Listar medicamentos disponibles")
     @GetMapping(value = "/disponibles", produces = {"application/json"})
     ResponseEntity<List<Medicamento>> listarDisponibles();
 
     /** Lista productos agotados. */
+    @Operation(summary = "Listar medicamentos agotados")
     @GetMapping(value = "/agotados", produces = {"application/json"})
     ResponseEntity<List<Medicamento>> listarAgotados();
 
     /** Lista productos con saldo inferior o igual a su stock mínimo. */
+    @Operation(summary = "Listar medicamentos con stock bajo")
     @GetMapping(value = "/stock-bajo", produces = {"application/json"})
     ResponseEntity<List<Medicamento>> listarStockBajo();
 
     /** Lista productos próximos a vencer dentro del rango solicitado. */
+    @Operation(summary = "Listar medicamentos próximos a vencer")
     @GetMapping(value = "/proximos-vencer", produces = {"application/json"})
     ResponseEntity<List<Medicamento>> listarProximosAVencer(@RequestParam(defaultValue = "30") int dias);
 
     /** Consulta saldo utilizable y si alcanza para la cantidad solicitada. */
+    @Operation(summary = "Consultar disponibilidad de un medicamento")
     @GetMapping(value = "/{medicamentoId}/disponibilidad", produces = {"application/json"})
     ResponseEntity<java.util.Map<String, Object>> consultarDisponibilidad(
             @PathVariable Long medicamentoId, @RequestParam(defaultValue = "0") Integer cantidadRequerida);
 
     /** Lista el inventario consultable por el perfil de despacho, con cantidades y precios. */
+    @Operation(summary = "Consultar disponibilidad general para despacho")
     @GetMapping(value = "/disponibilidad", produces = "application/json")
     ResponseEntity<List<MedicamentoInventarioRs>> consultarInventarioParaDespacho();
 
     /** Lista los lotes y vencimientos asociados a un medicamento. */
+    @Operation(summary = "Consultar lotes para despacho")
     @GetMapping(value = "/{medicamentoId}/lotes", produces = "application/json")
     ResponseEntity<List<InventarioLoteRs>> consultarLotesParaDespacho(@PathVariable Long medicamentoId);
 
     /** Lista los movimientos relacionados con un medicamento. */
+    @Operation(summary = "Consultar movimientos de un medicamento")
     @GetMapping(value = "/{medicamentoId}/movimientos", produces = "application/json")
     ResponseEntity<List<MovimientoInventarioRs>> consultarMovimientosParaDespacho(
             @PathVariable Long medicamentoId);
 
     /** Descarga un informe parametrizable de existencias, lotes y movimientos en Excel. */
+    @Operation(summary = "Descargar informe de inventario en Excel",
+            description = "El rango de fechas se aplica a los movimientos.")
     @GetMapping(value = "/informes/exportar-excel",
             produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     ResponseEntity<byte[]> exportarInformeInventarioExcel(
@@ -103,12 +121,16 @@ public interface MedicamentoApi {
             @RequestParam(required = false) LocalDate desde,
             @RequestParam(required = false) LocalDate hasta);
 
+    @Operation(summary = "Consultar vista previa de inventario",
+            description = "Usa los mismos filtros y totales de las descargas.")
     @GetMapping(value = "/informes", produces = "application/json")
     InformeInventarioRs consultarInformeInventario(
             @RequestParam(defaultValue = "TODOS") String tipo,
             @RequestParam(required = false) LocalDate desde,
             @RequestParam(required = false) LocalDate hasta);
 
+    @Operation(summary = "Descargar informe de inventario en PDF",
+            description = "El rango de fechas se aplica a los movimientos.")
     @GetMapping(value = "/informes/exportar-pdf", produces = "application/pdf")
     ResponseEntity<byte[]> exportarInformeInventarioPdf(
             @RequestParam(defaultValue = "TODOS") String tipo,

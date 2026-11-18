@@ -1,9 +1,20 @@
 package com.uniminuto.clinica.models;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@Schema(example = """
+        {
+          "username": "usuario.clinica",
+          "password": "REEMPLAZA_CON_TU_CLAVE",
+          "activo": true,
+          "email": "usuario@example.test",
+          "perfilId": 2
+        }
+        """)
 @Data
 public class UsuarioRq {
     /*

@@ -1,5 +1,8 @@
 package com.uniminuto.clinica.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.AnotacionHistoriaRq;
 import com.uniminuto.clinica.models.AnotacionHistoriaRs;
@@ -16,15 +19,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 /** Expone las notas clínicas que pueden consultarse como parte de los antecedentes del paciente. */
+@Tag(name = "Anotaciones clínicas", description = "Administración y Veterinaria. Notas asociadas a la historia clínica.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/anotacion-historia")
 public interface AnotacionHistoriaApi {
 
+    @Operation(summary = "Listar anotaciones")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<AnotacionHistoriaRs>> listarAnotaciones();
 
+    @Operation(summary = "Buscar anotaciones")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -36,6 +42,7 @@ public interface AnotacionHistoriaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Registrar anotación clínica")
     @PostMapping(value = "/crear",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -44,6 +51,7 @@ public interface AnotacionHistoriaApi {
     )
             throws BadRequestException;
 
+    @Operation(summary = "Actualizar anotación clínica")
     @PutMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
