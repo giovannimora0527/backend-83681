@@ -19,12 +19,14 @@ import java.time.LocalDateTime;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    /** Responde cuando el usuario carece de permisos para la operación. */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ErrorResponse(403, "FORBIDDEN", ex.getMessage()));
     }
 
+    /** Devuelve al cliente el motivo de una solicitud rechazada. */
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequest(
             BadRequestException ex) {
@@ -40,6 +42,7 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    /** Devuelve una respuesta de error para una falla inesperada. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         ErrorResponse error = new ErrorResponse(
@@ -53,6 +56,7 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    /** Indica qué parámetro obligatorio falta en la solicitud. */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMissingParameter(MissingServletRequestParameterException ex) {
         return handleBadRequest(new BadRequestException("Falta el parámetro " + ex.getParameterName() + "."));

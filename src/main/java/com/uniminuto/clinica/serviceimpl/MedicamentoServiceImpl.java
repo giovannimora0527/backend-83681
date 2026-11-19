@@ -149,12 +149,14 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         return resultado;
     }
 
+    /** Consulta el informe de inventario. */
     @Override
     @Transactional(readOnly = true)
     public InformeInventarioRs consultarInformeInventario(String tipo, LocalDate desde, LocalDate hasta) {
         return prepararInformeInventario(tipo, desde, hasta);
     }
 
+    /** Reúne existencias, lotes, movimientos y totales para el informe de inventario. */
     private InformeInventarioRs prepararInformeInventario(String tipo, LocalDate desde, LocalDate hasta) {
         validarAccesoInformeInventario();
         validarRangoFechas(desde, hasta);
@@ -184,6 +186,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
                 List.of(existencias, detallesLote, movimientos), totales);
     }
 
+    /** Genera el informe de inventario en un libro de Excel. */
     @Override
     @Transactional(readOnly = true)
     public byte[] exportarInventarioExcel(String tipo, LocalDate desde, LocalDate hasta) {
@@ -208,6 +211,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         }
     }
 
+    /** Agrega los encabezados y las filas de una sección al libro de Excel. */
     private Sheet escribirSeccion(Workbook libro, CellStyle encabezado, InformeInventarioRs.Seccion seccion) {
         Sheet hoja = libro.createSheet(seccion.nombre());
         escribirEncabezados(hoja, encabezado, seccion.columnas().toArray(String[]::new));
@@ -222,12 +226,14 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         return hoja;
     }
 
+    /** Suma los importes de la columna indicada para el total del informe. */
     private BigDecimal sumarColumna(InformeInventarioRs.Seccion seccion, String nombre) {
         int columna = seccion.columnas().indexOf(nombre);
         return seccion.filas().stream().map(fila -> new BigDecimal(fila.get(columna).toString()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /** Suma las unidades de los movimientos del tipo indicado. */
     private long sumarMovimientos(InformeInventarioRs.Seccion movimientos, String tipo) {
         int tipoColumna = movimientos.columnas().indexOf("Tipo");
         int cantidadColumna = movimientos.columnas().indexOf("Cantidad");
@@ -235,6 +241,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
                 .mapToLong(fila -> ((Number) fila.get(cantidadColumna)).longValue()).sum();
     }
 
+    /** Agrega al libro los filtros y datos de generación del informe. */
     private void crearHojaParametros(Workbook libro, CellStyle encabezado, InformeInventarioRs informe) {
         Sheet hoja = libro.createSheet("Parámetros");
         escribirEncabezados(hoja, encabezado, "Parámetro", "Valor");
@@ -432,25 +439,30 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         };
     }
 
+    /** Comprueba si el lote conserva unidades en inventario. */
     private boolean loteConUnidades(InventarioLote lote) {
         return lote.getCantidad() != null && lote.getCantidad() > 0;
     }
 
+    /** Comprueba si el lote está activo, tiene unidades y sigue vigente. */
     private boolean loteDisponible(InventarioLote lote, LocalDate fecha) {
         return Boolean.TRUE.equals(lote.getActivo()) && loteConUnidades(lote)
                 && (lote.getFechaVencimiento() == null || !lote.getFechaVencimiento().isBefore(fecha));
     }
 
+    /** Comprueba si un lote con unidades ya superó su fecha de vencimiento. */
     private boolean loteVencido(InventarioLote lote, LocalDate fecha) {
         return loteConUnidades(lote) && lote.getFechaVencimiento() != null
                 && lote.getFechaVencimiento().isBefore(fecha);
     }
 
+    /** Comprueba si el lote disponible vence dentro del período de alerta. */
     private boolean loteProximoAVencer(InventarioLote lote, LocalDate fecha) {
         return loteDisponible(lote, fecha) && lote.getFechaVencimiento() != null
                 && !lote.getFechaVencimiento().isAfter(fecha.plusDays(DIAS_PROXIMO_VENCIMIENTO_EXCEL));
     }
 
+    /** Determina si la cantidad disponible está en el nivel mínimo o por debajo. */
     private boolean stockBajo(int disponible, Integer minimo) {
         return disponible > 0 && minimo != null && disponible <= minimo;
     }
@@ -567,10 +579,6 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         if ("MEDICAMENTO".equals(tipo) && solicitud.getFechaVence() == null) {
             throw new BadRequestException("La fecha de vencimiento es obligatoria para los medicamentos.");
         }
-        if (solicitud.getCantidadActual() != null && solicitud.getCantidadActual() > 0
-                && solicitud.getFechaVence() == null) {
-            throw new BadRequestException("La fecha de vencimiento es obligatoria para cada lote con existencias.");
-        }
         if (solicitud.getFechaVence() != null && solicitud.getFechaVence().isBefore(solicitud.getFechaCompra())) {
             throw new BadRequestException("La fecha de vencimiento no puede ser anterior a la fecha de compra.");
         }
@@ -685,6 +693,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         return cantidadDisponible(medicamento, lotesDisponibles);
     }
 
+    /** Calcula las unidades dispensables usando el saldo del producto y los lotes vigentes. */
     private int cantidadDisponible(Medicamento medicamento, long lotesDisponibles) {
         int saldoGeneral = medicamento.getCantidadActual() == null ? 0 : medicamento.getCantidadActual();
         return (int) Math.min(Math.max(0, saldoGeneral), Math.min(Integer.MAX_VALUE, lotesDisponibles));

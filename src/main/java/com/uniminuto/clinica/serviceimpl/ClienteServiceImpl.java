@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.time.LocalDate;
 
+/** Implementa las operaciones y validaciones relacionadas con un propietario de mascotas. */
 @Service
 public class ClienteServiceImpl implements ClienteService {
 
@@ -22,6 +23,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    /** Consulta los propietarios. */
     @Override
     public List<Cliente> listarClientes() throws BadRequestException {
         return clienteRepository.findAll().stream()
@@ -29,6 +31,7 @@ public class ClienteServiceImpl implements ClienteService {
                 .toList();
     }
 
+    /** Busca los propietarios cuyo documento coincide con el criterio. */
     @Override
     public Cliente buscarClientesPorDocumento(String documento) throws BadRequestException {
         Optional<Cliente> clienteOptional = clienteRepository.findByNumeroDocumento(documento);
@@ -39,6 +42,7 @@ public class ClienteServiceImpl implements ClienteService {
         }
     }
 
+    /** Registra el propietario. */
     @Override
     public MiRespuestaRS crearCliente(Cliente cliente) {
         validarCliente(cliente);
@@ -57,6 +61,7 @@ public class ClienteServiceImpl implements ClienteService {
         return respuesta("Cliente creado correctamente.");
     }
 
+    /** Actualiza el propietario. */
     @Override
     public MiRespuestaRS actualizarCliente(Cliente cliente) {
         validarCliente(cliente);
@@ -86,6 +91,7 @@ public class ClienteServiceImpl implements ClienteService {
         return respuesta("Cliente actualizado correctamente.");
     }
 
+    /** Valida el usuario. */
     private void validarUsuario(Long usuarioId, Long clienteId) {
         if (usuarioId == null) {
             return;
@@ -101,6 +107,7 @@ public class ClienteServiceImpl implements ClienteService {
         }
     }
 
+    /** Valida el propietario. */
     private void validarCliente(Cliente cliente) {
         if (cliente == null) throw new BadRequestException("La información del cliente es obligatoria.");
         if (vacio(cliente.getTipoDocumento()) || vacio(cliente.getNumeroDocumento())
@@ -116,8 +123,11 @@ public class ClienteServiceImpl implements ClienteService {
         }
     }
 
+    /** Comprueba si el texto está ausente o solo contiene espacios. */
     private boolean vacio(String valor) { return valor == null || valor.isBlank(); }
+    /** Elimina espacios sobrantes al inicio y al final del valor. */
     private String limpiar(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }
+    /** Prepara el mensaje que devuelve la operación. */
     private MiRespuestaRS respuesta(String mensaje) {
         MiRespuestaRS respuesta = new MiRespuestaRS();
         respuesta.setStatus(200);

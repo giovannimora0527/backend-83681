@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Contiene los datos enviados para registrar o editar una cuenta. */
 @Schema(example = """
         {
           "username": "usuario.clinica",

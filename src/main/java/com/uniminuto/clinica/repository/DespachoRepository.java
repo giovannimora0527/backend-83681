@@ -15,16 +15,20 @@ import java.util.Optional;
 @Repository
 public interface DespachoRepository extends JpaRepository<Despacho, Long> {
 
+    /** Obtiene el identificador de la fórmula ligada al despacho. */
     @Query("select d.formulaId from Despacho d where d.id = :id")
     Optional<Long> buscarFormulaId(@Param("id") Long id);
 
+    /** Consulta los registros del identificador más alto al más bajo. */
     List<Despacho> findAllByOrderByIdDesc();
 
+    /** Consulta los medicamentos de la fórmula desde el identificador más alto. */
     List<Despacho> findByFormulaIdOrderByIdDesc(Long formulaId);
 
     /** Busca el proceso activo más reciente de una fórmula. */
     Optional<Despacho> findFirstByFormulaIdAndEstadoInOrderByIdDesc(Long formulaId, List<String> estados);
 
+    /** Obtiene el registro por identificador con bloqueo durante la operación. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select d from Despacho d where d.id = :id")
     Optional<Despacho> findLockedById(@Param("id") Long id);

@@ -48,6 +48,7 @@ public class CitaServiceImpl implements CitaService {
     private final UsuarioRepository usuarioRepository;
     private final JdbcTemplate jdbc;
 
+    /** Consulta las citas. */
     @Override
     public List<Cita> listarCitas() {
         Long medico = medicoAutenticado();
@@ -55,6 +56,7 @@ public class CitaServiceImpl implements CitaService {
                 : citaRepository.findByMedicoIdOrderByFechaHoraAsc(medico);
     }
 
+    /** Consulta las citas entre la fecha inicial y la final. */
     @Override
     public List<Cita> listarCitasRango(LocalDateTime inicio, LocalDateTime fin) {
         if (inicio == null || fin == null || !inicio.isBefore(fin)) {
@@ -63,6 +65,7 @@ public class CitaServiceImpl implements CitaService {
         return citaRepository.listarIntervalo(medicoAutenticado(), inicio, fin);
     }
 
+    /** Consulta el historial de citas de la mascota indicada. */
     @Override
     public List<Cita> listarCitasPorMascota(Long mascotaId) {
         var mascota = mascotaRepository.findById(mascotaId)
@@ -73,6 +76,7 @@ public class CitaServiceImpl implements CitaService {
                 .toList();
     }
 
+    /** Consulta las citas del veterinario en las fechas indicadas. */
     @Override
     public List<CitaCalendarioRs> calendario(LocalDateTime inicio, LocalDateTime fin) {
         if (medicoAutenticado() == null) {
@@ -81,6 +85,7 @@ public class CitaServiceImpl implements CitaService {
         return listarCitasRango(inicio, fin).stream().map(CitaServiceImpl::evento).toList();
     }
 
+    /** Consulta los datos de la cita. */
     @Override
     public CitaCalendarioRs detalle(Long id) {
         Cita cita = buscarCita(id);
@@ -88,11 +93,15 @@ public class CitaServiceImpl implements CitaService {
         return evento(cita);
     }
 
+    /** Registra la cita. */
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public MiRespuestaRS crearCita(CitaRq solicitud) {
         if (solicitud == null) {
             throw new BadRequestException("Los datos de la cita son obligatorios.");
+        }
+        if (solicitud.getMedicoId() == null) {
+            solicitud.setMedicoId(medicoAutenticado());
         }
         if (solicitud.getMedicoId() != null) {
             validarAcceso(solicitud.getMedicoId());
@@ -110,6 +119,7 @@ public class CitaServiceImpl implements CitaService {
         return respuesta("Se guardó la cita.");
     }
 
+    /** Actualiza la cita. */
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public MiRespuestaRS actualizarCita(CitaRq solicitud) {
@@ -151,6 +161,7 @@ public class CitaServiceImpl implements CitaService {
         return respuesta("Se guardó la cita.");
     }
 
+    /** Solicita cambiar el horario de la cita indicada. */
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public CitaCalendarioRs reprogramar(Long id, LocalDateTime fechaHora) {
@@ -167,6 +178,7 @@ public class CitaServiceImpl implements CitaService {
         return evento(cita);
     }
 
+    /** Bloquea la cita y comprueba que todavía se pueda atender. */
     private Cita bloquearCitaAbierta(Long id, Long medicoDestino, Long mascotaDestino) {
         var asignacion = jdbc.query("SELECT medico_id, mascota_id FROM cita WHERE id = ?",
                 (rs, fila) -> new AsignacionCita(rs.getLong("medico_id"), rs.getLong("mascota_id")), id)
@@ -191,6 +203,7 @@ public class CitaServiceImpl implements CitaService {
         return cita;
     }
 
+    /** Bloquea los registros que intervienen en el cambio de la cita. */
     private void bloquearRecursos(AsignacionCita origen, Long medicoDestino, Long mascotaDestino) {
         // La agenda siempre bloquea médicos, mascotas y, por último, la cita existente.
         Stream.of(origen == null ? null : origen.medicoId(), medicoDestino)
@@ -201,6 +214,7 @@ public class CitaServiceImpl implements CitaService {
                         jdbc.queryForList("SELECT mascota_id FROM mascota WHERE mascota_id = ? FOR UPDATE", id));
     }
 
+    /** Registra una cita con el horario y los datos enviados. */
     private void agendar(Cita cita, CitaRq solicitud, String estado, boolean reprogramacion) {
         if (solicitud == null || solicitud.getMedicoId() == null || solicitud.getMascotaId() == null
                 || solicitud.getFechaHora() == null
@@ -263,10 +277,12 @@ public class CitaServiceImpl implements CitaService {
         citaRepository.save(cita);
     }
 
+    /** Busca la cita. */
     private Cita buscarCita(Long id) {
         return citaRepository.findById(id).orElseThrow(() -> new BadRequestException("La cita no existe."));
     }
 
+    /** Comprueba los permisos del usuario para realizar la operación. */
     private void validarAcceso(Long medicoId) {
         Long medico = medicoAutenticado();
         if (medico != null && !medico.equals(medicoId)) {
@@ -274,6 +290,7 @@ public class CitaServiceImpl implements CitaService {
         }
     }
 
+    /** Identifica al veterinario vinculado con la sesión. */
     @Override
     public Long medicoAutenticado() {
         var usuario = SecurityContextHolder.getContext().getAuthentication();
@@ -291,10 +308,12 @@ public class CitaServiceImpl implements CitaService {
                 .stream().findFirst().orElseThrow(() -> new AccessDeniedException("El usuario no tiene médico asociado."));
     }
 
+    /** Obtiene el identificador del usuario de la sesión. */
     private long usuarioId() {
         return Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
     }
 
+    /** Registra un cambio asociado a la operación. */
     private static CitaCalendarioRs evento(Cita cita) {
         var cliente = cita.getCliente();
         var mascota = cita.getMascota();
@@ -306,6 +325,7 @@ public class CitaServiceImpl implements CitaService {
                 raza == null ? null : raza.getNombre(), raza == null ? null : raza.getEspecie());
     }
 
+    /** Prepara el mensaje que devuelve la operación. */
     private MiRespuestaRS respuesta(String mensaje) {
         MiRespuestaRS respuesta = new MiRespuestaRS();
         respuesta.setStatus(200);
@@ -313,9 +333,11 @@ public class CitaServiceImpl implements CitaService {
         return respuesta;
     }
 
+    /** Contiene el inicio y el fin del período disponible para una cita. */
     private record Horario(long id, LocalTime fin, int duracion) {
     }
 
+    /** Agrupa los datos de la mascota y el veterinario considerados al programar la cita. */
     private record AsignacionCita(Long medicoId, Long mascotaId) {
     }
 }

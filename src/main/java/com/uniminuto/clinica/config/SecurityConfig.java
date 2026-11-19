@@ -23,6 +23,7 @@ import java.util.Locale;
 @Configuration
 public class SecurityConfig {
 
+    /** Configura los permisos y filtros que se aplican a las peticiones HTTP. */
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
         return http
@@ -45,8 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/cerrar-sesion").authenticated()
                         .requestMatchers(HttpMethod.POST, "/inventario/dispensaciones/*/cerrar-pendientes")
                         .access(perfiles("DESPACHO_MEDICO"))
-                        .requestMatchers("/inventario/dispensaciones/**")
-                        .access(perfiles("ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO"))
+                        .requestMatchers("/inventario/dispensaciones/**").access(perfiles("DESPACHO_MEDICO"))
                         .requestMatchers("/inventario/carga-masiva/**").access(administradores())
                         .requestMatchers(HttpMethod.GET,
                                 "/inventario/medicamentos/informes", "/inventario/medicamentos/informes/**",
@@ -54,7 +54,8 @@ public class SecurityConfig {
                         .access(perfiles("ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO"))
                         .requestMatchers("/inventario/medicamentos/**", "/medicamento/**")
                         .access(permisosMedicamento())
-                        .requestMatchers("/inventario-lote/**").access(permisosLotes())
+                        .requestMatchers(HttpMethod.POST, "/inventario-lote/guardar", "/inventario-lote/actualizar/*", "/inventario-lote/desactivar/*").access(administradores())
+                        .requestMatchers("/inventario-lote/**").access(soloLectura("ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO"))
                         .requestMatchers("/movimiento-inventario/**").access(soloLectura("ADMIN",
                                 "ADMINISTRADOR", "DESPACHO_MEDICO"))
                         .requestMatchers("/formula-medica/**").access(permisosFormula())
@@ -98,25 +99,14 @@ public class SecurityConfig {
         };
     }
 
-    /** Permite consulta de lotes a administración y despacho, y escrituras a administración. */
-    private AuthorizationManager<RequestAuthorizationContext> permisosLotes() {
-        return (authentication, context) -> {
-            Authentication actual = authentication.get();
-            boolean permitido = esMetodoLectura(context.getRequest().getMethod())
-                    ? tienePerfil(actual, "ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO")
-                    : esMetodoEscritura(context.getRequest().getMethod())
-                    && tienePerfil(actual, "ADMIN", "ADMINISTRADOR");
-            return new AuthorizationDecision(permitido);
-        };
-    }
 
-    /** Permite formular al veterinario y consultar a administración y despacho. */
+    /** Permite formular al veterinario y consultar a administración. */
     private AuthorizationManager<RequestAuthorizationContext> permisosFormula() {
         return (authentication, context) -> {
             Authentication actual = authentication.get();
             String metodo = context.getRequest().getMethod();
             boolean permitido = esMetodoLectura(metodo)
-                    ? tienePerfil(actual, "ADMIN", "ADMINISTRADOR", "MEDICO", "VETERINARIO", "DESPACHO_MEDICO")
+                    ? tienePerfil(actual, "ADMIN", "ADMINISTRADOR", "MEDICO", "VETERINARIO")
                     : esMetodoEscritura(metodo) && tienePerfil(actual, "MEDICO", "VETERINARIO");
             return new AuthorizationDecision(permitido);
         };

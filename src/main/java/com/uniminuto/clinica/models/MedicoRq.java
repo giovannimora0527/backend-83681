@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 
+/** Contiene los datos enviados para registrar o editar un veterinario. */
 @Schema(example = """
         {
           "tipoDocumento": "CC",

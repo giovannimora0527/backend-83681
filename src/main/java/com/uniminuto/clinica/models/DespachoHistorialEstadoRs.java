@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Contiene los datos que se devuelven sobre un cambio de estado registrado en un despacho. */
 @Data
 public class DespachoHistorialEstadoRs {
 

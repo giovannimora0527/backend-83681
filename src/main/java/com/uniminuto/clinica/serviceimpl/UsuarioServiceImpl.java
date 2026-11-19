@@ -17,23 +17,27 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Locale;
 
+/** Implementa las operaciones y validaciones relacionadas con una cuenta de usuario. */
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PerfilRepository perfilRepository;
 
+    /** Prepara los datos necesarios para usar la cuenta de usuario. */
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository, PerfilRepository perfilRepository) {
         this.usuarioRepository = usuarioRepository;
         this.perfilRepository = perfilRepository;
     }
 
+    /** Consulta las cuentas en el orden definido para el listado. */
     @Override
     public List<UsuarioRs> obtenerUsuariosOrdenados() {
         List<Usuario> usuarios = usuarioRepository.findAllByOrderByUsernameAsc();
         return convertirUsuarioToUsuarioRs(usuarios);
     }
 
+    /** Busca los usuarios. */
     @Override
     public List<UsuarioRs> buscarUsuarios(String termino) {
         String busqueda = termino == null ? "" : termino.trim().toLowerCase(Locale.ROOT);
@@ -45,10 +49,12 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .toList();
     }
 
+    /** Comprueba si el valor contiene el texto buscado. */
     private boolean contiene(String valor, String busqueda) {
         return valor != null && valor.toLowerCase(Locale.ROOT).contains(busqueda);
     }
 
+    /** Selecciona los datos de la cuenta que se devolverán en la respuesta. */
     private List<UsuarioRs> convertirUsuarioToUsuarioRs(List<Usuario> usuarios) {
         return usuarios.stream().map(usuario -> {
             UsuarioRs usuarioRs = new UsuarioRs();
@@ -62,6 +68,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         }).toList();
     }
 
+    /** Registra el usuario. */
     @Override
     public MiRespuestaRS crearUsuario(UsuarioRq usuarioRq) {
         this.validarUsuario(usuarioRq, true);
@@ -97,6 +104,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         return rta;
     }
 
+    /** Actualiza el usuario. */
     @Override
     public MiRespuestaRS actualizarUsuario(UsuarioRq usuarioRq) {
         this.validarUsuario(usuarioRq, false);
@@ -139,6 +147,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         return rta;
     }
 
+    /** Valida el usuario. */
     private void validarUsuario(UsuarioRq usuarioRq, boolean requierePassword) throws BadRequestException {
         if (usuarioRq == null) {
             throw new BadRequestException("El usuario no puede estar vacío");

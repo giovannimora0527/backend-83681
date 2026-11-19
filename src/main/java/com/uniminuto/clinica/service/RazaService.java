@@ -7,13 +7,18 @@ import com.uniminuto.clinica.models.RazaRq;
 
 import java.util.List;
 
+/** Define las operaciones disponibles para gestionar una raza del catálogo. */
 public interface RazaService {
 
+    /** Registra una nueva raza en el catálogo. */
     MiRespuestaRS crearRazaNueva(RazaRq razaRq) throws BadRequestException;
 
+    /** Actualiza la raza. */
     MiRespuestaRS actualizarRaza(RazaRq razaRq) throws BadRequestException;
 
+    /** Consulta las razas. */
     List<Raza> listarRazas() throws BadRequestException;
 
+    /** Busca las razas. */
     List<Raza> buscarRazas(String termino);
 }

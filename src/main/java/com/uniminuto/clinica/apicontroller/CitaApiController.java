@@ -33,21 +33,25 @@ public class CitaApiController implements CitaApi {
     @Autowired
     private CitaService citaService;
 
+    /** Consulta las citas del veterinario en las fechas indicadas. */
     @Override
     public List<CitaCalendarioRs> calendario(LocalDateTime inicio, LocalDateTime fin) {
         return citaService.calendario(inicio, fin);
     }
 
+    /** Consulta los datos de la cita. */
     @Override
     public CitaCalendarioRs detalle(Long id) {
         return citaService.detalle(id);
     }
 
+    /** Solicita cambiar el horario de la cita indicada. */
     @Override
     public CitaCalendarioRs reprogramar(Long id, ReprogramarCitaRq solicitud) {
         return citaService.reprogramar(id, solicitud == null ? null : solicitud.fechaHora());
     }
 
+    /** Genera y devuelve el Excel con las citas del período solicitado. */
     @Override
     public ResponseEntity<byte[]> excel(String inicio, String fin) throws IOException {
         var intervalo = intervaloExcel(inicio, fin);
@@ -79,6 +83,7 @@ public class CitaApiController implements CitaApi {
         }
     }
 
+    /** Valida y prepara las fechas para consultar las citas del Excel. */
     private IntervaloExcel intervaloExcel(String inicio, String fin) {
         try {
             if (inicio.length() == 10 && fin.length() == 10) {
@@ -92,29 +97,35 @@ public class CitaApiController implements CitaApi {
         }
     }
 
+    /** Contiene las fechas validadas para exportar las citas. */
     private record IntervaloExcel(LocalDateTime inicio, LocalDateTime fin) {
     }
+    /** Consulta las citas. */
     @Override
     public ResponseEntity<List<Cita>> listarCitas() throws BadRequestException {
         return ResponseEntity.ok(this.citaService.listarCitas());
     }
 
+    /** Consulta las citas entre la fecha inicial y la final. */
     @Override
     public ResponseEntity<List<Cita>> listarCitasRango(LocalDateTime fechaInicio, LocalDateTime fechaFin)
             throws BadRequestException {
         return ResponseEntity.ok(this.citaService.listarCitasRango(fechaInicio, fechaFin));
     }
 
+    /** Consulta el historial de citas de la mascota indicada. */
     @Override
     public ResponseEntity<List<Cita>> listarCitasPorMascota(Long mascotaId) throws BadRequestException {
         return ResponseEntity.ok(this.citaService.listarCitasPorMascota(mascotaId));
     }
 
+    /** Registra la cita. */
     @Override
     public ResponseEntity<MiRespuestaRS> crearCita(CitaRq cita) throws BadRequestException {
         return ResponseEntity.ok(this.citaService.crearCita(cita));
     }
 
+    /** Actualiza la cita. */
     @Override
     public ResponseEntity<MiRespuestaRS> actualizarCita(CitaRq cita) throws BadRequestException {
         return ResponseEntity.ok(this.citaService.actualizarCita(cita));

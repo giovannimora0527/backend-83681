@@ -41,13 +41,17 @@ public class AtencionServiceImpl implements AtencionService {
     private final HistoriaMedicaRepository historias;
     private final AnotacionHistoriaRepository anotaciones;
 
+    /** Reúne los datos de la cita, los antecedentes, las fórmulas y la prefactura del paciente. */
     @Override
     @Transactional(readOnly = true)
     public AtencionDetalleRs consultar(long citaId) {
         var cita = citas.detalle(citaId);
+        var prefacturaId = jdbc.queryForList("""
+                SELECT id FROM factura WHERE cita_id = ? AND tipo_documento = 'PREFACTURA'
+                """, Long.class, citaId).stream().findFirst().orElse(null);
         var registros = historias.findByMascota_MascotaIdOrderByFechaCreacionDescIdDesc(cita.mascotaId());
         if (registros.isEmpty()) {
-            return new AtencionDetalleRs(cita, List.of(), null);
+            return new AtencionDetalleRs(cita, List.of(), null, prefacturaId);
         }
         var notasPorHistoria = new HashMap<Long, List<HistoriaAtencionRs.Nota>>();
         for (var nota : anotaciones.findByHistoria_IdInOrderByFechaAscIdAsc(
@@ -70,7 +74,7 @@ public class AtencionServiceImpl implements AtencionService {
                 antecedentes.add(registro);
             }
         }
-        return new AtencionDetalleRs(cita, antecedentes, historiaActual);
+        return new AtencionDetalleRs(cita, antecedentes, historiaActual, prefacturaId);
     }
 
     /** Guarda la historia, la fecha real de atención y la prefactura en la misma operación. */
@@ -124,11 +128,13 @@ public class AtencionServiceImpl implements AtencionService {
         return lista;
     }
 
+    /** Solicita guardar la prescripción para la cita que el veterinario está atendiendo. */
     @Override
     public long formular(long citaId, PrescripcionRq solicitud) {
         return formulas.formular(citaId, solicitud);
     }
 
+    /** Consulta las unidades disponibles tras verificar el acceso a la cita. */
     @Override
     public long existencias(long citaId, long medicamentoId) {
         citas.detalle(citaId);
@@ -176,6 +182,7 @@ public class AtencionServiceImpl implements AtencionService {
                 LocalDateTime.now(ZoneId.of("America/Bogota")), List.of(), filas);
     }
 
+    /** Bloquea la cita y comprueba que todavía permita registrar atención. */
     private com.uniminuto.clinica.models.CitaCalendarioRs bloquearCitaAbierta(long citaId) {
         citaRepository.bloquearPorId(citaId)
                 .orElseThrow(() -> new BadRequestException("La cita no existe."));
@@ -186,6 +193,7 @@ public class AtencionServiceImpl implements AtencionService {
         return cita;
     }
 
+    /** Comprueba si el texto está ausente o solo contiene espacios. */
     private boolean vacio(String texto) {
         return texto == null || texto.isBlank();
     }

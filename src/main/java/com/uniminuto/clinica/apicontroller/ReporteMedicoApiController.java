@@ -21,6 +21,7 @@ public class ReporteMedicoApiController implements ReporteMedicoApi {
 
     private final ReporteMedicoService reportes;
 
+    /** Consulta el reporte de citas y atenciones. */
     @Override
     public ReporteRs consultar(LocalDate inicio, LocalDate fin,
                                Long medicoId,
@@ -28,6 +29,7 @@ public class ReporteMedicoApiController implements ReporteMedicoApi {
         return reportes.consultar(inicio, fin, medicoId, especializacionId);
     }
 
+    /** Prepara el archivo y los encabezados de la respuesta de descarga. */
     @Override
     public ResponseEntity<byte[]> descargar(String formato, LocalDate inicio,
                                             LocalDate fin, Long medicoId,
@@ -42,6 +44,7 @@ public class ReporteMedicoApiController implements ReporteMedicoApi {
         };
     }
 
+    /** Prepara el archivo y los encabezados de la respuesta de descarga. */
     private ResponseEntity<byte[]> descargar(String nombre, MediaType tipo, byte[] bytes) {
         return ResponseEntity.ok().contentType(tipo)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + nombre).body(bytes);

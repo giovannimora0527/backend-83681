@@ -153,6 +153,7 @@ public class DespachoApiController implements DespachoApi {
                 despachoId, cancelacionRq, usuarioResponsableId));
     }
 
+    /** Registra el cierre justificado de las cantidades que siguen pendientes. */
     @Override
     public ResponseEntity<MiRespuestaRS> cerrarPendientes(Long despachoId, DespachoCancelarRq solicitud,
                                                          String usuarioResponsableId) {
@@ -302,12 +303,13 @@ public class DespachoApiController implements DespachoApi {
         respuesta.setNumeroLote(lote.getNumeroLote());
         respuesta.setCantidadDisponible(lote.getCantidad());
         respuesta.setFechaVencimiento(lote.getFechaVencimiento());
-        respuesta.setVencido(lote.getFechaVencimiento().isBefore(hoy));
-        respuesta.setProximoAVencer(!lote.getFechaVencimiento().isBefore(hoy)
+        var vencimiento = lote.getFechaVencimiento();
+        respuesta.setVencido(vencimiento != null && vencimiento.isBefore(hoy));
+        respuesta.setProximoAVencer(vencimiento != null && !vencimiento.isBefore(hoy)
                 && !lote.getFechaVencimiento().isAfter(hoy.plusDays(30)));
         respuesta.setSeleccionable(Boolean.TRUE.equals(lote.getActivo())
                 && lote.getCantidad() != null && lote.getCantidad() > 0
-                && !lote.getFechaVencimiento().isBefore(hoy));
+                && (vencimiento == null || !vencimiento.isBefore(hoy)));
         respuesta.setRecomendadoFefo(false);
         return respuesta;
     }

@@ -121,6 +121,7 @@ public interface MedicamentoApi {
             @RequestParam(required = false) LocalDate desde,
             @RequestParam(required = false) LocalDate hasta);
 
+    /** Genera la información del inventario con el tipo de informe y las fechas recibidas. */
     @Operation(summary = "Consultar vista previa de inventario",
             description = "Usa los mismos filtros y totales de las descargas.")
     @GetMapping(value = "/informes", produces = "application/json")
@@ -129,6 +130,7 @@ public interface MedicamentoApi {
             @RequestParam(required = false) LocalDate desde,
             @RequestParam(required = false) LocalDate hasta);
 
+    /** Genera el informe de inventario en formato PDF. */
     @Operation(summary = "Descargar informe de inventario en PDF",
             description = "El rango de fechas se aplica a los movimientos.")
     @GetMapping(value = "/informes/exportar-pdf", produces = "application/pdf")

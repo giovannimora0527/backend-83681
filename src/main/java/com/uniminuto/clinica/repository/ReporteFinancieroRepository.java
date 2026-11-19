@@ -109,7 +109,7 @@ public class ReporteFinancieroRepository {
         return filas;
     }
 
-    /** Distribuye proporcionalmente abonos, IVA y descuentos entre servicios y medicamentos. */
+    /** Distribuye abonos, IVA y descuentos entre consultas, otros servicios y medicamentos. */
     private List<List<Object>> recaudoPorConcepto(LocalDateTime desde, LocalDateTime hasta, String formato,
                                                   Long medico, Long especialidad) {
         // La diferencia entre acumulados redondeados conserva los centavos entre abonos.
@@ -128,15 +128,22 @@ public class ReporteFinancieroRepository {
                     WHERE f.tipo_documento = 'FACTURA' AND f.total > 0
                         AND (? IS NULL OR m.id = ?)
                         AND (? IS NULL OR COALESCE(f.especializacion_emision_id, m.especializacion_id) = ?)
-                ), importes AS (
-                    SELECT f.id, f.total, f.descuento,
-                        SUM(d.subtotal + COALESCE(i.importe, 0)) AS bruto,
-                        SUM(CASE WHEN d.tipo = 'SERVICIO' THEN d.subtotal + COALESCE(i.importe, 0) ELSE 0 END)
-                            AS bruto_servicio,
-                        SUM(CASE WHEN d.tipo = 'SERVICIO' THEN COALESCE(i.importe, 0) ELSE 0 END) AS iva_servicio,
-                        SUM(CASE WHEN d.tipo = 'MEDICAMENTO' THEN COALESCE(i.importe, 0) ELSE 0 END) AS iva_medicamento
+                ), lineas AS (
+                    SELECT d.factura_id, d.tipo, d.subtotal, COALESCE(i.importe, 0) AS iva,
+                        d.tipo = 'SERVICIO' AND REGEXP_LIKE(TRIM(d.descripcion), '^Consulta([[:space:]]|$)', 'i')
+                            AS es_consulta
                     FROM facturas_del_reporte f JOIN factura_detalle d ON d.factura_id = f.id
                     LEFT JOIN factura_detalle_iva i ON i.detalle_id = d.id
+                ), importes AS (
+                    SELECT f.id, f.total, f.descuento,
+                        SUM(d.subtotal + d.iva) AS bruto,
+                        SUM(CASE WHEN d.tipo = 'SERVICIO' THEN d.subtotal + d.iva ELSE 0 END)
+                            AS bruto_servicio,
+                        SUM(CASE WHEN d.tipo = 'SERVICIO' THEN d.iva ELSE 0 END) AS iva_servicio,
+                        SUM(CASE WHEN d.tipo = 'MEDICAMENTO' THEN d.iva ELSE 0 END) AS iva_medicamento,
+                        SUM(CASE WHEN d.es_consulta THEN d.subtotal + d.iva ELSE 0 END) AS bruto_consulta,
+                        SUM(CASE WHEN d.es_consulta THEN d.iva ELSE 0 END) AS iva_consulta
+                    FROM facturas_del_reporte f JOIN lineas d ON d.factura_id = f.id
                     GROUP BY f.id, f.total, f.descuento
                     HAVING bruto > 0
                 ), costos AS (
@@ -154,6 +161,8 @@ public class ReporteFinancieroRepository {
                             / NULLIF(i.bruto_servicio, 0), 2), 0) AS iva_servicio,
                         COALESCE(ROUND(i.iva_medicamento * (i.total - i.bruto_servicio + i.descuento_servicio)
                             / NULLIF(i.bruto - i.bruto_servicio, 0), 2), 0) AS iva_medicamento,
+                        COALESCE(CAST(i.bruto_consulta AS DECIMAL(28, 12)) / NULLIF(i.bruto_servicio, 0), 0) AS peso_consulta,
+                        COALESCE(CAST(i.iva_consulta AS DECIMAL(28, 12)) / NULLIF(i.iva_servicio, 0), 0) AS peso_iva_consulta,
                         i.descuento_servicio, i.descuento - i.descuento_servicio AS descuento_medicamento
                     FROM eventos ev JOIN pagos_acumulados p ON p.id = ev.pago_id JOIN costos i ON i.id = p.factura_id
                 ), reparto AS (
@@ -165,11 +174,21 @@ public class ReporteFinancieroRepository {
                         ROUND(acumulado * descuento_servicio / total, 2) - ROUND(previo * descuento_servicio / total, 2)
                             AS descuento_servicio,
                         ROUND(acumulado * descuento_medicamento / total, 2) - ROUND(previo * descuento_medicamento / total, 2)
-                            AS descuento_medicamento
+                            AS descuento_medicamento,
+                        ROUND(ROUND(acumulado * neto_servicio / total, 2) * peso_consulta, 2)
+                            - ROUND(ROUND(previo * neto_servicio / total, 2) * peso_consulta, 2) AS consulta,
+                        ROUND(ROUND(acumulado * iva_servicio / total, 2) * peso_iva_consulta, 2)
+                            - ROUND(ROUND(previo * iva_servicio / total, 2) * peso_iva_consulta, 2) AS iva_consulta,
+                        ROUND(ROUND(acumulado * descuento_servicio / total, 2) * peso_consulta, 2)
+                            - ROUND(ROUND(previo * descuento_servicio / total, 2) * peso_consulta, 2) AS descuento_consulta
                     FROM bases
                 ), conceptos AS (
-                    SELECT 'Recaudo neto de servicios' AS concepto, grupo, signo * servicio AS importe,
-                        signo * iva_servicio AS iva, signo * descuento_servicio AS descuento
+                    SELECT 'Recaudo neto de consultas médicas' AS concepto, grupo, signo * consulta AS importe,
+                        signo * iva_consulta AS iva, signo * descuento_consulta AS descuento
+                    FROM reparto
+                    UNION ALL
+                    SELECT 'Recaudo neto de otros servicios', grupo, signo * (servicio - consulta),
+                        signo * (iva_servicio - iva_consulta), signo * (descuento_servicio - descuento_consulta)
                     FROM reparto
                     UNION ALL
                     SELECT 'Recaudo neto de medicamentos', grupo, signo * (monto - servicio),

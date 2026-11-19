@@ -17,15 +17,17 @@ import java.time.LocalDate;
 @Repository
 public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Long> {
 
+    /** Calcula las unidades que se pueden dispensar según el saldo y los lotes vigentes. */
     @org.springframework.data.jpa.repository.Query(value = """
             SELECT LEAST(m.stock_actual, COALESCE(SUM(l.cantidad), 0))
             FROM medicamento m LEFT JOIN inventario_lote l ON l.medicamento_id = m.id
-                AND l.activo = 1 AND l.fecha_vencimiento >= :fecha
+                AND l.activo = 1 AND (l.fecha_vencimiento IS NULL OR l.fecha_vencimiento >= :fecha)
             WHERE m.id = :medicamentoId
             GROUP BY m.id, m.stock_actual
             """, nativeQuery = true)
     Optional<Long> existenciasDisponibles(Long medicamentoId, LocalDate fecha);
 
+    /** Cuenta las entregas registradas para los medicamentos de la fórmula. */
     @org.springframework.data.jpa.repository.Query(value = """
             SELECT COUNT(*) FROM despacho_detalle dd
                 JOIN formula_detalle fd ON fd.id = dd.formula_detalle_id
@@ -33,18 +35,25 @@ public interface FormulaMedicaRepository extends JpaRepository<FormulaMedica, Lo
             """, nativeQuery = true)
     long contarEntregas(Long formulaId);
 
+    /** Busca la fórmula indicada y comprueba que pertenezca a la cita. */
     Optional<FormulaMedica> findByIdAndCita_Id(Long id, Long citaId);
 
+    /** Consulta los registros del más antiguo al más reciente. */
     List<FormulaMedica> findAllByOrderByFechaCreacionRegistroAsc();
 
+    /** Consulta fórmulas de las citas indicadas, empezando por las más recientes. */
     List<FormulaMedica> findByCita_IdInOrderByFechaCreacionRegistroDesc(List<Long> citaIds);
 
+    /** Consulta los registros del más reciente al más antiguo. */
     List<FormulaMedica> findAllByOrderByFechaCreacionRegistroDesc();
 
+    /** Consulta las fórmulas del veterinario, empezando por la más reciente. */
     List<FormulaMedica> findByMedico_IdOrderByFechaCreacionRegistroDesc(Long medicoId);
 
+    /** Comprueba si existe una fórmula asociada a la cita. */
     boolean existsByCita_Id(Long citaId);
 
+    /** Obtiene el registro por identificador con bloqueo durante la operación. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @org.springframework.data.jpa.repository.Query("select f from FormulaMedica f where f.id = :id")
     Optional<FormulaMedica> findLockedById(Long id);

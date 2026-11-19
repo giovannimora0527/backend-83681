@@ -19,21 +19,25 @@ public class FormulaMedicaApiController implements FormulaMedicaApi {
     @Autowired
     private FormulaService formulaService;
 
+    /** Consulta las fórmulas médicas. */
     @Override
     public ResponseEntity<List<FormulaMedica>> listarFormulas() {
         return ResponseEntity.ok(this.formulaService.findAllFormulas());
     }
 
+    /** Busca las fórmulas médicas. */
     @Override
     public ResponseEntity<List<FormulaMedica>> buscarFormulas(String termino) {
         return ResponseEntity.ok(this.formulaService.buscarFormulas(termino));
     }
 
+    /** Guarda la fórmula médica. */
     @Override
     public ResponseEntity<MiRespuestaRS> guardarFormula(FormulaRq formulaRq) throws BadRequestException {
         return ResponseEntity.ok(this.formulaService.guardarFormula(formulaRq));
     }
 
+    /** Actualiza la fórmula médica. */
     @Override
     public ResponseEntity<MiRespuestaRS> actualizarFormula(FormulaRq formulaRq) throws BadRequestException {
         return ResponseEntity.ok(this.formulaService.actualizarFormula(formulaRq));

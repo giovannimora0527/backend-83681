@@ -251,6 +251,9 @@ public class CargaMasivaInventarioServiceImpl implements CargaMasivaInventarioSe
             DataFormatter formatter = new DataFormatter(Locale.ROOT);
             List<List<String>> filas = new ArrayList<>();
             for (Row fila : hoja) {
+                while (filas.size() < fila.getRowNum()) {
+                    filas.add(List.of());
+                }
                 List<String> celdas = new ArrayList<>();
                 for (int columna = 0; columna < Math.max(fila.getLastCellNum(), 0); columna++) {
                     Cell celda = fila.getCell(columna, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -307,7 +310,6 @@ public class CargaMasivaInventarioServiceImpl implements CargaMasivaInventarioSe
         if (!decimalValido(valor(fila, "precioCompra")) || !decimalValido(valor(fila, "precioVenta"))) return "Los precios deben ser números no negativos.";
         if (!enteroValido(valor(fila, "cantidadActual")) || !enteroValido(valor(fila, "stockMinimo"))) return "Las cantidades deben ser enteros no negativos.";
         if (Integer.parseInt(valor(fila, "cantidadActual")) > 0) {
-            if (valor(fila, "fechaVence").isBlank()) return "La fecha de vencimiento es obligatoria cuando se registran existencias.";
             if (valor(fila, "numeroLote").isBlank() || valor(fila, "numeroLote").length() > 50) return "El número de lote es obligatorio cuando hay existencias.";
             if (!decimalValido(valor(fila, "precioCompraLote"))) return "El precio de compra del lote debe ser un número no negativo.";
         }

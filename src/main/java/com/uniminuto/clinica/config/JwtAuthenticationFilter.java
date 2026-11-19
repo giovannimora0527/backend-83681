@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
+/** Valida el token de cada petición y carga el perfil de una sesión vigente. */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -34,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final SessionRepository sessionRepository;
     private final String jwtSecret;
 
+    /** Prepara los datos necesarios para usar esta clase. */
     public JwtAuthenticationFilter(UsuarioRepository usuarioRepository,
                                    SessionRepository sessionRepository,
                                    @Value("${JWT_SECRET}") String jwtSecret) {
@@ -42,6 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtSecret = jwtSecret;
     }
 
+    /** Identifica las peticiones que pueden continuar sin pasar por la comprobación del token. */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
@@ -49,6 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || request.getMethod().equalsIgnoreCase("OPTIONS");
     }
 
+    /** Valida el token, revisa que la sesión siga activa y carga el usuario autenticado. */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
@@ -96,6 +100,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
+    /** Comprueba que el token y la sesión correspondan a la misma cuenta. */
     private boolean userIdEquals(Session session, long userId) {
         return session.getUserId() != null && session.getUserId() == userId;
     }

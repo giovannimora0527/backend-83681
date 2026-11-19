@@ -23,6 +23,7 @@ import java.util.List;
 public record AtencionRq(Long tarifaId, String motivo, String sintomas, String diagnostico,
                          String observaciones, String recomendaciones, List<Long> tarifaIds) {
 
+    /** Prepara los datos necesarios para usar esta clase. */
     public AtencionRq(Long tarifaId, String motivo, String sintomas, String diagnostico,
                       String observaciones, String recomendaciones) {
         this(tarifaId, motivo, sintomas, diagnostico, observaciones, recomendaciones, null);

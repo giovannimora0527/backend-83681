@@ -25,6 +25,7 @@ import java.util.List;
 @RequestMapping("/historia-clinica")
 public interface HistoriaApi {
 
+    /** Consulta todas las historias clínicas disponibles. */
     @Operation(summary = "Listar historias clínicas")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
@@ -32,6 +33,7 @@ public interface HistoriaApi {
     ResponseEntity<List<HistoriaMedicaRs>> listarAllHIstorias()
             throws BadRequestException;
 
+    /** Busca las historias clínicas que coinciden con el criterio. */
     @Operation(summary = "Buscar historias clínicas")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
@@ -39,6 +41,7 @@ public interface HistoriaApi {
     ResponseEntity<List<HistoriaMedicaRs>> buscarHistorias(@RequestParam String termino)
             throws BadRequestException;
 
+    /** Guarda los datos de la historia clínica. */
     @Operation(summary = "Registrar historia de una cita")
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
@@ -48,6 +51,7 @@ public interface HistoriaApi {
     )
             throws BadRequestException;
 
+    /** Guarda cambios en la historia clínica del paciente. */
     @Operation(summary = "Actualizar historia de una cita abierta")
     @RequestMapping(value = "/actualizar", method = {RequestMethod.POST, RequestMethod.PUT},
             produces = {"application/json"},

@@ -42,7 +42,7 @@ public class InventarioLote {
     @Column(name = "precio_compra_lote", precision = 12, scale = 2, nullable = false)
     private BigDecimal precioCompraLote;
 
-    @Column(name = "fecha_vencimiento", nullable = false)
+    @Column(name = "fecha_vencimiento")
     private LocalDate fechaVencimiento;
 
     @Column(name = "fecha_ingreso", nullable = false)

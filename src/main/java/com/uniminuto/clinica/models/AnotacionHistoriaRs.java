@@ -23,6 +23,7 @@ public class AnotacionHistoriaRs {
     private String observaciones;
     private List<FormulaMedica> formulasMedicas = List.of();
 
+    /** Prepara los datos necesarios para usar esta clase. */
     public AnotacionHistoriaRs(AnotacionHistoria anotacion) {
         this.id = anotacion.getId();
         this.historia = anotacion.getHistoria();

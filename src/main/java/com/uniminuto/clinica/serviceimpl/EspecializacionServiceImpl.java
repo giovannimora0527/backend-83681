@@ -19,6 +19,7 @@ public class EspecializacionServiceImpl implements EspecializacionService {
     @Autowired
     private EspecializacionRepository especializacionRepository;
 
+    /** Consulta las especialidades veterinarias. */
     @Override
     public List<Especializacion> listarEspecializaciones() {
         return especializacionRepository.findAll().stream()
@@ -26,6 +27,7 @@ public class EspecializacionServiceImpl implements EspecializacionService {
                         .compareToIgnoreCase(e2.getNombre())).toList();
     }
 
+    /** Busca las especialidades veterinarias. */
     @Override
     public List<Especializacion> buscarEspecializaciones(String termino) {
         String busqueda = termino == null ? "" : termino.trim().toLowerCase(Locale.ROOT);
@@ -37,10 +39,12 @@ public class EspecializacionServiceImpl implements EspecializacionService {
                 .toList();
     }
 
+    /** Comprueba si el valor contiene el texto buscado. */
     private boolean contiene(String valor, String busqueda) {
         return valor != null && valor.toLowerCase(Locale.ROOT).contains(busqueda);
     }
 
+    /** Registra la especialidad veterinaria. */
     @Override
     public MiRespuestaRS crearEspecializacion(EspecializacionRq solicitud) {
         validarEspecializacion(solicitud);
@@ -50,6 +54,7 @@ public class EspecializacionServiceImpl implements EspecializacionService {
         return respuesta("Especialización creada exitosamente.");
     }
 
+    /** Actualiza la especialidad veterinaria. */
     @Override
     public MiRespuestaRS actualizarEspecializacion(EspecializacionRq solicitud) {
         validarEspecializacion(solicitud);
@@ -62,6 +67,7 @@ public class EspecializacionServiceImpl implements EspecializacionService {
         return respuesta("Especialización actualizada exitosamente.");
     }
 
+    /** Valida la especialidad veterinaria. */
     private void validarEspecializacion(EspecializacionRq solicitud) {
         if (solicitud == null || solicitud.codigoEspecializacion() == null
                 || solicitud.codigoEspecializacion().isBlank() || solicitud.codigoEspecializacion().strip().length() > 10) {
@@ -78,6 +84,7 @@ public class EspecializacionServiceImpl implements EspecializacionService {
         }
     }
 
+    /** Guarda la especialidad. */
     private void guardar(Especializacion especializacion, EspecializacionRq solicitud) {
         String codigo = solicitud.codigoEspecializacion().strip();
         String nombre = solicitud.nombre().strip();
@@ -98,6 +105,7 @@ public class EspecializacionServiceImpl implements EspecializacionService {
         especializacionRepository.save(especializacion);
     }
 
+    /** Prepara el mensaje que devuelve la operación. */
     private MiRespuestaRS respuesta(String mensaje) {
         var respuesta = new MiRespuestaRS();
         respuesta.setMessage(mensaje);

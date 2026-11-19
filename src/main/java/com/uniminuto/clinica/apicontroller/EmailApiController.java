@@ -24,6 +24,7 @@ public class EmailApiController implements EmailApi {
     @Autowired
     private EmailService emailService;
 
+    /** Envía un correo para comprobar que el servicio esté disponible. */
     @Override
     public ResponseEntity<TestRs> testEmail() throws BadRequestException {
       return ResponseEntity.ok(emailService.testService());

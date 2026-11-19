@@ -16,6 +16,7 @@ public class FormulaMedicaServiceImpl implements FormulaMedicaService {
     private FormulaMedicaRepository formulaMedicaRepository;
 
 
+    /** Consulta las fórmulas en el orden usado para el listado. */
     @Override
     public List<FormulaMedica> listarFormulasOrdenadas(boolean asc) {
         return asc? formulaMedicaRepository.findAllByOrderByFechaCreacionRegistroAsc()

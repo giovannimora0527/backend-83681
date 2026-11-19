@@ -1,5 +1,6 @@
 package com.uniminuto.clinica.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -56,6 +57,7 @@ public class FormulaMedica {
     private String estado = "VIGENTE";
 
     @Transient
+    @JsonIgnoreProperties({"lotes", "movimientos"})
     private Medicamento medicamento;
 
     @Transient
@@ -104,4 +106,9 @@ public class FormulaMedica {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private List<FormulaDetalle> detallesDespacho;
+
+    @Transient
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<FormulaDetalle> detalles;
 }

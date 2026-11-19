@@ -43,6 +43,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      */
     Optional<Usuario> findByUsername(String username);
 
+    /** Busca un registro por su identificador. */
     @EntityGraph(attributePaths = "perfil")
     Optional<Usuario> findOneById(Long id);
 

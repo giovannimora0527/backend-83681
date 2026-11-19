@@ -33,32 +33,40 @@ import java.util.List;
 @RequestMapping("/medico")
 public interface MedicoApi {
 
+    /** Consulta las cuentas que pueden asociarse a un veterinario. */
     @Operation(summary = "Listar cuentas veterinarias disponibles")
     @GetMapping("/cuentas-disponibles")
     List<CuentaMedicoRs> listarCuentasDisponibles();
 
+    /** Consulta la cuenta de acceso asociada al veterinario. */
     @Operation(summary = "Consultar cuenta vinculada")
     @GetMapping("/{medicoId}/cuenta")
     ResponseEntity<CuentaMedicoRs> consultarCuenta(@PathVariable Long medicoId);
 
+    /** Relaciona la cuenta seleccionada con el veterinario. */
     @Operation(summary = "Vincular cuenta con un veterinario")
     @PutMapping("/{medicoId}/cuenta")
     CuentaMedicoRs vincularCuenta(@PathVariable Long medicoId, @RequestBody CuentaMedicoRq solicitud);
 
+    /** Desasocia la cuenta de acceso del veterinario indicado. */
     @Operation(summary = "Desvincular cuenta de un veterinario")
     @DeleteMapping("/{medicoId}/cuenta")
     ResponseEntity<Void> desvincularCuenta(@PathVariable Long medicoId);
 
+    /** Consulta los veterinarios que pueden atender en el horario indicado. */
     @Operation(summary = "Consultar veterinarios disponibles en un intervalo")
     @GetMapping(value = "/listar-disponibles",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<Medico>> listarMedicosDisponibles(
             @RequestParam LocalDateTime fechaInicio,
-            @RequestParam LocalDateTime fechaFin)
+            @RequestParam LocalDateTime fechaFin,
+            @RequestParam(required = false) Long citaId,
+            @RequestParam(required = false) Long mascotaId)
             throws BadRequestException;
 
 
+    /** Consulta todos los registros del catálogo. */
     @Operation(summary = "Listar veterinarios")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
@@ -66,6 +74,7 @@ public interface MedicoApi {
     ResponseEntity<List<Medico>> listarTodos()
             throws BadRequestException;
 
+    /** Busca veterinarios que coincidan con el criterio. */
     @Operation(summary = "Buscar veterinarios")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
@@ -73,6 +82,7 @@ public interface MedicoApi {
     ResponseEntity<List<Medico>> buscarMedicos(@RequestParam String termino)
             throws BadRequestException;
 
+    /** Registra un nuevo veterinario. */
     @Operation(summary = "Registrar veterinario")
     @PostMapping(value = "/crear",
             produces = {"application/json"},
@@ -82,6 +92,7 @@ public interface MedicoApi {
     )
             throws BadRequestException;
 
+    /** Guarda los cambios del veterinario. */
     @Operation(summary = "Actualizar veterinario")
     @RequestMapping(value = "/actualizar", method = {RequestMethod.POST, RequestMethod.PUT},
             produces = {"application/json"},

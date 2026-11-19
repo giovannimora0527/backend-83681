@@ -40,7 +40,7 @@ public class ReporteMedicoRepository {
                        SUM(en_agenda),
                        SUM(en_agenda AND estado = 'ATENDIDA'),
                        SUM(en_agenda AND estado = 'CANCELADA'),
-                       SUM(en_agenda AND estado = 'PROGRAMADA'),
+                       SUM(en_agenda AND estado IN ('PROGRAMADA', 'CONFIRMADA')),
                        COUNT(DISTINCT CASE WHEN en_atencion THEN mascota_id END),
                        SUM(en_agenda AND estado = 'CONFIRMADA'),
                        SUM(en_agenda AND estado = 'NO_ASISTIDA'),

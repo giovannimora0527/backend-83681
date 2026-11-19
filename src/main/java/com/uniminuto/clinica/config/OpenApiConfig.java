@@ -29,12 +29,13 @@ public class OpenApiConfig {
     private static final String PDF = "application/pdf";
     private static final String EXCEL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
+    /** Configura la descripción general de la API de la clínica. */
     @Bean
     OpenAPI apiClinica() {
         return new OpenAPI()
                 .info(new Info().title("Clínica veterinaria Uniminuto").version("1")
                         .description("""
-                                Consulta las operaciones por módulo y sus permisos.
+                                Consulta las operaciones por módulo y sus permisos. Cada operación incluye una nota sobre su uso desde Angular.
                                 Para probar las rutas protegidas, ejecuta el login, valida el OTP recibido
                                 por correo y usa el JWT de la segunda respuesta en Authorize.
                                 """))
@@ -43,12 +44,14 @@ public class OpenApiConfig {
                 .addSecurityItem(new SecurityRequirement().addList("jwt"));
     }
 
+    /** Configura las respuestas documentadas para los servicios de comprobación. */
     @Bean
     OpenApiCustomizer documentarRespuestasClinica() {
         return api -> api.getPaths().forEach((ruta, recurso) ->
                 recurso.readOperationsMap().forEach((metodo, operacion) -> documentar(ruta, metodo, operacion)));
     }
 
+    /** Completa la información que se muestra en Swagger para la operación. */
     private void documentar(String ruta, PathItem.HttpMethod metodo, Operation operacion) {
         var respuestas = operacion.getResponses();
         if (respuestas == null) {
@@ -72,8 +75,10 @@ public class OpenApiConfig {
         documentarEstadoExitoso(ruta, metodo, respuestas);
         documentarParametros(ruta, operacion);
         documentarEjemploSolicitud(ruta, operacion);
+        ConsumoAngularOpenApi.documentar(ruta, metodo, operacion);
     }
 
+    /** Describe los formatos de archivo que la operación devuelve. */
     private void documentarDescarga(String ruta, ApiResponses respuestas) {
         var contenido = new Content();
         if (ruta.equals("/reportes/medicos/{formato}") || ruta.equals("/reportes/financieros/{formato}")) {
@@ -89,10 +94,12 @@ public class OpenApiConfig {
         }
     }
 
+    /** Prepara la respuesta para devolver un archivo al navegador. */
     private MediaType archivo() {
         return new MediaType().schema(new StringSchema().format("binary"));
     }
 
+    /** Describe la respuesta que se devuelve cuando la operación tiene éxito. */
     private void documentarEstadoExitoso(String ruta, PathItem.HttpMethod metodo, ApiResponses respuestas) {
         boolean sinContenido = ruta.equals("/factura/{id}/anular")
                 || ruta.equals("/factura/{id}/pagos/{pagoId}/devolucion")
@@ -106,6 +113,7 @@ public class OpenApiConfig {
         }
     }
 
+    /** Completa la descripción de los parámetros de la operación en Swagger. */
     private void documentarParametros(String ruta, Operation operacion) {
         if (operacion.getParameters() == null) {
             return;
@@ -137,6 +145,7 @@ public class OpenApiConfig {
         }
     }
 
+    /** Agrega ejemplos al cuerpo de la solicitud descrita en Swagger. */
     private void documentarEjemploSolicitud(String ruta, Operation operacion) {
         if (operacion.getRequestBody() == null || operacion.getRequestBody().getContent() == null) {
             return;

@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/** Implementa las operaciones y validaciones relacionadas con el envío de correos. */
 @Service
 public class EmailServiceImpl implements EmailService {
 
@@ -42,6 +43,7 @@ public class EmailServiceImpl implements EmailService {
     @Autowired
     private EmailConfig emailConfig;
 
+    /** Prepara los datos necesarios para usar esta clase. */
     public EmailServiceImpl(
             JavaMailSender mailSender,
             @Value("${spring.mail.username}") String remitente) {
@@ -49,6 +51,7 @@ public class EmailServiceImpl implements EmailService {
         this.remitente = remitente;
     }
 
+    /** Devuelve una respuesta para comprobar el acceso al servicio. */
     @Override
     public TestRs testService() {
         // Envío de correo de prueba con detalles claros para testeo
@@ -71,12 +74,14 @@ public class EmailServiceImpl implements EmailService {
         return rta;
     }
 
+    /** Envía un correo de texto con el asunto y el contenido recibidos. */
     @Override
     public void enviarCorreoSimple(String to, String subject, String body)
             throws BadRequestException {
         enviarCorreo(to, subject, body, getTo());
     }
 
+    /** Envía un correo al destinatario indicado. */
     @Override
     public void enviarCorreo(String to, String subject, String body, String from)
             throws BadRequestException {
@@ -123,6 +128,7 @@ public class EmailServiceImpl implements EmailService {
 
         // Crear la sesión de correo con autenticación
         Session session = Session.getInstance(properties, new Authenticator() {
+            /** Entrega las credenciales configuradas al servidor de correo. */
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(emailConfig.getUsername(),
@@ -145,11 +151,13 @@ public class EmailServiceImpl implements EmailService {
         System.out.println("Correo enviado con éxito a " + to);
     }
 
+    /** Devuelve el destinatario del correo. */
     @Override
     public String getTo() {
         return remitente;
     }
 
+    /** Envía un correo junto con los archivos indicados. */
     @Override
     public void enviarCorreoConAdjuntos(String to, String subject, String body, String from,
                                         MultipartFile adjunto, String filename)
@@ -180,6 +188,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    /** Comprueba el formato de la dirección de correo. */
     private void validarCorreo(String to, String subject, String from) {
         if (to == null || to.isBlank()) {
             throw new BadRequestException("El destinatario del correo es obligatorio.");

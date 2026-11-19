@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/** Representa la asignación de una opción de navegación a un perfil en la base de datos. */
 @Entity
 @Table(name = "perfil_menu")
 @Data

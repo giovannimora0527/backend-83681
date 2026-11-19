@@ -25,10 +25,12 @@ public class MedicoUsuarioRepository {
 
     private final JdbcTemplate jdbc;
 
+    /** Obtiene el veterinario con bloqueo antes de modificar sus citas o datos. */
     public boolean bloquearMedico(long medicoId) {
         return !jdbc.queryForList("SELECT id FROM medico WHERE id = ? FOR UPDATE", Long.class, medicoId).isEmpty();
     }
 
+    /** Busca la cuenta asociada al veterinario. */
     public Optional<CuentaMedicoRs> buscarCuenta(long medicoId) {
         return jdbc.query("""
                 SELECT u.id, u.username, u.email FROM medico_usuario mu
@@ -36,6 +38,7 @@ public class MedicoUsuarioRepository {
                 """, CUENTA, medicoId).stream().findFirst();
     }
 
+    /** Consulta los registros disponibles para la operación. */
     public List<CuentaMedicoRs> listarDisponibles() {
         return jdbc.query(CUENTAS_MEDICAS + """
                   AND NOT EXISTS (SELECT 1 FROM medico_usuario mu WHERE mu.usuario_id = u.id)
@@ -43,16 +46,19 @@ public class MedicoUsuarioRepository {
                 """, CUENTA);
     }
 
+    /** Obtiene la cuenta con bloqueo antes de modificar su vínculo. */
     public Optional<CuentaMedicoRs> bloquearCuentaMedica(long usuarioId) {
         return jdbc.query(CUENTAS_MEDICAS + " AND u.id = ? FOR UPDATE", CUENTA, usuarioId)
                 .stream().findFirst();
     }
 
+    /** Bloquea la relación del usuario con el veterinario durante el cambio. */
     public Optional<Long> bloquearVinculoPorUsuario(long usuarioId) {
         return jdbc.queryForList("SELECT medico_id FROM medico_usuario WHERE usuario_id = ? FOR UPDATE",
                 Long.class, usuarioId).stream().findFirst();
     }
 
+    /** Asocia el veterinario con una cuenta de acceso. */
     public void vincular(long medicoId, long usuarioId) {
         int actualizados = jdbc.update("UPDATE medico_usuario SET usuario_id = ? WHERE medico_id = ?",
                 usuarioId, medicoId);
@@ -61,6 +67,7 @@ public class MedicoUsuarioRepository {
         }
     }
 
+    /** Elimina el vínculo entre el veterinario y su cuenta. */
     public void desvincular(long medicoId) {
         jdbc.update("DELETE FROM medico_usuario WHERE medico_id = ?", medicoId);
     }

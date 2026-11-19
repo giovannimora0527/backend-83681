@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+/** Agrupa las operaciones HTTP relacionadas con el envío de correos. */
 @Tag(name = "Correo", description = "Administración. Comprobación del servicio de correo.")
 @CrossOrigin(origins = "*")
 @RequestMapping("/email")

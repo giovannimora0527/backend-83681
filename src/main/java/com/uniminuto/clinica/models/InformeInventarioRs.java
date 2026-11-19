@@ -5,16 +5,20 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/** Contiene el corte del inventario, las secciones consultadas y sus totales. */
 public record InformeInventarioRs(LocalDateTime generado, String tipo, LocalDate desde, LocalDate hasta,
                                   String moneda, List<Seccion> secciones, Totales totales) {
 
+    /** Contiene los encabezados y las filas de una sección del informe de inventario. */
     public record Seccion(String nombre, List<String> columnas, List<List<Object>> filas) {
     }
 
+    /** Agrupa las unidades y los importes consolidados del inventario. */
     public record Totales(long existenciasRegistradas, long disponiblesParaDispensar,
                           BigDecimal valorCosto, BigDecimal valorPotencialVenta, long entradas, long salidas) {
     }
 
+    /** Devuelve los filtros y el momento de corte que acompañan al informe exportado. */
     public List<List<Object>> parametros() {
         return List.of(
                 List.of("Generado", generado),
@@ -25,6 +29,7 @@ public record InformeInventarioRs(LocalDateTime generado, String tipo, LocalDate
                 List.of("Corte de existencias y lotes", generado.toLocalDate()));
     }
 
+    /** Convierte los totales de existencias, costos y movimientos en filas del informe. */
     public List<List<Object>> filasTotales() {
         return List.of(
                 List.of("Existencias registradas", totales.existenciasRegistradas()),

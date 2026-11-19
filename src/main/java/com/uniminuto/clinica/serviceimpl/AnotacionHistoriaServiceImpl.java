@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.List;
 
+/** Implementa las operaciones y validaciones relacionadas con una anotación del historial clínico. */
 @Service
 public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
 
@@ -35,6 +36,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
     @Autowired
     private CitaRepository citaRepository;
 
+    /** Consulta las anotaciones clínicas registradas. */
     @Override
     public List<AnotacionHistoriaRs> listarAnotaciones() {
         return anotacionHistoriaRepository.findAll().stream()
@@ -44,6 +46,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
                 .toList();
     }
 
+    /** Consulta las anotaciones de la historia indicada. */
     @Override
     public List<AnotacionHistoriaRs> buscarPorHistoria(Long historiaId) {
         if (historiaId == null || historiaId <= 0) {
@@ -56,6 +59,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
                 .toList();
     }
 
+    /** Registra una nueva anotación en la historia clínica. */
     @Override
     public MiRespuestaRS crearAnotacionHistoria(AnotacionHistoriaRq anotacionHistoriaRq) {
         this.validarAnotacionHistoria(anotacionHistoriaRq);
@@ -92,6 +96,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
         return rta;
     }
 
+    /** Guarda los cambios de una anotación clínica existente. */
     @Override
     public MiRespuestaRS actualizarAnotacionHistoria(AnotacionHistoriaRq solicitud) {
         this.validarAnotacionHistoria(solicitud);
@@ -119,6 +124,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
         return respuesta;
     }
 
+    /** Vincula la cita con el historial clínico del paciente. */
     private void asociarCitaAHistoria(HistoriaMedica historia, Cita cita, Long medicoId, String diagnostico) {
         if (historia.getMascota() == null || cita.getMascota() == null
                 || !historia.getMascota().getMascotaId().equals(cita.getMascota().getMascotaId())) {
@@ -149,6 +155,7 @@ public class AnotacionHistoriaServiceImpl implements AnotacionHistoriaService {
         historiaMedicaRepository.save(historia);
     }
 
+    /** Comprueba los datos requeridos para guardar la anotación. */
     private void validarAnotacionHistoria(AnotacionHistoriaRq anotacionHistoriaRq) throws BadRequestException {
         if (anotacionHistoriaRq == null) {
             throw new BadRequestException("La anotación de historia clínica es obligatoria");

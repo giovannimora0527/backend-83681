@@ -27,6 +27,7 @@ import java.util.List;
 @RequestMapping("/especializacion")
 public interface EspecializacionApi {
 
+    /** Consulta las especialidades veterinarias registradas. */
     @Operation(summary = "Listar especialidades")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
@@ -34,6 +35,7 @@ public interface EspecializacionApi {
     ResponseEntity<List<Especializacion>> listarEspecializaciones()
             throws BadRequestException;
 
+    /** Busca especialidades que coincidan con el criterio indicado. */
     @Operation(summary = "Buscar especialidades")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
@@ -42,6 +44,7 @@ public interface EspecializacionApi {
             throws BadRequestException;
 
 
+    /** Registra una nueva especialidad veterinaria. */
     @Operation(summary = "Registrar especialidad")
     @PostMapping(value = "/crear",
             produces = {"application/json"},
@@ -52,6 +55,7 @@ public interface EspecializacionApi {
             throws BadRequestException;
 
 
+    /** Guarda los cambios de la especialidad indicada. */
     @Operation(summary = "Actualizar o cambiar el estado de una especialidad")
     @PutMapping(value = "/actualizar",
             produces = {"application/json"},

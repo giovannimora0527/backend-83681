@@ -12,6 +12,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa un movimiento de inventario y sus referencias en la base de datos. */
 @Entity
 @Table(name = "movimiento_inventario")
 @Data

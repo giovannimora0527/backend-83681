@@ -19,21 +19,25 @@ public class EspecializacionApiController implements EspecializacionApi {
     @Autowired
     private EspecializacionService especializacionService;
 
+    /** Consulta las especialidades veterinarias. */
     @Override
     public ResponseEntity<List<Especializacion>> listarEspecializaciones() throws BadRequestException {
         return ResponseEntity.ok(this.especializacionService.listarEspecializaciones());
     }
 
+    /** Busca las especialidades veterinarias. */
     @Override
     public ResponseEntity<List<Especializacion>> buscarEspecializaciones(String termino) {
         return ResponseEntity.ok(this.especializacionService.buscarEspecializaciones(termino));
     }
 
+    /** Registra la especialidad veterinaria. */
     @Override
     public ResponseEntity<MiRespuestaRS> crearEspecializacion(EspecializacionRq especializacion) throws BadRequestException {
         return ResponseEntity.ok(this.especializacionService.crearEspecializacion(especializacion));
     }
 
+    /** Actualiza la especialidad veterinaria. */
     @Override
     public ResponseEntity<MiRespuestaRS> actualizarEspecializacion(EspecializacionRq especializacion) throws BadRequestException {
         return ResponseEntity.ok(this.especializacionService.actualizarEspecializacion(especializacion));

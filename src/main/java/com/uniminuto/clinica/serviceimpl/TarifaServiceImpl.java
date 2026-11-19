@@ -30,16 +30,19 @@ public class TarifaServiceImpl implements TarifaService {
     private final EspecializacionRepository especializaciones;
     private final CitaService citas;
 
+    /** Consulta las tarifas y permite limitar el resultado a una especialidad. */
     @Override
     public List<TarifaRs> listar(Long especializacionId) {
         return tarifas.listar(especializacionId);
     }
 
+    /** Consulta las tarifas que se pueden aplicar en la atención indicada. */
     @Override
     public List<TarifaRs> listarParaCita(long citaId) {
         return tarifas.listarVigentesParaMedico(citas.detalle(citaId).medicoId());
     }
 
+    /** Valida los datos y registra una nueva tarifa con su vigencia. */
     @Override
     @Transactional
     public TarifaRs crear(TarifaRq solicitud, long usuarioId) {
@@ -54,6 +57,7 @@ public class TarifaServiceImpl implements TarifaService {
         return convertir(id, solicitud);
     }
 
+    /** Actualiza una tarifa y registra los cambios en su historial. */
     @Override
     @Transactional
     public TarifaRs actualizar(long id, TarifaRq solicitud, long usuarioId) {
@@ -78,11 +82,23 @@ public class TarifaServiceImpl implements TarifaService {
         return nueva;
     }
 
+    /** Consulta los cambios guardados para la tarifa indicada. */
     @Override
     public List<Map<String, Object>> historial(long id) {
         return tarifas.historial(id);
     }
 
+    /** Devuelve el porcentaje de IVA configurado para el producto. */
+    @Override
+    @Transactional(readOnly = true)
+    public BigDecimal consultarIvaMedicamento(long id) {
+        if (!tarifas.existeMedicamento(id)) {
+            throw new BadRequestException("El medicamento no existe.");
+        }
+        return tarifas.consultarIvaMedicamento(id).orElse(null);
+    }
+
+    /** Guarda el porcentaje de IVA asignado al medicamento. */
     @Override
     @Transactional
     public void configurarIvaMedicamento(long id, BigDecimal porcentaje, long usuarioId) {
@@ -95,6 +111,7 @@ public class TarifaServiceImpl implements TarifaService {
         tarifas.configurarIvaMedicamento(id, porcentaje, usuarioId);
     }
 
+    /** Comprueba los datos de la tarifa veterinaria. */
     private void validar(TarifaRq solicitud) {
         if (solicitud == null
                 || solicitud.nombreServicio() == null || solicitud.nombreServicio().isBlank()
@@ -113,17 +130,20 @@ public class TarifaServiceImpl implements TarifaService {
         }
     }
 
+    /** Comprueba que el porcentaje de IVA se encuentre dentro del intervalo permitido. */
     private boolean ivaValido(BigDecimal porcentaje) {
         return porcentaje != null && porcentaje.signum() >= 0 && porcentaje.scale() <= 2
                 && porcentaje.compareTo(BigDecimal.valueOf(100)) <= 0;
     }
 
+    /** Guarda el valor anterior, el nuevo valor y el usuario que hizo el cambio. */
     private void registrar(long id, String campo, Object anterior, Object nuevo, long usuarioId) {
         if (!Objects.equals(anterior, nuevo)) {
             tarifas.registrar(id, campo, Objects.toString(anterior, null), Objects.toString(nuevo, null), usuarioId);
         }
     }
 
+    /** Construye la respuesta a partir de los valores solicitados y el identificador de la tarifa. */
     private TarifaRs convertir(long id, TarifaRq solicitud) {
         return new TarifaRs(id, solicitud.especializacionId(), solicitud.nombreServicio().strip(),
                 solicitud.valorBase().setScale(2), solicitud.ivaPorcentaje().setScale(2),

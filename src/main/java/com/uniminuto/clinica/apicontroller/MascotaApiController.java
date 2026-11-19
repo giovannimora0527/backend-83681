@@ -13,43 +13,51 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Expone las operaciones HTTP relacionadas con una mascota y su propietario. */
 @RestController
 public class MascotaApiController implements MascotaApi {
 
     @Autowired
     private MascotaService mascotaService;
 
+    /** Consulta las mascotas. */
     @Override
     public ResponseEntity<List<Mascota>> listarMascotas() throws BadRequestException {
        return ResponseEntity.ok(mascotaService.listarMascotas());
     }
 
+    /** Consulta las mascotas en el orden indicado. */
     @Override
     public ResponseEntity<List<Mascota>> listarMascotasOrdenado(boolean ascendente) throws BadRequestException {
         return ResponseEntity.ok(mascotaService.listarMascotasOrdenado(ascendente));
     }
 
+    /** Busca mascotas por el nombre recibido. */
     @Override
     public ResponseEntity<List<Mascota>> buscarMascotaPorNombre(String nombre) throws BadRequestException {
         return ResponseEntity.ok(mascotaService.findByNombreMascota(nombre).map(List::of).orElseGet(List::of));
     }
 
+    /** Consulta las mascotas del propietario indicado. */
     @Override
     public ResponseEntity<List<Mascota>> buscarMascotaPorCliente(Long clienteId) throws BadRequestException {
         return ResponseEntity.ok(mascotaService.buscarMascotasPorCliente(clienteId));
 
     }
 
+    /** Busca mascotas por la raza indicada. */
     @Override
     public ResponseEntity<List<Mascota>> buscarMascotaPorRaza(Integer razaId) throws BadRequestException {
         return ResponseEntity.ok(mascotaService.buscarMascotasPorRaza(razaId));
     }
 
+    /** Guarda la mascota. */
     @Override
     public ResponseEntity<MiRespuestaRS> guardarMascota(MascotaRq mascotaRq) throws BadRequestException {
         return ResponseEntity.ok(mascotaService.guardarMascota(mascotaRq));
     }
 
+    /** Actualiza la mascota. */
     @Override
     public ResponseEntity<MiRespuestaRS> actualizarMascota(MascotaRq mascotaRq) throws BadRequestException {
         return ResponseEntity.ok(mascotaService.actualizarMascota(mascotaRq));

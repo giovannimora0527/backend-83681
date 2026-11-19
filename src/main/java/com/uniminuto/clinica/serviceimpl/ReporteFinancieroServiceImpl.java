@@ -23,6 +23,7 @@ public class ReporteFinancieroServiceImpl implements ReporteFinancieroService {
 
     private final ReporteFinancieroRepository reportes;
 
+    /** Valida las fechas y la agrupación antes de calcular facturación, recaudo y devoluciones. */
     @Override
     @Transactional(readOnly = true)
     public ReporteRs consultar(LocalDate inicio, LocalDate fin, String periodo, Long medico, Long especialidad) {

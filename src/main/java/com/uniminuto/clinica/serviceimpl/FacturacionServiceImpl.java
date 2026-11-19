@@ -73,6 +73,7 @@ public class FacturacionServiceImpl implements FacturacionService {
         return guardar("PREFACTURA", cita, servicios, medicamentos, null, usuarioId);
     }
 
+    /** Identifica un servicio por su especialidad y su nombre. */
     private record IdentidadServicio(Long especializacionId, String nombre) {
     }
 
@@ -99,6 +100,23 @@ public class FacturacionServiceImpl implements FacturacionService {
 
         var entregas = facturas.entregas(citaId);
         return guardar("FACTURA", cita, servicios, entregas, descuento, usuarioId);
+    }
+
+    /** Devuelve el motivo que impide emitir la factura cuando la cita aún no cumple las condiciones. */
+    @Override
+    @Transactional(readOnly = true)
+    public String impedimentoEmision(long citaId) {
+        if (!facturas.citaAtendida(citaId)) {
+            return "La cita no existe o no se ha atendido.";
+        }
+        if (facturas.facturaEmitida(citaId)) {
+            return "La cita ya tiene una factura. Consulta el historial.";
+        }
+        if (!facturas.pendientes(citaId).isEmpty()) {
+            return "La cita todavía tiene medicamentos pendientes de dispensación.";
+        }
+        return facturas.serviciosPrefacturados(citaId).isEmpty()
+                ? "Se requiere una prefactura válida con al menos un servicio." : null;
     }
 
     /** Valida el saldo para evitar sobrepagos y actualiza el estado con el abono registrado. */
@@ -162,6 +180,7 @@ public class FacturacionServiceImpl implements FacturacionService {
         facturas.actualizarEstado(facturaId, estado);
     }
 
+    /** Consulta las facturas por propietario o mascota. */
     @Override
     public List<Map<String, Object>> historial(Long clienteId, Long mascotaId) {
         if (clienteId == null && mascotaId == null) {
@@ -170,11 +189,13 @@ public class FacturacionServiceImpl implements FacturacionService {
         return facturas.historial(clienteId, mascotaId);
     }
 
+    /** Consulta los pagos. */
     @Override
     public List<Map<String, Object>> listarPagos(long facturaId) {
         return facturas.listarPagos(facturaId);
     }
 
+    /** Prepara el detalle financiero que se incluirá en el PDF. */
     @Transactional(readOnly = true)
     @Override
     public ReporteRs documento(long facturaId, Long citaId) {
@@ -182,7 +203,14 @@ public class FacturacionServiceImpl implements FacturacionService {
         var filas = facturas.lineas(facturaId);
         filas.add(List.of("Subtotal", cabecera.get("subtotal"), "IVA", cabecera.get("iva")));
         filas.add(List.of("Descuento", cabecera.get("descuento"), "Total", cabecera.get("total")));
-        filas.add(List.of("Estado", "NO_REQUIERE_PAGO".equals(cabecera.get("estado")) ? "No requiere pago" : cabecera.get("estado"), "Pagado", pagos(facturaId)));
+        BigDecimal pagado = pagos(facturaId);
+        var estadoPago = cabecera.get("estado");
+        filas.add(List.of("Estado", "NO_REQUIERE_PAGO".equals(estadoPago) ? "No requiere pago" : estadoPago, "Pagado", pagado));
+        if ("FACTURA".equals(cabecera.get("tipo_documento"))) {
+            BigDecimal saldo = "ANULADA".equals(estadoPago) ? BigDecimal.ZERO
+                    : ((BigDecimal) cabecera.get("total")).subtract(pagado).max(BigDecimal.ZERO);
+            filas.add(List.of("Saldo pendiente", saldo));
+        }
         filas.addFirst(List.of("Propietario", cabecera.get("propietario"), "Mascota", cabecera.get("mascota")));
         filas.addFirst(List.of("Veterinario", cabecera.get("medico"), "Especialidad", cabecera.get("especialidad")));
         if (cabecera.get("motivo_sin_pago") != null) {
@@ -204,9 +232,10 @@ public class FacturacionServiceImpl implements FacturacionService {
         String nombreClinica = datosClinica.getOrDefault("CLINICA_NOMBRE", "Clínica veterinaria Uniminuto");
         return new ReporteRs(nombreClinica + " | " + cabecera.get("tipo_documento") + " " + cabecera.get("numero_factura"),
                 LocalDateTime.now(ZoneId.of("America/Bogota")),
-                List.of("Tipo", "Descripción", "Cantidad", "Precio unitario", "Subtotal", "IVA"), filas);
+                List.of("Tipo", "Descripción", "Cantidad", "Precio unitario", "Subtotal", "IVA %", "IVA"), filas);
     }
 
+    /** Persiste la cabecera, los detalles y los impuestos del documento. */
     private long guardar(String tipo, CitaFacturada cita, List<Servicio> servicios, List<Producto> productos,
                          DescuentoRq descuento, long usuarioId) {
         var subtotalServicios = servicios.stream().map(Servicio::precio).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -254,15 +283,18 @@ public class FacturacionServiceImpl implements FacturacionService {
         return id;
     }
 
+    /** Guarda el detalle. */
     private void guardarDetalle(Map<String, ?> datos, BigDecimal porcentaje, BigDecimal subtotal) {
         long id = facturas.insertarDetalle(datos);
         facturas.insertarIva(id, porcentaje, iva(subtotal, porcentaje));
     }
 
+    /** Calcula el IVA a partir del subtotal y el porcentaje aplicable. */
     private BigDecimal iva(BigDecimal subtotal, BigDecimal porcentaje) {
         return subtotal.multiply(porcentaje).movePointLeft(2).setScale(2, RoundingMode.HALF_UP);
     }
 
+    /** Comprueba que el descuento solicitado se pueda aplicar al total. */
     private BigDecimal validarDescuento(DescuentoRq descuento, BigDecimal total) {
         if (descuento == null) {
             return BigDecimal.ZERO;
@@ -280,20 +312,24 @@ public class FacturacionServiceImpl implements FacturacionService {
         return descuento.monto();
     }
 
+    /** Bloquea la cita y comprueba que ya se haya atendido. */
     private CitaFacturada bloquearCitaAtendida(long id) {
         return facturas.bloquearCitaAtendida(id);
     }
 
+    /** Comprueba que la cita no tenga ya un documento del tipo que se intenta emitir. */
     private void validarDocumentoUnico(long citaId, String tipo) {
         if (facturas.existeDocumento(citaId, tipo)) {
             throw new BadRequestException("La cita ya tiene un documento de ese tipo.");
         }
     }
 
+    /** Obtiene la factura con bloqueo mientras se actualiza su saldo. */
     private FacturaSaldo bloquearFactura(long id) {
         return facturas.bloquearFactura(id);
     }
 
+    /** Calcula el importe neto de los pagos de la factura. */
     private BigDecimal pagos(long id) {
         return facturas.pagos(id);
     }

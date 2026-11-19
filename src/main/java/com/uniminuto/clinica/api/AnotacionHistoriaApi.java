@@ -24,12 +24,14 @@ import java.util.List;
 @RequestMapping("/anotacion-historia")
 public interface AnotacionHistoriaApi {
 
+    /** Consulta las anotaciones clínicas registradas. */
     @Operation(summary = "Listar anotaciones")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<AnotacionHistoriaRs>> listarAnotaciones();
 
+    /** Consulta las anotaciones de la historia indicada. */
     @Operation(summary = "Buscar anotaciones")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
@@ -51,6 +53,7 @@ public interface AnotacionHistoriaApi {
     )
             throws BadRequestException;
 
+    /** Guarda los cambios de una anotación clínica existente. */
     @Operation(summary = "Actualizar anotación clínica")
     @PutMapping(value = "/actualizar",
             produces = {"application/json"},

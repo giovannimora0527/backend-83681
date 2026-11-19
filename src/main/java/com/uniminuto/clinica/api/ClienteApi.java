@@ -17,11 +17,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+/** Agrupa las operaciones HTTP del catálogo de propietarios. */
 @Tag(name = "Propietarios", description = "Administración y Recepción pueden gestionar propietarios. Veterinaria tiene acceso de consulta.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/cliente")
 public interface ClienteApi {
 
+    /** Consulta los propietarios registrados. */
     @Operation(summary = "Listar propietarios")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
@@ -30,6 +32,7 @@ public interface ClienteApi {
             throws BadRequestException;
 
 
+    /** Busca los propietarios cuyo documento coincide con el criterio. */
     @Operation(summary = "Buscar propietarios por documento")
     @GetMapping(value = "/buscar-por-documento",
             produces = {"application/json"},
@@ -39,11 +42,13 @@ public interface ClienteApi {
     )
             throws BadRequestException;
 
+    /** Registra un nuevo propietario. */
     @Operation(summary = "Registrar propietario")
     @PostMapping(value = {"/crear", "/guardar"},
             produces = {"application/json"}, consumes = {"application/json"})
     ResponseEntity<MiRespuestaRS> crearCliente(@RequestBody Cliente cliente) throws BadRequestException;
 
+    /** Guarda los cambios de los datos del propietario. */
     @Operation(summary = "Actualizar propietario")
     @PutMapping(value = "/actualizar",
             produces = {"application/json"}, consumes = {"application/json"})

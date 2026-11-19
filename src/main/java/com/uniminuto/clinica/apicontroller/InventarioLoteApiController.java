@@ -13,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 
+/** Expone las operaciones HTTP relacionadas con un lote, su saldo, costo y vencimiento. */
 @RestController
 public class InventarioLoteApiController implements InventarioLoteApi {
 

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** Agrupa las operaciones HTTP de gestión de usuarios. */
 @Tag(name = "Usuarios y perfiles", description = "Administración. Gestión de cuentas de acceso y perfiles.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/usuario")
@@ -31,6 +32,7 @@ public interface UsuarioApi {
     ResponseEntity<List<UsuarioRs>> getUsuarios()
             throws BadRequestException;
 
+    /** Busca usuarios que coincidan con el criterio indicado. */
     @Operation(summary = "Buscar usuarios")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},

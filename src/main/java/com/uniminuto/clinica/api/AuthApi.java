@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+/** Agrupa las operaciones HTTP de acceso y cierre de sesión. */
 @Tag(name = "Autenticación", description = "Inicio de sesión mediante contraseña y código de correo. Usa el JWT de la validación en el botón Authorize.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/auth")
 public interface AuthApi {
 
+   /** Recibe las credenciales y solicita iniciar la verificación de acceso. */
    @Operation(summary = "Solicitar código de inicio de sesión",
            description = "Valida la contraseña, envía el OTP al correo de la cuenta y devuelve usuarioId.")
    @PostMapping(value = "/login",
@@ -30,6 +32,7 @@ public interface AuthApi {
            @RequestBody AuthRq authRq)
            throws BadRequestException;
 
+    /** Recibe el código de verificación y solicita completar el inicio de sesión. */
     @Operation(summary = "Validar OTP y obtener JWT",
             description = "Envía el usuarioId del login y el código recibido. El campo token de la respuesta es el JWT.")
     @PostMapping(value = "/validate-token",
@@ -40,6 +43,7 @@ public interface AuthApi {
             throws BadRequestException;
 
 
+    /** Cierra la sesión asociada al token recibido. */
     @Operation(summary = "Solicitar cierre de sesión",
             description = "La ruta requiere una sesión. La invalidación del JWT aún no está implementada.")
     @PostMapping(value = "/cerrar-sesion",

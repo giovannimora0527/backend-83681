@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /** API del módulo de consulta, preparación, confirmación y trazabilidad de despachos. */
-@Tag(name = "Dispensación", description = "Administración y Despacho Médico. El cierre de pendientes se reserva a Despacho Médico.")
+@Tag(name = "Dispensación", description = "Acceso exclusivo para el perfil Despacho Médico.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/inventario/dispensaciones")
 public interface DespachoApi {
@@ -124,6 +124,7 @@ public interface DespachoApi {
             @RequestBody DespachoCancelarRq cancelacionRq,
             @AuthenticationPrincipal String usuarioResponsableId) throws BadRequestException;
 
+    /** Registra el cierre justificado de las cantidades pendientes de despacho. */
     @Operation(summary = "Cerrar cantidades pendientes",
             description = "Solo Despacho Médico. Requiere justificar el cierre de un despacho parcial.")
     @PostMapping(value = "/{despachoId}/cerrar-pendientes", produces = "application/json", consumes = "application/json")

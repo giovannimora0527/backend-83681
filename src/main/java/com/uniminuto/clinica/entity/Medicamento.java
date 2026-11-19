@@ -1,5 +1,6 @@
 package com.uniminuto.clinica.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -48,10 +49,10 @@ public class Medicamento {
     @Column(name = "presentacion", length = 100)
     private String presentacion;
 
-    @Transient
+    @Column(name = "fecha_compra")
     private LocalDate fechaCompra;
 
-    @Transient
+    @Column(name = "fecha_vence")
     private LocalDate fechaVence;
 
     @Column(name = "precio_compra", precision = 12, scale = 2, nullable = false)
@@ -81,9 +82,11 @@ public class Medicamento {
 
     /** Lotes asociados al medicamento. */
     @OneToMany(mappedBy = "medicamento")
+    @JsonIgnore
     private List<InventarioLote> lotes;
 
     /** Movimientos de inventario asociados al medicamento. */
     @OneToMany(mappedBy = "medicamento")
+    @JsonIgnore
     private List<MovimientoInventario> movimientos;
 }

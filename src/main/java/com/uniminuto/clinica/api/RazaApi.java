@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+/** Agrupa las operaciones HTTP del catálogo de razas. */
 @Tag(name = "Razas", description = "Administración gestiona el catálogo y Recepción puede consultarlo.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/raza")
@@ -59,6 +60,7 @@ public interface RazaApi {
     ResponseEntity<List<Raza>> listarRazas()
             throws BadRequestException;
 
+    /** Busca razas que coincidan con el criterio recibido. */
     @Operation(summary = "Buscar razas")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},

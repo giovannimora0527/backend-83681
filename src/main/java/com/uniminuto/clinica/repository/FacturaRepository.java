@@ -20,6 +20,7 @@ public class FacturaRepository {
 
     private final JdbcTemplate jdbc;
 
+    /** Consulta los medicamentos recetados para la cita, con su cantidad, precio e IVA. */
     public List<Producto> medicamentosPrescritos(long citaId) {
         return jdbc.query("""
                 SELECT m.id, m.nombre, d.cantidad_prescrita, m.precio_venta, COALESCE(i.iva_porcentaje,0)
@@ -32,6 +33,7 @@ public class FacturaRepository {
                 rs.getBigDecimal(4), null, rs.getBigDecimal(5)), citaId);
     }
 
+    /** Identifica los medicamentos de la cita cuya cantidad prescrita todavía no se ha entregado por completo. */
     public List<Map<String, Object>> pendientes(long citaId) {
         return jdbc.queryForList("""
                 SELECT fd.id FROM formula_detalle fd JOIN formula_medica f ON f.id = fd.formula_id
@@ -69,6 +71,18 @@ public class FacturaRepository {
                 rs.getBigDecimal(4), rs.getLong(5), rs.getBigDecimal(6)), citaId);
     }
 
+    /** Comprueba si la cita figura como atendida. */
+    public boolean citaAtendida(long citaId) {
+        return !jdbc.queryForList("SELECT id FROM cita WHERE id = ? AND estado = 'ATENDIDA'", Long.class, citaId).isEmpty();
+    }
+
+    /** Comprueba si ya se emitió una factura para la cita. */
+    public boolean facturaEmitida(long citaId) {
+        return !jdbc.queryForList("SELECT id FROM factura WHERE cita_id = ? AND tipo_documento = 'FACTURA'",
+                Long.class, citaId).isEmpty();
+    }
+
+    /** Bloquea los despachos de la cita mientras se calcula la factura. */
     public void bloquearDespachos(long citaId) {
         jdbc.queryForList("""
                 SELECT d.id FROM despacho d JOIN formula_medica f ON f.id = d.formula_id
@@ -76,6 +90,7 @@ public class FacturaRepository {
                 """, citaId);
     }
 
+    /** Consulta el historial de la factura. */
     public List<Map<String, Object>> historial(Long clienteId, Long mascotaId) {
         return jdbc.queryForList("""
                 SELECT f.id, f.numero_factura AS numero, f.fecha_emision AS fecha, f.estado,
@@ -88,6 +103,7 @@ public class FacturaRepository {
                 """, clienteId, clienteId, mascotaId, mascotaId);
     }
 
+    /** Consulta los pagos. */
     public List<Map<String, Object>> listarPagos(long facturaId) {
         return jdbc.queryForList("""
                 SELECT p.id, p.monto, p.metodo_pago AS metodo, p.fecha_pago AS fecha, p.observacion,
@@ -97,6 +113,7 @@ public class FacturaRepository {
                 """, facturaId);
     }
 
+    /** Consulta los datos generales de la factura que se mostrarán en el documento. */
     public Map<String, Object> cabecera(long facturaId, Long citaId) {
         return jdbc.queryForList("""
                 SELECT f.numero_factura, f.tipo_documento, f.fecha_emision, f.estado, f.subtotal, f.iva, f.descuento,
@@ -114,63 +131,76 @@ public class FacturaRepository {
                 .orElseThrow(() -> new BadRequestException("El documento no existe."));
     }
 
+    /** Consulta las líneas de productos y servicios que se presentan en la factura. */
     public List<List<Object>> lineas(long facturaId) {
         return jdbc.query("""
-                SELECT d.tipo, d.descripcion, d.cantidad, d.precio_unitario, d.subtotal, COALESCE(i.importe,0)
+                SELECT d.tipo, d.descripcion, d.cantidad, d.precio_unitario, d.subtotal,
+                       COALESCE(i.porcentaje,0), COALESCE(i.importe,0)
                 FROM factura_detalle d LEFT JOIN factura_detalle_iva i ON i.detalle_id = d.id
                 WHERE d.factura_id = ? ORDER BY d.id
                 """, (rs, index) -> List.<Object>of(rs.getString(1), rs.getString(2), rs.getInt(3),
-                rs.getBigDecimal(4), rs.getBigDecimal(5), rs.getBigDecimal(6)), facturaId);
+                rs.getBigDecimal(4), rs.getBigDecimal(5), rs.getBigDecimal(6), rs.getBigDecimal(7)), facturaId);
     }
 
+    /** Guarda la cabecera de la factura y devuelve su identificador. */
     public long insertarFactura(Map<String, ?> valores) {
         return new SimpleJdbcInsert(jdbc).withTableName("factura")
                 .usingColumns(valores.keySet().toArray(String[]::new))
                 .usingGeneratedKeyColumns("id").executeAndReturnKey(valores).longValue();
     }
 
+    /** Guarda una línea de productos o servicios de la factura. */
     public long insertarDetalle(Map<String, ?> datos) {
         return new SimpleJdbcInsert(jdbc).withTableName("factura_detalle")
                 .usingColumns(datos.keySet().toArray(String[]::new))
                 .usingGeneratedKeyColumns("id").executeAndReturnKey(datos).longValue();
     }
 
+    /** Guarda el motivo del descuento, la factura y el usuario que lo aplicó. */
     public void insertarDescuento(long id, long usuarioId, String motivo) {
         jdbc.update("INSERT INTO factura_descuento (factura_id, usuario_id, motivo) VALUES (?, ?, ?)",
                 id, usuarioId, motivo);
     }
 
 
+    /** Contiene los identificadores de la cita y las partes asociadas a la factura. */
     public record CitaFacturada(long id, long clienteId, long medicoId, long especializacionId) {
     }
 
+    /** Contiene la tarifa y el impuesto de un servicio incluido en la factura. */
     public record Servicio(long id, String nombre, BigDecimal precio, BigDecimal ivaPorcentaje) {
     }
 
+    /** Contiene la cantidad, el precio y el impuesto de un medicamento incluido en el documento. */
     public record Producto(long id, String nombre, int cantidad, BigDecimal precio, Long despachoDetalleId,
                             BigDecimal ivaPorcentaje) {
+        /** Calcula el importe de una línea a partir de su cantidad y precio. */
         public BigDecimal subtotal() {
             return precio.multiply(BigDecimal.valueOf(cantidad));
         }
     }
 
 
+    /** Comprueba si la factura tiene devoluciones registradas. */
     public boolean tieneDevoluciones(long facturaId) {
         return !jdbc.queryForList("""
                 SELECT d.pago_id FROM devolucion_pago d JOIN pago p ON p.id = d.pago_id WHERE p.factura_id = ?
                 """, facturaId).isEmpty();
     }
 
+    /** Guarda el abono, su medio de pago y el usuario que lo registró. */
     public void insertarPago(long facturaId, BigDecimal monto, String metodo, String observacion, long usuarioId) {
         jdbc.update("""
                 INSERT INTO pago (factura_id, monto, metodo_pago, observacion, usuario_id) VALUES (?, ?, ?, ?, ?)
                 """, facturaId, monto, metodo, observacion, usuarioId);
     }
 
+    /** Guarda el nuevo estado de la factura. */
     public void actualizarEstado(long facturaId, String estado) {
         jdbc.update("UPDATE factura SET estado = ? WHERE id = ?", estado, facturaId);
     }
 
+    /** Registra la anulación de la factura junto con su motivo. */
     public void anular(long facturaId, String motivo, long usuarioId) {
         jdbc.update("""
                 UPDATE factura SET estado = 'ANULADA', motivo_anulacion = ?, usuario_anulacion = ?,
@@ -178,24 +208,29 @@ public class FacturaRepository {
                 """, motivo, usuarioId, facturaId);
     }
 
+    /** Comprueba si el pago pertenece a la factura indicada. */
     public boolean pagoExiste(long pagoId, long facturaId) {
         return !jdbc.queryForList("SELECT id FROM pago WHERE id = ? AND factura_id = ?", pagoId, facturaId).isEmpty();
     }
 
+    /** Comprueba si el pago ya fue devuelto. */
     public boolean pagoDevuelto(long pagoId) {
         return !jdbc.queryForList("SELECT pago_id FROM devolucion_pago WHERE pago_id = ?", pagoId).isEmpty();
     }
 
+    /** Guarda la devolución y su referencia vinculadas al pago. */
     public void insertarDevolucion(long pagoId, String referencia, long usuarioId) {
         jdbc.update("INSERT INTO devolucion_pago (pago_id, referencia, usuario_id) VALUES (?, ?, ?)",
                 pagoId, referencia, usuarioId);
     }
 
+    /** Guarda el porcentaje y el importe de IVA de la línea. */
     public void insertarIva(long id, BigDecimal porcentaje, BigDecimal importe) {
         jdbc.update("INSERT INTO factura_detalle_iva (detalle_id, porcentaje, importe) VALUES (?, ?, ?)",
                 id, porcentaje, importe);
     }
 
+    /** Bloquea la cita y comprueba que ya se haya atendido. */
     public CitaFacturada bloquearCitaAtendida(long id) {
         return jdbc.query("""
                 SELECT c.id, c.cliente_id, c.medico_id, m.especializacion_id
@@ -205,11 +240,13 @@ public class FacturaRepository {
                 .stream().findFirst().orElseThrow(() -> new BadRequestException("Se requiere una cita atendida."));
     }
 
+    /** Comprueba si la cita ya tiene un documento del tipo indicado. */
     public boolean existeDocumento(long citaId, String tipo) {
         return !jdbc.queryForList("SELECT id FROM factura WHERE cita_id = ? AND tipo_documento = ? FOR UPDATE",
                 citaId, tipo).isEmpty();
     }
 
+    /** Obtiene el saldo y el estado de la factura con bloqueo. */
     public FacturaSaldo bloquearFactura(long id) {
         return jdbc.query("SELECT total, estado FROM factura WHERE id = ? AND tipo_documento = 'FACTURA' FOR UPDATE",
                 (rs, index) -> new FacturaSaldo(rs.getBigDecimal(1), rs.getString(2)), id)
@@ -224,7 +261,9 @@ public class FacturaRepository {
                 """, BigDecimal.class, id);
     }
 
+    /** Contiene el total y el estado de la factura antes de registrar un cambio. */
     public record FacturaSaldo(BigDecimal total, String estado) {}
+    /** Consulta los datos de la clínica que se incluyen en la factura. */
     public Map<String, String> datosClinica() {
         return jdbc.query("""
                 SELECT codigo, valor FROM parametro_sistema

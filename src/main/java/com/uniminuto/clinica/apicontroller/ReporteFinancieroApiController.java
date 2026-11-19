@@ -21,6 +21,7 @@ public class ReporteFinancieroApiController implements ReporteFinancieroApi {
 
     private final ReporteFinancieroService reportes;
 
+    /** Consulta el resumen de facturación y recaudo. */
     @Override
     public ReporteRs consultar(LocalDate inicio, LocalDate fin, String periodo,
                                Long medicoId,
@@ -28,6 +29,7 @@ public class ReporteFinancieroApiController implements ReporteFinancieroApi {
         return reportes.consultar(inicio, fin, periodo, medicoId, especializacionId);
     }
 
+    /** Prepara el archivo y los encabezados de la respuesta de descarga. */
     @Override
     public ResponseEntity<byte[]> descargar(String formato, LocalDate inicio,
                                             LocalDate fin, String periodo, Long medicoId,
@@ -42,6 +44,7 @@ public class ReporteFinancieroApiController implements ReporteFinancieroApi {
         };
     }
 
+    /** Prepara el archivo y los encabezados de la respuesta de descarga. */
     private ResponseEntity<byte[]> descargar(String nombre, MediaType tipo, byte[] bytes) {
         return ResponseEntity.ok().contentType(tipo)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + nombre).body(bytes);

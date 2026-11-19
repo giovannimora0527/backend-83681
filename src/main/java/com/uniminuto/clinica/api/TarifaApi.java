@@ -42,6 +42,12 @@ public interface TarifaApi {
     @GetMapping("/{id}/historial")
     List<Map<String, Object>> historial(@PathVariable long id);
 
+    /** Consulta el porcentaje de IVA configurado para el medicamento. */
+    @Operation(summary = "Consultar IVA configurado de un medicamento",
+            description = "Devuelve un porcentaje nulo cuando el medicamento no tiene IVA configurado.")
+    @GetMapping("/impuestos-medicamento/{id}")
+    ImpuestoRq consultarIva(@PathVariable long id);
+
     /** Guarda el porcentaje de IVA aplicable al medicamento. */
     @Operation(summary = "Configurar IVA de un medicamento")
     @PutMapping("/impuestos-medicamento/{id}")

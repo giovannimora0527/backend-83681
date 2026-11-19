@@ -24,6 +24,13 @@ import java.util.Map;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/factura")
 public interface FacturaApi {
+    /** Indica si la cita se puede facturar y el motivo cuando la emisión se bloquea. */
+    record EstadoEmision(boolean disponible, String motivo) {}
+
+    /** Permite consultar si la cita cumple los requisitos para emitir la factura. */
+    @Operation(summary = "Consultar si la cita puede facturarse")
+    @GetMapping("/cita/{citaId}/estado")
+    EstadoEmision estadoEmision(@PathVariable long citaId);
 
     /**
      * Emite la factura definitiva de una cita atendida. El descuento es opcional y requiere

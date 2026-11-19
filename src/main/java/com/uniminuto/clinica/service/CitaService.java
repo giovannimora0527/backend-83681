@@ -24,10 +24,13 @@ public interface CitaService {
     /** Mueve la cita a un horario disponible y conserva su duración. */
     CitaCalendarioRs reprogramar(Long id, LocalDateTime fechaHora);
 
+    /** Consulta las citas. */
     List<Cita> listarCitas() throws BadRequestException;
 
+    /** Consulta las citas entre la fecha inicial y la final. */
     List<Cita> listarCitasRango(LocalDateTime fechaInicio, LocalDateTime fechaFin) throws BadRequestException;
 
+    /** Consulta el historial de citas de la mascota indicada. */
     List<Cita> listarCitasPorMascota(Long mascotaId) throws BadRequestException;
 
     /** Valida y crea una cita en estado programada. */

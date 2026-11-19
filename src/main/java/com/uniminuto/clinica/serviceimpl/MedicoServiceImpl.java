@@ -35,13 +35,14 @@ public class MedicoServiceImpl implements MedicoService {
     @Autowired
     private MedicoUsuarioRepository medicoUsuarioRepository;
 
-    private static final String ESTADO_CITA = "PROGRAMADA";
 
+    /** Consulta las cuentas que pueden asociarse a un veterinario. */
     @Override
     public List<CuentaMedicoRs> listarCuentasDisponibles() {
         return medicoUsuarioRepository.listarDisponibles();
     }
 
+    /** Consulta la cuenta de acceso asociada al veterinario. */
     @Override
     public Optional<CuentaMedicoRs> consultarCuenta(Long medicoId) {
         if (!medicoRepository.existsById(medicoId)) {
@@ -50,6 +51,7 @@ public class MedicoServiceImpl implements MedicoService {
         return medicoUsuarioRepository.buscarCuenta(medicoId);
     }
 
+    /** Relaciona la cuenta seleccionada con el veterinario. */
     @Override
     @Transactional
     public CuentaMedicoRs vincularCuenta(Long medicoId, Long usuarioId) {
@@ -70,6 +72,7 @@ public class MedicoServiceImpl implements MedicoService {
         return cuenta;
     }
 
+    /** Desasocia la cuenta de acceso del veterinario indicado. */
     @Override
     @Transactional
     public void desvincularCuenta(Long medicoId) {
@@ -77,18 +80,21 @@ public class MedicoServiceImpl implements MedicoService {
         medicoUsuarioRepository.desvincular(medicoId);
     }
 
+    /** Obtiene el veterinario con bloqueo y rechaza la operación si no existe. */
     private void exigirMedicoBloqueado(Long medicoId) {
         if (!medicoUsuarioRepository.bloquearMedico(medicoId)) {
             throw new BadRequestException("El médico no existe.");
         }
     }
 
+    /** Consulta los veterinarios. */
     @Override
     public List<Medico> listarMedicos() {
         return this.medicoRepository.findAll().stream().sorted((m1, m2) -> m1.getApellidos()
                 .compareToIgnoreCase(m2.getApellidos())).toList();
     }
 
+    /** Busca los veterinarios. */
     @Override
     public List<Medico> buscarMedicos(String termino) {
         String busqueda = termino == null ? "" : termino.trim().toLowerCase(Locale.ROOT);
@@ -103,24 +109,28 @@ public class MedicoServiceImpl implements MedicoService {
                 .toList();
     }
 
+    /** Comprueba si el valor contiene el texto buscado. */
     private boolean contiene(String valor, String busqueda) {
         return valor != null && valor.toLowerCase(Locale.ROOT).contains(busqueda);
     }
 
+    /** Consulta los veterinarios que tienen disponibilidad para la fecha indicada. */
     @Override
-    public List<Medico> listarMedicosDisponiblesPorFecha(LocalDateTime fechaInicio, LocalDateTime fechaFin)
+    public List<Medico> listarMedicosDisponiblesPorFecha(LocalDateTime fechaInicio, LocalDateTime fechaFin,
+                                                 Long citaId, Long mascotaId)
             throws BadRequestException {
 
         if (fechaInicio == null || fechaFin == null) {
             throw new BadRequestException("Las fechas no pueden ser nulas");
         }
-        if (fechaInicio.isAfter(fechaFin)) {
-            throw new BadRequestException("La fecha de inicio no puede ser mayor a la fecha de fin");
+        if (!fechaInicio.isBefore(fechaFin) || !fechaInicio.toLocalDate().equals(fechaFin.toLocalDate())) {
+            throw new BadRequestException("El intervalo debe tener una duración positiva y terminar el mismo día");
         }
 
-        return this.medicoRepository.findDisponiblesPorFecha(fechaInicio, fechaFin, ESTADO_CITA);
+        return this.medicoRepository.findDisponiblesPorFecha(fechaInicio, fechaFin, citaId, mascotaId);
     }
 
+    /** Guarda el veterinario. */
     @Override
     public MiRespuestaRS guardarMedico(MedicoRq medicoRq) throws BadRequestException {
         this.validarMedico(medicoRq);
@@ -143,6 +153,7 @@ public class MedicoServiceImpl implements MedicoService {
         return rta;
     }
 
+    /** Actualiza el veterinario. */
     @Override
     public MiRespuestaRS actualizarMedico(MedicoRq medicoRq) throws BadRequestException {
         if (medicoRq == null || medicoRq.getId() == null || medicoRq.getId() <= 0) {
@@ -173,6 +184,7 @@ public class MedicoServiceImpl implements MedicoService {
         return rta;
     }
 
+    /** Prepara los datos del veterinario para responder a la consulta. */
     private void mapearMedico(Medico medico, MedicoRq medicoRq, Especializacion especializacion) {
         medico.setTipoDocumento(medicoRq.getTipoDocumento().trim());
         medico.setNumeroDocumento(medicoRq.getNumeroDocumento().trim());
@@ -183,6 +195,7 @@ public class MedicoServiceImpl implements MedicoService {
         medico.setEspecializacion(especializacion);
     }
 
+    /** Comprueba que exista la especialidad indicada. */
     private Especializacion existeEspecializacion(MedicoRq medicoRq) throws BadRequestException {
         Optional<Especializacion> optionalEspecializacion = this.especializacionRepository
                 .findById(medicoRq.getEspecializacionId());
@@ -192,6 +205,7 @@ public class MedicoServiceImpl implements MedicoService {
         return optionalEspecializacion.get();
     }
 
+    /** Valida el veterinario. */
     private void validarMedico(MedicoRq medicoRq) throws BadRequestException {
         if (medicoRq == null) {
             throw new BadRequestException("La información del médico es obligatoria.");
@@ -216,6 +230,7 @@ public class MedicoServiceImpl implements MedicoService {
         }
     }
 
+    /** Comprueba si el texto está ausente o solo tiene espacios. */
     private boolean esVacio(String valor) {
         return valor == null || valor.trim().isEmpty();
     }

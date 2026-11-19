@@ -34,42 +34,50 @@ public class AtencionApiController implements AtencionApi {
     private final CitaService citas;
     private final TarifaService tarifas;
 
+    /** Devuelve los datos clínicos disponibles para la cita solicitada. */
     @Override
     public AtencionDetalleRs consultar(long citaId) {
         return atenciones.consultar(citaId);
     }
 
+    /** Consulta las tarifas. */
     @Override
     public List<TarifaRs> listarTarifas(long citaId) {
         return tarifas.listarParaCita(citaId);
     }
 
+    /** Solicita cerrar la atención y guardar los datos clínicos de la cita. */
     @Override
     public Map<String, Long> finalizar(long citaId, AtencionRq solicitud, Principal usuario) {
         return Map.of("prefacturaId", atenciones.finalizar(citaId, solicitud, Long.parseLong(usuario.getName())));
     }
 
+    /** Guarda la prescripción asociada a la atención. */
     @Override
     public Map<String, Long> formular(long citaId, PrescripcionRq solicitud) {
         return Map.of("formulaId", atenciones.formular(citaId, solicitud));
     }
 
+    /** Consulta las cantidades disponibles para el medicamento indicado. */
     @Override
     public Map<String, Long> existencias(long citaId, long medicamentoId) {
         return Map.of("disponible", atenciones.existencias(citaId, medicamentoId));
     }
 
+    /** Prepara el documento de la fórmula para la cita indicada. */
     @Override
     public ResponseEntity<byte[]> formula(long citaId, long formulaId) throws IOException {
         return pdf("formula-" + formulaId, ExportarReporte.pdf(atenciones.formula(citaId, formulaId)));
     }
 
+    /** Obtiene el documento de la prefactura asociada a la cita. */
     @Override
     public ResponseEntity<byte[]> prefactura(long citaId, long id) throws IOException {
         citas.detalle(citaId);
         return pdf("prefactura-" + id, ExportarReporte.pdf(facturacion.documento(id, citaId)));
     }
 
+    /** Prepara la respuesta con el documento PDF solicitado. */
     private ResponseEntity<byte[]> pdf(String nombre, byte[] cuerpo) {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + nombre + ".pdf").body(cuerpo);

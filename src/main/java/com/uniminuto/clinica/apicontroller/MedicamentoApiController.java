@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
 
+/** Expone las operaciones HTTP relacionadas con un producto del catálogo de inventario. */
 @RestController
 public class MedicamentoApiController implements MedicamentoApi {
 
@@ -132,11 +133,13 @@ public class MedicamentoApiController implements MedicamentoApi {
                 .body(archivo);
     }
 
+    /** Consulta el informe de inventario. */
     @Override
     public InformeInventarioRs consultarInformeInventario(String tipo, LocalDate desde, LocalDate hasta) {
         return medicamentoService.consultarInformeInventario(tipo, desde, hasta);
     }
 
+    /** Genera el informe de inventario en formato PDF. */
     @Override
     public ResponseEntity<byte[]> exportarInformeInventarioPdf(String tipo, LocalDate desde, LocalDate hasta)
             throws IOException {

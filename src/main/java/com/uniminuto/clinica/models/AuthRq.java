@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import lombok.Data;
 
+/** Contiene las credenciales enviadas para solicitar el inicio de sesión. */
 @Schema(example = """
         {
           "username": "usuario.clinica",

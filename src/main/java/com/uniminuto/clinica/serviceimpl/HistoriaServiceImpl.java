@@ -52,6 +52,7 @@ public class HistoriaServiceImpl implements HistoriaService {
     @Autowired
     private JdbcTemplate jdbc;
 
+    /** Consulta las historias clínicas registradas. */
     @Override
     public List<HistoriaMedicaRs> getAllHistorias() {
         List<HistoriaMedica> historias = historiaMedicaRepository.findAll();
@@ -84,6 +85,7 @@ public class HistoriaServiceImpl implements HistoriaService {
         return resultados;
     }
 
+    /** Busca las historias clínicas que coinciden con el criterio. */
     @Override
     public List<HistoriaMedicaRs> buscarHistorias(String termino) {
         String busqueda = termino == null ? "" : termino.trim().toLowerCase(Locale.ROOT);
@@ -103,10 +105,12 @@ public class HistoriaServiceImpl implements HistoriaService {
                 .toList();
     }
 
+    /** Comprueba si el valor contiene el texto buscado. */
     private boolean contiene(String valor, String busqueda) {
         return valor != null && valor.toLowerCase(Locale.ROOT).contains(busqueda);
     }
 
+    /** Guarda los datos de la historia clínica. */
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public MiRespuestaRS guardarHistoria(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
@@ -127,6 +131,7 @@ public class HistoriaServiceImpl implements HistoriaService {
         return rta;
     }
 
+    /** Guarda cambios en la historia clínica del paciente. */
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public MiRespuestaRS actualizarHistoria(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
@@ -170,6 +175,7 @@ public class HistoriaServiceImpl implements HistoriaService {
         return rta;
     }
 
+    /** Bloquea la cita y comprueba que su estado permita modificarla. */
     private void bloquearCitaEditable(Long id) {
         if (jdbc.queryForList("SELECT id FROM cita WHERE id = ? FOR UPDATE", Long.class, id).isEmpty()) {
             throw new BadRequestException("La cita seleccionada no existe.");
@@ -179,6 +185,7 @@ public class HistoriaServiceImpl implements HistoriaService {
         }
     }
 
+    /** Comprueba que exista la cita indicada. */
     private Cita existeCita(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
         Optional<Cita> optionalCita = this.citaRepository.findById(historiaMedicaRq.getCitaId());
         if (optionalCita.isEmpty()) {
@@ -191,6 +198,7 @@ public class HistoriaServiceImpl implements HistoriaService {
         return cita;
     }
 
+    /** Prepara los datos de la historia clínica para responder a la consulta. */
     private void mapearHistoria(HistoriaMedica historia, HistoriaMedicaRq solicitud, Cita cita) {
         historia.setCita(cita);
         historia.setMascota(cita.getMascota());
@@ -206,6 +214,7 @@ public class HistoriaServiceImpl implements HistoriaService {
         }
     }
 
+    /** Comprueba los datos requeridos para guardar la historia clínica. */
     private void validarHistoria(HistoriaMedicaRq historiaMedicaRq) throws BadRequestException {
         if (historiaMedicaRq == null) {
             throw new BadRequestException("La información de la historia clínica es obligatoria.");

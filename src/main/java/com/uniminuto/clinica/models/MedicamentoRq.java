@@ -7,6 +7,7 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.math.BigDecimal;
 
+/** Contiene los datos enviados para registrar o editar un producto del inventario. */
 @Schema(example = """
         {
           "nombre": "Solución de cuidado veterinario",

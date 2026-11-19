@@ -19,22 +19,30 @@ import java.util.Optional;
 @Repository
 public interface CitaRepository extends JpaRepository<Cita, Long> {
 
+    /** Obtiene el registro por su identificador y lo bloquea durante la operación. */
     @Query(value = "SELECT id FROM cita WHERE id = :id FOR UPDATE", nativeQuery = true)
     Optional<Long> bloquearPorId(Long id);
 
+    /** Lee el estado de la cita con bloqueo durante la operación. */
     @Query(value = "SELECT estado FROM cita WHERE id = :id FOR UPDATE", nativeQuery = true)
     Optional<String> bloquearEstado(Long id);
 
+    /** Consulta las citas agendadas dentro del intervalo indicado. */
     List<Cita> findByFechaHoraBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
+    /** Busca la historia clínica asociada a la mascota y al veterinario. */
     Optional<Cita> findByMascotaAndMedico(Mascota mascota, Medico medico);
 
+    /** Consulta las citas del veterinario en el intervalo indicado. */
     List<Cita> findByMedicoAndFechaHoraBetween(Medico medico, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
+    /** Consulta las citas de la mascota, empezando por la más reciente. */
     List<Cita> findByMascotaOrderByFechaHoraDesc(Mascota mascota);
 
+    /** Consulta las citas del veterinario en orden de fecha y hora. */
     List<Cita> findByMedicoIdOrderByFechaHoraAsc(Long medicoId);
 
+    /** Consulta las citas dentro del intervalo indicado. */
     @Query(value = """
             SELECT c.* FROM cita c
             WHERE (:medicoId IS NULL OR c.medico_id = :medicoId)

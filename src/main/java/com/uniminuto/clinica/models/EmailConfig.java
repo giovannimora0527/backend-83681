@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/** Configura el envío de correos que usa la aplicación. */
 @Component
 @Data
 public class EmailConfig {

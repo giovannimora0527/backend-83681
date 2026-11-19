@@ -20,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 
+/** Agrupa las funciones usadas para generar códigos y tokens de autenticación. */
 @Component
 public class Utilidades {
     /**
@@ -40,6 +41,7 @@ public class Utilidades {
     private final UsuarioRepository usuarioRepository;
     private final ObjectMapper objectMapper;
 
+    /** Prepara los datos necesarios para usar esta clase. */
     public Utilidades(MenuService menuService,
                       UsuarioRepository usuarioRepository,
                       ObjectMapper objectMapper) {
@@ -48,6 +50,7 @@ public class Utilidades {
         this.objectMapper = objectMapper;
     }
 
+    /** Genera el código temporal usado para verificar el inicio de sesión. */
     public static String generarTokenOtp() {
         StringBuilder token = new StringBuilder(LONGITUD_OTP);
         for (int i = 0; i < LONGITUD_OTP; i++) {
@@ -56,6 +59,7 @@ public class Utilidades {
         return token.toString();
     }
 
+    /** Genera el token con la identidad y los permisos de la sesión. */
     public String crearJwtToken(OtpToken otpToken, String secret) {
         validarOtpToken(otpToken);
         if (secret == null || secret.isBlank()) {
@@ -70,6 +74,7 @@ public class Utilidades {
         return firmarJwtToken(otpToken, usuario, key, menusJson);
     }
 
+    /** Convierte las opciones de menú en el formato que se guarda en el token. */
     private String serializarMenus(List<Menu> menus) {
         try {
             return objectMapper.writeValueAsString(menus);
@@ -78,6 +83,7 @@ public class Utilidades {
         }
     }
 
+    /** Firma el token de sesión con la clave configurada. */
     private static String firmarJwtToken(OtpToken otpToken, Usuario usuario,
                                          SecretKey key, String menusJson) {
         Instant now = Instant.now();
@@ -93,6 +99,7 @@ public class Utilidades {
                 .compact();
     }
 
+    /** Comprueba si el código de verificación coincide y sigue vigente. */
     private static void validarOtpToken(OtpToken otpToken) {
         if (otpToken == null || otpToken.getUsuarioId() == null) {
             throw new IllegalArgumentException("El token OTP debe tener un usuario asociado.");

@@ -15,6 +15,7 @@ public interface DespachoDetalleRepository extends JpaRepository<DespachoDetalle
     /** Lista las líneas de despacho ordenadas por su identificador. */
     List<DespachoDetalle> findByDespacho_IdOrderByIdAsc(Long despachoId);
 
+    /** Consulta las facturas vigentes vinculadas con el despacho. */
     @Query(value = """
             SELECT f.id FROM factura f
             JOIN factura_detalle fd ON fd.factura_id = f.id

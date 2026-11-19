@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una raza del catálogo en la base de datos. */
 @Entity
 @Table(name = "raza")
 @Data

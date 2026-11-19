@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa un perfil de usuario en la base de datos. */
 @Entity
 @Table(name = "perfil")
 @Data

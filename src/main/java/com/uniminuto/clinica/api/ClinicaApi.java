@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.uniminuto.clinica.exception.BadRequestException;
 
+/** Agrupa las operaciones de comprobación de la aplicación. */
 @Tag(name = "Diagnóstico del backend", description = "Administración. Rutas de comprobación de funcionamiento.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/clinica")
@@ -29,6 +30,7 @@ public interface ClinicaApi {
             throws BadRequestException;
 
 
+    /** Devuelve la respuesta de la segunda comprobación del servicio. */
     @Operation(summary = "Comprobar respuesta de texto de la clínica")
     @GetMapping(value = "/test2",
             produces = {"application/text"},
@@ -36,6 +38,7 @@ public interface ClinicaApi {
     ResponseEntity<String> testService2()
             throws BadRequestException;
 
+    /** Devuelve la respuesta de la tercera comprobación del servicio. */
     @Operation(summary = "Comprobar respuesta JSON de la clínica")
     @GetMapping(value = "/test3",
             produces = {"application/json"},

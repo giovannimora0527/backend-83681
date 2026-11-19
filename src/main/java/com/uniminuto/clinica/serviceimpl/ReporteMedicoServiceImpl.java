@@ -23,6 +23,7 @@ public class ReporteMedicoServiceImpl implements ReporteMedicoService {
 
     private final ReporteMedicoRepository reportes;
 
+    /** Valida el rango y reúne las cifras de agenda y atención del período solicitado. */
     @Override
     @Transactional(readOnly = true)
     public ReporteRs consultar(LocalDate inicio, LocalDate fin, Long medicoId, Long especializacionId) {
@@ -36,6 +37,6 @@ public class ReporteMedicoServiceImpl implements ReporteMedicoService {
                 LocalDateTime.now(ZoneId.of("America/Bogota")),
                 List.of("ID médico", "Veterinario", "ID especialidad", "Especialidad", "Citas",
                         "Atendidas", "Canceladas", "Pendientes", "Mascotas atendidas",
-                        "Confirmadas", "No asistidas", "Consultas realizadas"), filas);
+                        "De ellas, confirmadas", "No asistidas", "Consultas realizadas"), filas);
     }
 }

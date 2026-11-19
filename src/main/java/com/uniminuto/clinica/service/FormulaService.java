@@ -17,8 +17,10 @@ public interface FormulaService {
     /** Devuelve las unidades disponibles según el stock y los lotes vigentes. */
     long existencias(long medicamentoId);
 
+    /** Consulta las fórmulas médicas registradas. */
     List<FormulaMedica> findAllFormulas();
 
+    /** Busca las fórmulas médicas. */
     List<FormulaMedica> buscarFormulas(String termino);
 
     /** Registra la fórmula desde el formulario individual. */

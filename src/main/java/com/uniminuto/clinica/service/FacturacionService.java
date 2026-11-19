@@ -17,6 +17,9 @@ public interface FacturacionService {
     /** Emite la factura con los servicios de la prefactura y los medicamentos que se entregaron. */
     long facturar(long citaId, long usuarioId, DescuentoRq descuento);
 
+    /** Devuelve el motivo por el que la cita no puede facturarse, o null si esta lista. */
+    String impedimentoEmision(long citaId);
+
     /** Registra el abono dentro del saldo pendiente y devuelve el nuevo estado. */
     String pagar(long facturaId, BigDecimal monto, String metodo, String observacion, long usuarioId);
 

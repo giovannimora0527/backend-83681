@@ -15,11 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/** Genera documentos PDF y libros de Excel a partir de las filas de un reporte. */
 public final class ExportarReporte {
 
+    /** Prepara los datos necesarios para usar esta clase. */
     private ExportarReporte() {
     }
 
+    /** Genera el libro con el título, la fecha, los encabezados y las filas del reporte. */
     public static byte[] excel(ReporteRs reporte) throws IOException {
         try (var libro = new XSSFWorkbook(); var salida = new ByteArrayOutputStream()) {
             var hoja = libro.createSheet("Reporte");
@@ -48,6 +51,7 @@ public final class ExportarReporte {
         }
     }
 
+    /** Genera un PDF paginado con los encabezados y las filas del reporte. */
     public static byte[] pdf(ReporteRs reporte) throws IOException {
         var fuente = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         var lineas = new ArrayList<String>();
@@ -78,6 +82,7 @@ public final class ExportarReporte {
         }
     }
 
+    /** Divide el texto en líneas que caben en el ancho de la página. */
     private static List<String> ajustar(String texto, PDType1Font fuente) throws IOException {
         var lineas = new ArrayList<String>();
         var linea = new StringBuilder();
@@ -95,12 +100,14 @@ public final class ExportarReporte {
         return lineas;
     }
 
+    /** Escribe una línea de texto en la página del PDF. */
     private static void escribir(PDPageContentStream contenido, String texto, PDType1Font fuente)
             throws IOException {
         contenido.showText(limpiar(texto, fuente));
         contenido.newLine();
     }
 
+    /** Sustituye los caracteres que la fuente del PDF no puede representar. */
     private static String limpiar(String texto, PDType1Font fuente) {
         var limpio = new StringBuilder();
         for (int codigo : texto.codePoints().toArray()) {
