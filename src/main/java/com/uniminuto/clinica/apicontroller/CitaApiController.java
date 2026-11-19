@@ -13,13 +13,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.uniminuto.clinica.models.ReporteRs;
+import com.uniminuto.clinica.util.ExportarReporte;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -56,31 +57,16 @@ public class CitaApiController implements CitaApi {
     public ResponseEntity<byte[]> excel(String inicio, String fin) throws IOException {
         var intervalo = intervaloExcel(inicio, fin);
         var citas = citaService.calendario(intervalo.inicio(), intervalo.fin());
-        try (var libro = new XSSFWorkbook(); var salida = new ByteArrayOutputStream()) {
-            var hoja = libro.createSheet("Citas");
-            var encabezado = hoja.createRow(0);
-            var titulos = List.of("Cita", "Mascota", "Propietario", "Inicio", "Fin", "Motivo", "Estado");
-            for (int i = 0; i < titulos.size(); i++) {
-                encabezado.createCell(i).setCellValue(titulos.get(i));
-            }
-            int indice = 1;
-            for (var cita : citas) {
-                var fila = hoja.createRow(indice++);
-                fila.createCell(0).setCellValue(cita.id().toString());
-                fila.createCell(1).setCellValue(cita.mascota());
-                fila.createCell(2).setCellValue(cita.propietario());
-                fila.createCell(3).setCellValue(cita.inicio().toString());
-                fila.createCell(4).setCellValue(cita.fin().toString());
-                fila.createCell(5).setCellValue(cita.motivo());
-                fila.createCell(6).setCellValue(cita.estado());
-            }
-            hoja.createRow(indice).createCell(0).setCellValue("Total de citas: " + citas.size());
-            libro.write(salida);
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=citas.xlsx")
-                    .body(salida.toByteArray());
-        }
+        var titulos = List.of("Cita", "Mascota", "Propietario", "Inicio", "Fin", "Motivo", "Estado");
+        var filas = citas.stream().map(cita -> java.util.Arrays.<Object>asList(cita.id().toString(),
+                cita.mascota(), cita.propietario(), cita.inicio(), cita.fin(), cita.motivo(), cita.estado())).toList();
+        var reporte = new ReporteRs("Agenda de citas", LocalDateTime.now(ZoneId.of("America/Bogota")), titulos, filas);
+        byte[] archivo = ExportarReporte.excel(reporte, "Citas", "Período solicitado: " + inicio + " a " + fin,
+                List.of(new ExportarReporte.Indicador("Total de citas", citas.size(), false)));
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=citas.xlsx")
+                .body(archivo);
     }
 
     /** Valida y prepara las fechas para consultar las citas del Excel. */

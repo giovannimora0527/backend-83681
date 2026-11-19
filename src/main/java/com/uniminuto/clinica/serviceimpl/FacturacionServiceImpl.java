@@ -1,7 +1,7 @@
 package com.uniminuto.clinica.serviceimpl;
 
 import com.uniminuto.clinica.exception.BadRequestException;
-import com.uniminuto.clinica.models.ReporteRs;
+import com.uniminuto.clinica.models.FacturaDocumento;
 import com.uniminuto.clinica.repository.TarifaRepository;
 import com.uniminuto.clinica.repository.FacturaRepository;
 import com.uniminuto.clinica.repository.FacturaRepository.CitaFacturada;
@@ -198,41 +198,16 @@ public class FacturacionServiceImpl implements FacturacionService {
     /** Prepara el detalle financiero que se incluirá en el PDF. */
     @Transactional(readOnly = true)
     @Override
-    public ReporteRs documento(long facturaId, Long citaId) {
+    public FacturaDocumento documento(long facturaId, Long citaId) {
         var cabecera = facturas.cabecera(facturaId, citaId);
-        var filas = facturas.lineas(facturaId);
-        filas.add(List.of("Subtotal", cabecera.get("subtotal"), "IVA", cabecera.get("iva")));
-        filas.add(List.of("Descuento", cabecera.get("descuento"), "Total", cabecera.get("total")));
         BigDecimal pagado = pagos(facturaId);
-        var estadoPago = cabecera.get("estado");
-        filas.add(List.of("Estado", "NO_REQUIERE_PAGO".equals(estadoPago) ? "No requiere pago" : estadoPago, "Pagado", pagado));
+        BigDecimal saldo = null;
         if ("FACTURA".equals(cabecera.get("tipo_documento"))) {
-            BigDecimal saldo = "ANULADA".equals(estadoPago) ? BigDecimal.ZERO
+            saldo = "ANULADA".equals(cabecera.get("estado")) ? BigDecimal.ZERO
                     : ((BigDecimal) cabecera.get("total")).subtract(pagado).max(BigDecimal.ZERO);
-            filas.add(List.of("Saldo pendiente", saldo));
         }
-        filas.addFirst(List.of("Propietario", cabecera.get("propietario"), "Mascota", cabecera.get("mascota")));
-        filas.addFirst(List.of("Veterinario", cabecera.get("medico"), "Especialidad", cabecera.get("especialidad")));
-        if (cabecera.get("motivo_sin_pago") != null) {
-            filas.add(List.of("Motivo del valor cero", cabecera.get("motivo_sin_pago")));
-        }
-        filas.addFirst(List.of("Identificación del propietario", cabecera.get("documento_propietario"),
-                "Especie y raza", cabecera.get("identificacion_mascota")));
-        filas.addFirst(List.of("Registro profesional", cabecera.get("registro_profesional")));
-        filas.addFirst(List.of("Emisión", cabecera.get("fecha_emision")));
-        var datosClinica = facturas.datosClinica();
-        var encabezado = new java.util.ArrayList<List<Object>>();
-        for (var campo : List.of("NIT", "DIRECCION", "TELEFONO", "EMAIL")) {
-            String valor = datosClinica.get("CLINICA_" + campo);
-            if (valor != null && !valor.isBlank()) {
-                encabezado.add(List.of(campo, valor));
-            }
-        }
-        filas.addAll(0, encabezado);
-        String nombreClinica = datosClinica.getOrDefault("CLINICA_NOMBRE", "Clínica veterinaria Uniminuto");
-        return new ReporteRs(nombreClinica + " | " + cabecera.get("tipo_documento") + " " + cabecera.get("numero_factura"),
-                LocalDateTime.now(ZoneId.of("America/Bogota")),
-                List.of("Tipo", "Descripción", "Cantidad", "Precio unitario", "Subtotal", "IVA %", "IVA"), filas);
+        return new FacturaDocumento(facturas.datosClinica(), cabecera, facturas.lineas(facturaId), pagado,
+                saldo, LocalDateTime.now(ZoneId.of("America/Bogota")));
     }
 
     /** Persiste la cabecera, los detalles y los impuestos del documento. */

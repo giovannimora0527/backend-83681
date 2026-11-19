@@ -1,7 +1,7 @@
 package com.uniminuto.clinica.service;
 
 import com.uniminuto.clinica.models.DescuentoRq;
-import com.uniminuto.clinica.models.ReporteRs;
+import com.uniminuto.clinica.models.FacturaDocumento;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -36,5 +36,5 @@ public interface FacturacionService {
     List<Map<String, Object>> listarPagos(long facturaId);
 
     /** Reúne los datos para descargar una factura o una prefactura. */
-    ReporteRs documento(long facturaId, Long citaId);
+    FacturaDocumento documento(long facturaId, Long citaId);
 }

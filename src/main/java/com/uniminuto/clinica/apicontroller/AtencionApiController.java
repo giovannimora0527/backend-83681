@@ -10,6 +10,7 @@ import com.uniminuto.clinica.service.TarifaService;
 import com.uniminuto.clinica.service.AtencionService;
 import com.uniminuto.clinica.service.FacturacionService;
 import com.uniminuto.clinica.util.ExportarReporte;
+import com.uniminuto.clinica.util.FacturaPdf;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -74,7 +75,7 @@ public class AtencionApiController implements AtencionApi {
     @Override
     public ResponseEntity<byte[]> prefactura(long citaId, long id) throws IOException {
         citas.detalle(citaId);
-        return pdf("prefactura-" + id, ExportarReporte.pdf(facturacion.documento(id, citaId)));
+        return pdf("prefactura-" + id, FacturaPdf.generar(facturacion.documento(id, citaId)));
     }
 
     /** Prepara la respuesta con el documento PDF solicitado. */

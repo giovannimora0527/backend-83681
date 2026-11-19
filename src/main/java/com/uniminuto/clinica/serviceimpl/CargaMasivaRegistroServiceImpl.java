@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Map;
 
@@ -70,7 +71,11 @@ public class CargaMasivaRegistroServiceImpl implements CargaMasivaRegistroServic
         medicamento.setPrecioVenta(new BigDecimal(fila.get("precioVenta")));
         medicamento.setStockMinimo(Integer.parseInt(fila.get("stockMinimo")));
         medicamento.setCantidadActual(0);
-        medicamento.setFechaProximoPedido(fecha(fila.get("fechaProximoPedido")));
+        LocalDate proximoPedido = fecha(fila.get("fechaProximoPedido"));
+        if (proximoPedido != null && proximoPedido.isBefore(LocalDate.now(ZoneId.of("America/Bogota")))) {
+            throw new BadRequestException("El próximo pedido debe ser de hoy o posterior.");
+        }
+        medicamento.setFechaProximoPedido(proximoPedido);
         medicamento.setFechaCreacionRegistro(LocalDateTime.now());
         medicamento.setUsuarioCreacion(usuario);
         medicamento = medicamentoRepository.save(medicamento);

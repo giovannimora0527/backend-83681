@@ -1,6 +1,7 @@
 package com.uniminuto.clinica.repository;
 
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.FacturaDocumento.Linea;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -132,13 +133,13 @@ public class FacturaRepository {
     }
 
     /** Consulta las líneas de productos y servicios que se presentan en la factura. */
-    public List<List<Object>> lineas(long facturaId) {
+    public List<Linea> lineas(long facturaId) {
         return jdbc.query("""
                 SELECT d.tipo, d.descripcion, d.cantidad, d.precio_unitario, d.subtotal,
                        COALESCE(i.porcentaje,0), COALESCE(i.importe,0)
                 FROM factura_detalle d LEFT JOIN factura_detalle_iva i ON i.detalle_id = d.id
                 WHERE d.factura_id = ? ORDER BY d.id
-                """, (rs, index) -> List.<Object>of(rs.getString(1), rs.getString(2), rs.getInt(3),
+                """, (rs, index) -> new Linea(rs.getString(1), rs.getString(2), rs.getInt(3),
                 rs.getBigDecimal(4), rs.getBigDecimal(5), rs.getBigDecimal(6), rs.getBigDecimal(7)), facturaId);
     }
 

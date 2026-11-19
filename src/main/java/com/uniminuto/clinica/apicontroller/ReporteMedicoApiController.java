@@ -5,6 +5,7 @@ import com.uniminuto.clinica.models.ReporteRs;
 import com.uniminuto.clinica.api.ReporteMedicoApi;
 import com.uniminuto.clinica.service.ReporteMedicoService;
 import com.uniminuto.clinica.util.ExportarReporte;
+import com.uniminuto.clinica.util.InformePdf;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 /** Entrega en JSON, PDF o Excel el reporte médico calculado con los filtros solicitados. */
 @RestController
@@ -36,12 +38,26 @@ public class ReporteMedicoApiController implements ReporteMedicoApi {
                                             Long especializacionId) throws IOException {
         ReporteRs reporte = consultar(inicio, fin, medicoId, especializacionId);
         return switch (formato) {
-            case "pdf" -> descargar("gestion-medica.pdf", MediaType.APPLICATION_PDF, ExportarReporte.pdf(reporte));
+            case "pdf" -> descargar("gestion-medica.pdf", MediaType.APPLICATION_PDF, InformePdf.generar(reporte,
+                    ExportarReporte.contexto(inicio, fin, medicoId, especializacionId)));
             case "excel" -> descargar("gestion-medica.xlsx",
                     MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-                    ExportarReporte.excel(reporte));
+                    ExportarReporte.excel(reporte, "Gestión médica",
+                            ExportarReporte.contexto(inicio, fin, medicoId, especializacionId),
+                            indicadores(reporte)));
             default -> throw new BadRequestException("El formato debe ser pdf o excel.");
         };
+    }
+
+    /** Muestra los totales de la consulta en la cabecera del Excel. */
+    private List<ExportarReporte.Indicador> indicadores(ReporteRs reporte) {
+        return reporte.filas().stream().filter(fila -> "TOTAL".equals(fila.get(1))).findFirst()
+                .map(fila -> List.of(
+                        new ExportarReporte.Indicador("Total de citas", (Number) fila.get(4), false),
+                        new ExportarReporte.Indicador("Citas atendidas", (Number) fila.get(5), false),
+                        new ExportarReporte.Indicador("Mascotas atendidas", (Number) fila.get(8), false),
+                        new ExportarReporte.Indicador("Consultas realizadas", (Number) fila.get(11), false)))
+                .orElseGet(List::of);
     }
 
     /** Prepara el archivo y los encabezados de la respuesta de descarga. */

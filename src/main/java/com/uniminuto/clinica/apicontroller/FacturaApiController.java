@@ -6,7 +6,7 @@ import com.uniminuto.clinica.models.PagoRq;
 import com.uniminuto.clinica.models.AnulacionRq;
 import com.uniminuto.clinica.models.DevolucionRq;
 import com.uniminuto.clinica.service.FacturacionService;
-import com.uniminuto.clinica.util.ExportarReporte;
+import com.uniminuto.clinica.util.FacturaPdf;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -82,6 +82,6 @@ public class FacturaApiController implements FacturaApi {
     public ResponseEntity<byte[]> pdf(long id) throws IOException {
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=factura-" + id + ".pdf")
-                .body(ExportarReporte.pdf(facturacion.documento(id, null)));
+                .body(FacturaPdf.generar(facturacion.documento(id, null)));
     }
 }

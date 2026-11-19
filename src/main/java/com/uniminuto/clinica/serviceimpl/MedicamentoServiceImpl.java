@@ -29,15 +29,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.uniminuto.clinica.models.ReporteRs;
+import com.uniminuto.clinica.util.ExportarReporte;
 
 /** Implementa administración y consultas del inventario de productos médicos. */
 @Service
@@ -191,39 +185,30 @@ public class MedicamentoServiceImpl implements MedicamentoService {
     @Transactional(readOnly = true)
     public byte[] exportarInventarioExcel(String tipo, LocalDate desde, LocalDate hasta) {
         var informe = prepararInformeInventario(tipo, desde, hasta);
-        try (Workbook libro = new XSSFWorkbook(); ByteArrayOutputStream salida = new ByteArrayOutputStream()) {
-            CellStyle encabezado = estiloEncabezado(libro);
-            crearHojaParametros(libro, encabezado, informe);
+        String contexto = "Tipo: " + informe.tipo()
+                + "  |  Desde (movimientos): " + (desde == null ? "Sin límite" : desde)
+                + "  |  Hasta (movimientos): " + (hasta == null ? "Sin límite" : hasta);
+        try (var libro = new XSSFWorkbook(); var salida = new ByteArrayOutputStream()) {
+            var totales = informe.totales();
+            var indicadores = List.of(
+                    new ExportarReporte.Indicador("Existencias registradas", totales.existenciasRegistradas(), false),
+                    new ExportarReporte.Indicador("Disponible para dispensar", totales.disponiblesParaDispensar(), false),
+                    new ExportarReporte.Indicador("Valor al costo", totales.valorCosto(), true),
+                    new ExportarReporte.Indicador("Valor potencial de venta", totales.valorPotencialVenta(), true));
+            ExportarReporte.hojaExcel(libro, "Parámetros", new ReporteRs("Informe de inventario",
+                    informe.generado(), List.of("Parámetro", "Valor"), informe.parametros()), contexto, indicadores);
             for (var seccion : informe.secciones()) {
-                var hoja = escribirSeccion(libro, encabezado, seccion);
-                if ("Existencias".equals(seccion.nombre())) {
-                    formatearMoneda(libro, hoja, 8, 9, 10, 11);
-                } else if ("Lotes".equals(seccion.nombre())) {
-                    formatearMoneda(libro, hoja, 5, 6);
-                }
+                ExportarReporte.hojaExcel(libro, seccion.nombre(),
+                        new ReporteRs("Inventario · " + seccion.nombre(), informe.generado(),
+                                seccion.columnas(), seccion.filas()), contexto, List.of());
             }
-            escribirSeccion(libro, encabezado,
-                    new InformeInventarioRs.Seccion("Totales", List.of("Concepto", "Total"), informe.filasTotales()));
+            ExportarReporte.hojaExcel(libro, "Totales", new ReporteRs("Inventario · Totales",
+                    informe.generado(), List.of("Concepto", "Total"), informe.filasTotales()), contexto, List.of());
             libro.write(salida);
             return salida.toByteArray();
         } catch (IOException exception) {
             throw new BadRequestException("No fue posible generar el informe Excel del inventario.");
         }
-    }
-
-    /** Agrega los encabezados y las filas de una sección al libro de Excel. */
-    private Sheet escribirSeccion(Workbook libro, CellStyle encabezado, InformeInventarioRs.Seccion seccion) {
-        Sheet hoja = libro.createSheet(seccion.nombre());
-        escribirEncabezados(hoja, encabezado, seccion.columnas().toArray(String[]::new));
-        int indiceFila = 1;
-        for (var datos : seccion.filas()) {
-            Row fila = hoja.createRow(indiceFila++);
-            for (int columna = 0; columna < datos.size(); columna++) {
-                poner(fila, columna, datos.get(columna));
-            }
-        }
-        finalizarHoja(hoja, seccion.columnas().size());
-        return hoja;
     }
 
     /** Suma los importes de la columna indicada para el total del informe. */
@@ -239,18 +224,6 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         int cantidadColumna = movimientos.columnas().indexOf("Cantidad");
         return movimientos.filas().stream().filter(fila -> tipo.equalsIgnoreCase((String) fila.get(tipoColumna)))
                 .mapToLong(fila -> ((Number) fila.get(cantidadColumna)).longValue()).sum();
-    }
-
-    /** Agrega al libro los filtros y datos de generación del informe. */
-    private void crearHojaParametros(Workbook libro, CellStyle encabezado, InformeInventarioRs informe) {
-        Sheet hoja = libro.createSheet("Parámetros");
-        escribirEncabezados(hoja, encabezado, "Parámetro", "Valor");
-        int fila = 1;
-        for (var parametro : informe.parametros()) {
-            escribirFila(hoja, fila++, parametro.get(0).toString(), parametro.get(1).toString());
-        }
-        hoja.setColumnWidth(0, 8500);
-        hoja.setColumnWidth(1, 10000);
     }
 
     /** Construye el resumen valorizado de existencias y aplica el filtro seleccionado. */
@@ -361,72 +334,6 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         return new InformeInventarioRs.Seccion("Movimientos", List.of(columnas), filas);
     }
 
-    /** Aplica formato visual uniforme a las filas de encabezado. */
-    private CellStyle estiloEncabezado(Workbook libro) {
-        CellStyle estilo = libro.createCellStyle();
-        estilo.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-        estilo.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        estilo.setBorderBottom(BorderStyle.THIN);
-        org.apache.poi.ss.usermodel.Font fuente = libro.createFont();
-        fuente.setBold(true);
-        fuente.setColor(IndexedColors.WHITE.getIndex());
-        estilo.setFont(fuente);
-        return estilo;
-    }
-
-    /** Escribe los títulos de columna con el estilo del libro. */
-    private void escribirEncabezados(Sheet hoja, CellStyle estilo, String... nombres) {
-        Row fila = hoja.createRow(0);
-        for (int i = 0; i < nombres.length; i++) {
-            Cell celda = fila.createCell(i);
-            celda.setCellValue(nombres[i]);
-            celda.setCellStyle(estilo);
-        }
-    }
-
-    /** Escribe un par parámetro/valor en la hoja de filtros. */
-    private void escribirFila(Sheet hoja, int indice, String clave, String valor) {
-        Row fila = hoja.createRow(indice);
-        fila.createCell(0).setCellValue(clave);
-        fila.createCell(1).setCellValue(valor);
-    }
-
-    /** Escribe valores numéricos y textos conservando sus tipos en Excel. */
-    private void poner(Row fila, int indice, Object valor) {
-        Cell celda = fila.createCell(indice);
-        if (valor == null) return;
-        if (valor instanceof Number numero) celda.setCellValue(numero.doubleValue());
-        else if (valor instanceof Boolean booleano) celda.setCellValue(booleano);
-        else celda.setCellValue(valor.toString());
-    }
-
-    /** Activa filtros, fija encabezados y ajusta el ancho de columnas. */
-    private void finalizarHoja(Sheet hoja, int columnas) {
-        if (hoja.getLastRowNum() >= 0) hoja.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0,
-                hoja.getLastRowNum(), 0, columnas - 1));
-        hoja.createFreezePane(0, 1);
-        for (int i = 0; i < columnas; i++) {
-            hoja.autoSizeColumn(i);
-            hoja.setColumnWidth(i, Math.min(hoja.getColumnWidth(i), 45 * 256));
-        }
-    }
-
-    /** Aplica formato de moneda colombiana a las columnas de valores del informe. */
-    private void formatearMoneda(Workbook libro, Sheet hoja, int... columnas) {
-        CellStyle moneda = libro.createCellStyle();
-        moneda.setDataFormat(libro.createDataFormat().getFormat("\"$\" #,##0.00"));
-        for (int fila = 1; fila <= hoja.getLastRowNum(); fila++) {
-            Row row = hoja.getRow(fila);
-            if (row == null) continue;
-            for (int columna : columnas) {
-                Cell cell = row.getCell(columna);
-                if (cell != null && cell.getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
-                    cell.setCellStyle(moneda);
-                }
-            }
-        }
-    }
-
     /** Determina si un producto coincide con la categoría de informe seleccionada. */
     private boolean coincideFiltroExistencia(String filtro, boolean bajo, boolean agotado,
                                              boolean proximo, boolean vencido) {
@@ -508,6 +415,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
             throw new BadRequestException("Ya existe un medicamento con ese nombre.");
         }
         validarDatosInventario(solicitud, null);
+        validarProximoPedido(solicitud.getFechaProximoPedido(), null);
         Medicamento medicamento = new Medicamento();
         mapearDatosEditables(medicamento, solicitud);
         medicamento.setCantidadActual(0);
@@ -534,6 +442,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
             throw new BadRequestException("Ya existe otro medicamento con ese nombre.");
         }
         validarDatosInventario(solicitud, medicamento.getId());
+        validarProximoPedido(solicitud.getFechaProximoPedido(), medicamento.getFechaProximoPedido());
         if (!solicitud.getCantidadActual().equals(medicamento.getCantidadActual())) {
             throw new BadRequestException("Las existencias solo se modifican mediante entradas, salidas o ajustes trazables.");
         }
@@ -581,6 +490,13 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         }
         if (solicitud.getFechaVence() != null && solicitud.getFechaVence().isBefore(solicitud.getFechaCompra())) {
             throw new BadRequestException("La fecha de vencimiento no puede ser anterior a la fecha de compra.");
+        }
+    }
+
+    /** Impide asignar un próximo pedido anterior a hoy y permite conservar la fecha registrada. */
+    private void validarProximoPedido(LocalDate fecha, LocalDate anterior) {
+        if (fecha != null && !fecha.equals(anterior) && fecha.isBefore(LocalDate.now(ZoneId.of("America/Bogota")))) {
+            throw new BadRequestException("El próximo pedido debe ser de hoy o posterior.");
         }
     }
 

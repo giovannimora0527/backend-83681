@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,6 +49,7 @@ public class TarifaServiceImpl implements TarifaService {
     @Transactional
     public TarifaRs crear(TarifaRq solicitud, long usuarioId) {
         validar(solicitud);
+        validarFechaVigencia(solicitud.fechaVigencia(), null);
         long id;
         try {
             id = tarifas.insertar(convertir(0, solicitud));
@@ -67,6 +70,7 @@ public class TarifaServiceImpl implements TarifaService {
         if (anterior.especializacionId() == null && solicitud.especializacionId() != null) {
             throw new BadRequestException("La tarifa de Consulta general no se puede asociar a una especialización.");
         }
+        validarFechaVigencia(solicitud.fechaVigencia(), anterior.fechaVigencia());
         var nueva = convertir(id, solicitud);
         try {
             tarifas.actualizar(nueva);
@@ -127,6 +131,13 @@ public class TarifaServiceImpl implements TarifaService {
         }
         if (solicitud.especializacionId() == null && !NOMBRE_CONSULTA_GENERAL.equals(solicitud.nombreServicio().strip())) {
             throw new BadRequestException("La tarifa sin especialización se debe llamar Consulta general.");
+        }
+    }
+
+    /** Impide asignar una fecha de vigencia anterior a hoy sin afectar la fecha ya registrada. */
+    private void validarFechaVigencia(LocalDate fecha, LocalDate anterior) {
+        if (!fecha.equals(anterior) && fecha.isBefore(LocalDate.now(ZoneId.of("America/Bogota")))) {
+            throw new BadRequestException("La nueva vigencia debe ser de hoy o posterior.");
         }
     }
 
