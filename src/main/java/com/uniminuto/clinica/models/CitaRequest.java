@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Contiene los datos recibidos para registrar una cita. */
 @Data
 public class CitaRequest {
 

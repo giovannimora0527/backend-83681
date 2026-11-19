@@ -10,6 +10,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/** Datos de una nota clínica incluidos en la consulta del historial. */
 @Data
 public class AnotacionHistoriaRs {
     private Long id;
@@ -22,6 +23,7 @@ public class AnotacionHistoriaRs {
     private String observaciones;
     private List<FormulaMedica> formulasMedicas = List.of();
 
+    /** Prepara los datos necesarios para usar esta clase. */
     public AnotacionHistoriaRs(AnotacionHistoria anotacion) {
         this.id = anotacion.getId();
         this.historia = anotacion.getHistoria();

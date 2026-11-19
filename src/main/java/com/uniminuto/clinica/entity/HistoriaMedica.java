@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Conserva los hallazgos clínicos y las recomendaciones de la cita en el historial de la mascota. */
 @Entity
 @Table(name = "historia_medica")
 @Data

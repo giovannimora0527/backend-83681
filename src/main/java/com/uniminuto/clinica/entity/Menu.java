@@ -11,6 +11,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una opción de navegación en la base de datos. */
 @Entity
 @Table(name = "menu")
 @Data

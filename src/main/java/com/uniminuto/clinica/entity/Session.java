@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una sesión autenticada en la base de datos. */
 @Entity
 @Table(name = "session")
 @Data

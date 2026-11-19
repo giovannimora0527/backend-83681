@@ -32,6 +32,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
@@ -46,6 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Comparator;
 import java.util.TreeSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -159,6 +161,7 @@ public class DespachoServiceImpl implements DespachoService {
         validarUsuarioDespacho(usuarioResponsableId);
         validarId(formulaId, "fórmula");
         FormulaMedica formula = enriquecerFormulaPendiente(formulaId);
+        validarCitaParaEntrega(formula.getCita().getEstado());
         if (formula.getDetallesDespacho().stream().noneMatch(detalle -> detalle.getCantidadPendiente() > 0)) {
             throw new BadRequestException("La fórmula ya no tiene cantidades pendientes de entrega.");
         }
@@ -167,13 +170,14 @@ public class DespachoServiceImpl implements DespachoService {
 
     /** {@inheritDoc} */
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Despacho prepararDespacho(DespachoRq despachoRq, String usuarioResponsableId) {
         if (despachoRq == null) {
             throw new BadRequestException("La información del despacho es obligatoria.");
         }
         validarId(despachoRq.getFormulaId(), "fórmula");
         Usuario usuario = validarUsuarioDespacho(usuarioResponsableId);
+        bloquearCitaParaEntrega(despachoRq.getFormulaId());
         Long formulaId = bloquearFormulaVigente(despachoRq.getFormulaId());
         List<FormulaDetalle> detallesFormula = formulaDetalleRepository.findByFormulaIdOrderByIdAsc(formulaId);
         if (detallesFormula.isEmpty()) {
@@ -215,24 +219,28 @@ public class DespachoServiceImpl implements DespachoService {
 
     /** {@inheritDoc} */
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Despacho confirmarDespacho(Long despachoId, List<LineaConfirmacion> detalles,
                                       String claveIdempotencia, String observacion,
                                       String usuarioResponsableId) {
         Usuario usuario = validarUsuarioDespacho(usuarioResponsableId);
-        Despacho despacho = despachoRepository.findLockedById(validarId(despachoId, "despacho"))
+        validarId(despachoId, "despacho");
+        Long formulaOrigen = despachoRepository.buscarFormulaId(despachoId)
                 .orElseThrow(() -> new BadRequestException("El despacho no existe."));
-        if (!List.of(ESTADO_EN_PREPARACION, ESTADO_PARCIAL,
-                ESTADO_PENDIENTE_DISPONIBILIDAD).contains(despacho.getEstado())) {
-            throw new BadRequestException("El despacho no está en un estado que permita confirmar entregas.");
-        }
+        bloquearCitaParaEntrega(formulaOrigen);
+        Despacho despacho = despachoRepository.findLockedById(despachoId)
+                .orElseThrow(() -> new BadRequestException("El despacho no existe."));
         String clave = validarClaveIdempotencia(claveIdempotencia);
         boolean claveYaProcesada = despachoHistorialEstadoRepository
                 .findByDespacho_IdOrderByFechaCambioAsc(despachoId).stream()
                 .anyMatch(evento -> evento.getObservacion() != null
                         && evento.getObservacion().startsWith("IDEMPOTENCIA:" + clave + "|"));
         if (claveYaProcesada) {
-            throw new BadRequestException("La confirmación ya fue procesada para esta clave de idempotencia.");
+            return enriquecerDespacho(despacho);
+        }
+        if (!List.of(ESTADO_EN_PREPARACION, ESTADO_PARCIAL,
+                ESTADO_PENDIENTE_DISPONIBILIDAD).contains(despacho.getEstado())) {
+            throw new BadRequestException("El despacho no está en un estado que permita confirmar entregas.");
         }
 
         Long formulaId = bloquearFormulaVigente(despacho.getFormulaId());
@@ -298,7 +306,7 @@ public class DespachoServiceImpl implements DespachoService {
             if (!Boolean.TRUE.equals(lote.getActivo()) || lote.getCantidad() == null || lote.getCantidad() <= 0) {
                 throw new BadRequestException("El lote seleccionado no tiene existencias disponibles.");
             }
-            if (lote.getFechaVencimiento().isBefore(LocalDate.now())) {
+            if (lote.getFechaVencimiento() != null && lote.getFechaVencimiento().isBefore(LocalDate.now())) {
                 throw new BadRequestException("No se permite dispensar medicamentos vencidos.");
             }
             long cantidadLote = cantidadPorLote.merge(
@@ -375,6 +383,9 @@ public class DespachoServiceImpl implements DespachoService {
         if (ESTADO_CANCELADO.equals(despacho.getEstado())) {
             throw new BadRequestException("El despacho ya está cancelado.");
         }
+        if (!despachoDetalleRepository.buscarFacturasVigentes(despachoId).isEmpty()) {
+            throw new BadRequestException("Anula la factura vigente antes de revertir el despacho.");
+        }
 
         String observacion = limpiar(cancelacionRq == null ? null : cancelacionRq.getObservacion());
         if (observacion == null) {
@@ -409,6 +420,36 @@ public class DespachoServiceImpl implements DespachoService {
         return respuesta(detalles.isEmpty()
                 ? "Preparación de despacho cancelada sin afectar el inventario."
                 : "Despacho cancelado y cantidades devueltas al inventario.");
+    }
+
+    /** Registra el cierre justificado de las cantidades que siguen pendientes. */
+    @Override
+    @Transactional
+    public MiRespuestaRS cerrarPendientes(Long despachoId, DespachoCancelarRq solicitud, String usuarioResponsableId) {
+        Usuario usuario = validarUsuarioDespacho(usuarioResponsableId);
+        String observacion = limpiar(solicitud == null ? null : solicitud.getObservacion());
+        if (observacion == null) {
+            throw new BadRequestException("Justifica por qué el cliente no retirará las cantidades pendientes.");
+        }
+        Despacho despacho = despachoRepository.findLockedById(validarId(despachoId, "despacho"))
+                .orElseThrow(() -> new BadRequestException("El despacho no existe."));
+        if (!ESTADO_PARCIAL.equals(despacho.getEstado()) || despacho.getFechaDespacho() == null) {
+            throw new BadRequestException("Se requiere un despacho parcial confirmado.");
+        }
+        long formulaId = bloquearFormulaVigente(despacho.getFormulaId());
+        var detalles = formulaDetalleRepository.findByFormulaIdOrderByIdAsc(formulaId);
+        if (!tieneCantidadesPendientes(detalles)) {
+            throw new BadRequestException("La fórmula ya no tiene cantidades pendientes.");
+        }
+        FormulaMedica formula = formulaMedicaRepository.findById(formulaId)
+                .orElseThrow(() -> new BadRequestException("La fórmula no existe."));
+        var ahora = LocalDateTime.now();
+        formula.setEstado("COMPLETA");
+        formula.setFechaActualizacionRegistro(ahora);
+        formulaMedicaRepository.save(formula);
+        guardarHistorial(despacho, ESTADO_PARCIAL, ESTADO_PARCIAL, usuario,
+                "Cierre de cantidades pendientes: " + observacion, ahora);
+        return respuesta("Se cerraron las cantidades pendientes sin modificar las entregas registradas.");
     }
 
     /** {@inheritDoc} */
@@ -504,6 +545,7 @@ public class DespachoServiceImpl implements DespachoService {
         }
     }
 
+    /** Completa la fórmula con cantidades prescritas, entregadas y disponibles. */
     private FormulaMedica enriquecerFormulaPendiente(Long formulaId) {
         FormulaMedica formula = formulaMedicaRepository.findById(formulaId)
                 .orElseThrow(() -> new BadRequestException("La fórmula médica no existe."));
@@ -536,15 +578,17 @@ public class DespachoServiceImpl implements DespachoService {
                     .findByMedicamento_IdOrderByFechaVencimientoAsc(detalle.getMedicamentoId()).stream()
                     .filter(lote -> Boolean.TRUE.equals(lote.getActivo())
                             && lote.getCantidad() != null && lote.getCantidad() > 0)
+                    .sorted(Comparator.comparing(InventarioLote::getFechaVencimiento,
+                            Comparator.nullsLast(Comparator.naturalOrder())).thenComparing(InventarioLote::getId))
                     .toList();
             long disponible = lotes.stream()
-                    .filter(lote -> !lote.getFechaVencimiento().isBefore(hoy))
+                    .filter(lote -> lote.getFechaVencimiento() == null || !lote.getFechaVencimiento().isBefore(hoy))
                     .mapToLong(lote -> lote.getCantidad())
                     .sum();
             detalle.setMedicamentoNombre(medicamento.getNombre());
             detalle.setCantidadDispensada(Math.toIntExact(yaEntregado));
             detalle.setCantidadPendiente(Math.toIntExact(pendiente));
-            detalle.setCantidadDisponible(Math.toIntExact(disponible));
+            detalle.setCantidadDisponible((int) Math.min(disponible, Math.max(0, medicamento.getCantidadActual())));
             detalle.setLotesDisponibles(lotes);
         }
         formula.setDetallesDespacho(detalles);
@@ -552,6 +596,7 @@ public class DespachoServiceImpl implements DespachoService {
         return formula;
     }
 
+    /** Calcula el estado de despacho que se presenta junto a la fórmula. */
     private String obtenerEstadoDispensacion(Long formulaId, List<FormulaDetalle> detalles) {
         List<Despacho> despachos = despachoRepository.findByFormulaIdOrderByIdDesc(formulaId);
         for (Despacho despacho : despachos) {
@@ -573,6 +618,7 @@ public class DespachoServiceImpl implements DespachoService {
         return quedanPendientes ? ESTADO_PENDIENTE : ESTADO_DESPACHADO;
     }
 
+    /** Completa los datos de el despacho. */
     private Despacho enriquecerDespacho(Despacho despacho) {
         completarDatosHistorial(despacho);
         despacho.setDetallesTrazabilidad(enriquecerDetalles(
@@ -580,6 +626,7 @@ public class DespachoServiceImpl implements DespachoService {
         return despacho;
     }
 
+    /** Completa la información de fórmula, propietario, mascota y veterinario en el historial. */
     private void completarDatosHistorial(Despacho despacho) {
         formulaMedicaRepository.findById(despacho.getFormulaId()).ifPresent(formula -> {
             despacho.setNumeroFormula(formula.getNumeroFormula());
@@ -602,6 +649,7 @@ public class DespachoServiceImpl implements DespachoService {
         }
     }
 
+    /** Completa los detalles con los datos del lote y los movimientos asociados. */
     private List<DespachoDetalle> enriquecerDetalles(List<DespachoDetalle> detalles) {
         for (DespachoDetalle detalle : detalles) {
             Despacho despacho = detalle.getDespacho();
@@ -636,6 +684,7 @@ public class DespachoServiceImpl implements DespachoService {
         return detalles;
     }
 
+    /** Comprueba que se agoten primero los lotes vigentes con vencimiento más cercano. */
     private void validarPrioridadFefo(List<FormulaDetalle> formulas,
                                       Map<Long, Long> cantidadPorDetalle,
                                       Map<Long, Long> cantidadPorLote,
@@ -663,6 +712,7 @@ public class DespachoServiceImpl implements DespachoService {
         }
     }
 
+    /** Comprueba si quedan unidades prescritas por entregar. */
     private boolean tieneCantidadesPendientes(List<FormulaDetalle> detalles) {
         return detalles.stream().anyMatch(detalle -> {
             validarDetalleFormula(detalle);
@@ -670,11 +720,13 @@ public class DespachoServiceImpl implements DespachoService {
         });
     }
 
+    /** Suma las unidades entregadas para una línea de la fórmula. */
     private long cantidadEntregadaFormula(Long formulaDetalleId) {
         return Optional.ofNullable(
                 despachoDetalleRepository.sumarCantidadEntregadaPorFormulaDetalle(formulaDetalleId)).orElse(0L);
     }
 
+    /** Comprueba si algún medicamento pendiente tiene lotes aptos para entregar. */
     private boolean hayExistenciasElegibles(List<FormulaDetalle> formulas) {
         LocalDate hoy = LocalDate.now();
         for (FormulaDetalle formulaDetalle : formulas) {
@@ -685,13 +737,14 @@ public class DespachoServiceImpl implements DespachoService {
                     .findByMedicamento_IdOrderByFechaVencimientoAsc(formulaDetalle.getMedicamentoId());
             if (lotes.stream().anyMatch(lote -> Boolean.TRUE.equals(lote.getActivo())
                     && lote.getCantidad() != null && lote.getCantidad() > 0
-                    && !lote.getFechaVencimiento().isBefore(hoy))) {
+                    && (lote.getFechaVencimiento() == null || !lote.getFechaVencimiento().isBefore(hoy)))) {
                 return true;
             }
         }
         return false;
     }
 
+    /** Comprueba que la confirmación incluya una clave con un formato permitido. */
     private String validarClaveIdempotencia(String clave) {
         String normalizada = limpiar(clave);
         if (normalizada == null || !normalizada.matches("[A-Za-z0-9._:-]{1,100}")) {
@@ -700,14 +753,17 @@ public class DespachoServiceImpl implements DespachoService {
         return normalizada;
     }
 
+    /** Genera la referencia que identifica el comprobante de entrega. */
     private String generarNumeroComprobante() {
         return "CP-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase(Locale.ROOT);
     }
 
+    /** Une los nombres y apellidos para mostrar una persona en la respuesta. */
     private String nombreCompleto(String nombres, String apellidos) {
         return ((nombres == null ? "" : nombres.trim()) + " " + (apellidos == null ? "" : apellidos.trim())).trim();
     }
 
+    /** Comprueba si el despacho coincide con el filtro del historial. */
     private boolean coincideFiltroHistorial(Despacho despacho, String filtro) {
         if (filtro == null) {
             return true;
@@ -721,6 +777,7 @@ public class DespachoServiceImpl implements DespachoService {
                 || (despacho.getFormulaId() != null && despacho.getFormulaId().toString().contains(normalizado));
     }
 
+    /** Comprueba si el valor contiene el texto buscado. */
     private boolean contiene(String valor, String filtro) {
         if (valor == null) {
             return false;
@@ -730,6 +787,7 @@ public class DespachoServiceImpl implements DespachoService {
         return normalizado.contains(filtro);
     }
 
+    /** Comprueba si la fecha del despacho está dentro del rango consultado. */
     private boolean coincideRangoFechas(Despacho despacho, LocalDate desde, LocalDate hasta) {
         if (desde == null && hasta == null) {
             return true;
@@ -741,6 +799,7 @@ public class DespachoServiceImpl implements DespachoService {
         return (desde == null || !fecha.isBefore(desde)) && (hasta == null || !fecha.isAfter(hasta));
     }
 
+    /** Prepara el texto para que se pueda escribir en el PDF. */
     private String limpiarTextoPdf(String texto) {
         if (texto == null) {
             return "";
@@ -751,11 +810,28 @@ public class DespachoServiceImpl implements DespachoService {
                 .trim();
     }
 
+    /** Bloquea la cita durante la operación y comprueba que permita dispensar. */
+    private void bloquearCitaParaEntrega(Long formulaId) {
+        Long citaId = formulaDetalleRepository.buscarCitaIdPorFormula(formulaId)
+                .orElseThrow(() -> new BadRequestException("La fórmula no existe."));
+        validarCitaParaEntrega(citaRepository.bloquearEstado(citaId)
+                .orElseThrow(() -> new BadRequestException("La cita de la fórmula no existe.")));
+    }
+
+    /** Comprueba que el estado de la cita permita dispensar. */
+    private void validarCitaParaEntrega(String estado) {
+        if ("CANCELADA".equals(estado)) {
+            throw new BadRequestException("No se pueden dispensar medicamentos de una cita cancelada.");
+        }
+    }
+
+    /** Bloquea la fórmula y verifica que todavía se pueda dispensar. */
     private long bloquearFormulaVigente(Long formulaId) {
         return formulaDetalleRepository.buscarFormulaVigenteParaBloqueo(formulaId)
                 .orElseThrow(() -> new BadRequestException("La fórmula no existe, está inactiva o no está vigente."));
     }
 
+    /** Bloquea los productos que se van a actualizar durante la dispensación. */
     private Map<Long, Medicamento> bloquearMedicamentos(List<FormulaDetalle> formulas) {
         TreeSet<Long> ids = new TreeSet<>();
         for (FormulaDetalle formula : formulas) {
@@ -772,6 +848,7 @@ public class DespachoServiceImpl implements DespachoService {
         return medicamentos;
     }
 
+    /** Consulta los lotes elegibles que se pueden usar durante la dispensación. */
     private Map<Long, List<InventarioLote>> cargarLotesDisponibles(Iterable<Long> medicamentoIds) {
         Map<Long, List<InventarioLote>> lotes = new TreeMap<>();
         LocalDate hoy = LocalDate.now();
@@ -782,6 +859,7 @@ public class DespachoServiceImpl implements DespachoService {
         return lotes;
     }
 
+    /** Descuenta del saldo de cada producto las unidades que se entregaron. */
     private void actualizarStockMedicamentos(
             Map<Long, Medicamento> medicamentos,
             Map<Long, Integer> cantidadesPorMedicamento) {
@@ -797,6 +875,7 @@ public class DespachoServiceImpl implements DespachoService {
         }
     }
 
+    /** Registra una salida vinculada con la fórmula, el despacho y el lote. */
     private void guardarMovimientoSalida(
             Despacho despacho,
             DespachoDetalle detalle,
@@ -817,6 +896,7 @@ public class DespachoServiceImpl implements DespachoService {
         movimientoInventarioRepository.save(movimiento);
     }
 
+    /** Repone las unidades del detalle y registra el movimiento de reversión. */
     private void revertirDetalle(
             Despacho despacho,
             DespachoDetalle detalle,
@@ -853,6 +933,7 @@ public class DespachoServiceImpl implements DespachoService {
         movimientoInventarioRepository.save(reversion);
     }
 
+    /** Copia al despacho los datos de la cita relacionados con la entrega. */
     private void completarDatosCita(Despacho despacho, Long formulaId) {
         formulaDetalleRepository.buscarCitaIdPorFormula(formulaId).ifPresent(citaId -> {
             despacho.setCitaId(citaId);
@@ -867,6 +948,7 @@ public class DespachoServiceImpl implements DespachoService {
         });
     }
 
+    /** Comprueba que el usuario y su perfil estén activos y tenga permiso de despacho. */
     private Usuario validarUsuarioDespacho(String usuarioResponsableId) {
         Long usuarioId;
         try {
@@ -886,12 +968,13 @@ public class DespachoServiceImpl implements DespachoService {
                 .trim()
                 .toUpperCase(Locale.ROOT)
                 .replace(' ', '_');
-        if (!Set.of("DESPACHO_MEDICO", "ADMIN", "ADMINISTRADOR").contains(perfil)) {
-            throw new BadRequestException("Solo los perfiles ADMIN y DESPACHO_MEDICO pueden operar despachos.");
+        if (!"DESPACHO_MEDICO".equals(perfil)) {
+            throw new BadRequestException("Solo el perfil DESPACHO_MEDICO puede operar despachos.");
         }
         return usuario;
     }
 
+    /** Valida la línea de la prescripción. */
     private void validarDetalleFormula(FormulaDetalle formulaDetalle) {
         if (formulaDetalle == null || formulaDetalle.getId() == null
                 || formulaDetalle.getMedicamentoId() == null || formulaDetalle.getMedicamentoId() <= 0
@@ -900,12 +983,14 @@ public class DespachoServiceImpl implements DespachoService {
         }
     }
 
+    /** Obtiene el despacho. */
     private Despacho obtenerDespacho(Long id) {
         validarId(id, "despacho");
         return despachoRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("El despacho no existe."));
     }
 
+    /** Comprueba que el identificador sea mayor que cero. */
     private Long validarId(Long id, String entidad) {
         if (id == null || id <= 0) {
             throw new BadRequestException("El id del " + entidad + " debe ser mayor a cero.");
@@ -913,6 +998,7 @@ public class DespachoServiceImpl implements DespachoService {
         return id;
     }
 
+    /** Determina el estado del despacho a partir de lo entregado y el saldo disponible. */
     private String determinarEstado(List<FormulaDetalle> formulas,
                                     Map<Long, Long> pendientesAntes,
                                     Map<Long, Long> entregasActuales,
@@ -943,10 +1029,12 @@ public class DespachoServiceImpl implements DespachoService {
         return ESTADO_PARCIAL;
     }
 
+    /** Genera la referencia con la que se identifica el despacho. */
     private String generarNumeroDespacho() {
         return "DS-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase(Locale.ROOT);
     }
 
+    /** Guarda el historial. */
     private void guardarHistorial(
             Despacho despacho,
             String estadoAnterior,
@@ -964,6 +1052,7 @@ public class DespachoServiceImpl implements DespachoService {
         despachoHistorialEstadoRepository.save(historial);
     }
 
+    /** Prepara el mensaje que devuelve la operación. */
     private MiRespuestaRS respuesta(String mensaje) {
         MiRespuestaRS respuesta = new MiRespuestaRS();
         respuesta.setStatus(200);
@@ -971,15 +1060,18 @@ public class DespachoServiceImpl implements DespachoService {
         return respuesta;
     }
 
+    /** Deja sin valor una observación vacía y retira sus espacios sobrantes. */
     private String limpiar(String valor) {
         return valor == null || valor.isBlank() ? null : valor.trim();
     }
 
+    /** Vincula una línea de la fórmula con el lote y las unidades que se entregarán. */
     private static final class AsignacionLote {
         private final FormulaDetalle formulaDetalle;
         private final InventarioLote lote;
         private final int cantidad;
 
+        /** Prepara los datos necesarios para usar esta clase. */
         private AsignacionLote(FormulaDetalle formulaDetalle, InventarioLote lote, int cantidad) {
             this.formulaDetalle = formulaDetalle;
             this.lote = lote;

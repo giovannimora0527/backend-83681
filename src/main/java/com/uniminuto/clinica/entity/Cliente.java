@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+/** Representa al propietario asociado con la mascota y la atención. */
 @Entity
 @Table(name = "cliente")
 @Data
@@ -20,7 +21,7 @@ public class Cliente {
     private Long id;
 
     @Column(name = "usuario_id", unique = true)
-    private Integer usuarioId;
+    private Long usuarioId;
 
     @Column(name = "tipo_documento", nullable = false, length = 10)
     private String tipoDocumento;

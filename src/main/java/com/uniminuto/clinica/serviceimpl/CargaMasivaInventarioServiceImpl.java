@@ -28,6 +28,7 @@ import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -251,6 +252,9 @@ public class CargaMasivaInventarioServiceImpl implements CargaMasivaInventarioSe
             DataFormatter formatter = new DataFormatter(Locale.ROOT);
             List<List<String>> filas = new ArrayList<>();
             for (Row fila : hoja) {
+                while (filas.size() < fila.getRowNum()) {
+                    filas.add(List.of());
+                }
                 List<String> celdas = new ArrayList<>();
                 for (int columna = 0; columna < Math.max(fila.getLastCellNum(), 0); columna++) {
                     Cell celda = fila.getCell(columna, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
@@ -299,7 +303,11 @@ public class CargaMasivaInventarioServiceImpl implements CargaMasivaInventarioSe
         if (!fechaValida(valor(fila, "fechaCompra"))) return "La fecha de compra debe usar formato AAAA-MM-DD.";
         if (!fechaValidaOpcional(valor(fila, "fechaVence"))) return "La fecha de vencimiento debe usar formato AAAA-MM-DD.";
         if ("MEDICAMENTO".equals(tipo) && valor(fila, "fechaVence").isBlank()) return "La fecha de vencimiento es obligatoria para medicamentos.";
-        if (!fechaValidaOpcional(valor(fila, "fechaProximoPedido"))) return "La fecha de próximo pedido debe usar formato AAAA-MM-DD.";
+        String proximoPedido = valor(fila, "fechaProximoPedido");
+        if (!fechaValidaOpcional(proximoPedido)) return "La fecha de próximo pedido debe usar formato AAAA-MM-DD.";
+        if (!proximoPedido.isBlank() && LocalDate.parse(proximoPedido).isBefore(LocalDate.now(ZoneId.of("America/Bogota")))) {
+            return "El próximo pedido debe ser de hoy o posterior.";
+        }
         if (fechaValidaOpcional(valor(fila, "fechaVence")) && !valor(fila, "fechaVence").isBlank()
                 && LocalDate.parse(valor(fila, "fechaVence")).isBefore(LocalDate.parse(valor(fila, "fechaCompra")))) {
             return "La fecha de vencimiento no puede ser anterior a la fecha de compra.";
@@ -307,7 +315,6 @@ public class CargaMasivaInventarioServiceImpl implements CargaMasivaInventarioSe
         if (!decimalValido(valor(fila, "precioCompra")) || !decimalValido(valor(fila, "precioVenta"))) return "Los precios deben ser números no negativos.";
         if (!enteroValido(valor(fila, "cantidadActual")) || !enteroValido(valor(fila, "stockMinimo"))) return "Las cantidades deben ser enteros no negativos.";
         if (Integer.parseInt(valor(fila, "cantidadActual")) > 0) {
-            if (valor(fila, "fechaVence").isBlank()) return "La fecha de vencimiento es obligatoria cuando se registran existencias.";
             if (valor(fila, "numeroLote").isBlank() || valor(fila, "numeroLote").length() > 50) return "El número de lote es obligatorio cuando hay existencias.";
             if (!decimalValido(valor(fila, "precioCompraLote"))) return "El precio de compra del lote debe ser un número no negativo.";
         }

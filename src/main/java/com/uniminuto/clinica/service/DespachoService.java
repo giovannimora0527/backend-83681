@@ -54,6 +54,9 @@ public interface DespachoService {
     MiRespuestaRS cancelarDespacho(Long despachoId, DespachoCancelarRq cancelacionRq,
                                    String usuarioResponsableId) throws BadRequestException;
 
+    /** Registra el cierre justificado de las cantidades que siguen pendientes. */
+    MiRespuestaRS cerrarPendientes(Long despachoId, DespachoCancelarRq solicitud, String usuarioResponsableId);
+
     /** Consulta el historial de despachos con filtros opcionales de texto y fechas. */
     List<Despacho> consultarHistorialDespachos(String filtro, LocalDate fechaDesde, LocalDate fechaHasta,
                                                String usuarioResponsableId) throws BadRequestException;

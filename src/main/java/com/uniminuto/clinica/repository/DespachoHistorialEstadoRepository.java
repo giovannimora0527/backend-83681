@@ -10,5 +10,6 @@ import java.util.List;
 @Repository
 public interface DespachoHistorialEstadoRepository extends JpaRepository<DespachoHistorialEstado, Long> {
 
+    /** Consulta los cambios de estado del despacho en el orden en que ocurrieron. */
     List<DespachoHistorialEstado> findByDespacho_IdOrderByFechaCambioAsc(Long despachoId);
 }

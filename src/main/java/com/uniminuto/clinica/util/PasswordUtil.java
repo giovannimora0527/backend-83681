@@ -4,12 +4,15 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+/** Agrupa la lógica que transforma las contraseñas para compararlas con los datos guardados. */
 public class PasswordUtil {
 
+    /** Calcula el valor que se usa para comparar la contraseña con el registro existente. */
     public static String generarMD5(String cadena) {
         return generateMD5(cadena);
     }
 
+    /** Calcula el valor con el que se guarda o compara la contraseña. */
     public static String generateMD5(String cadena) {
         if (cadena == null || cadena.isEmpty()) {
             return "";

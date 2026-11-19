@@ -8,20 +8,28 @@ import com.uniminuto.clinica.models.MiRespuestaRS;
 import java.util.Optional;
 import java.util.List;
 
+/** Define las operaciones disponibles para gestionar una mascota y su propietario. */
 public interface MascotaService {
 
+    /** Consulta las mascotas. */
     List<Mascota> listarMascotas();
 
+    /** Consulta las mascotas en el orden indicado. */
     List<Mascota> listarMascotasOrdenado(boolean ascendente);
 
+    /** Busca las mascotas por el nombre indicado. */
     Optional<Mascota> findByNombreMascota(String nombreMascota);
 
+    /** Consulta las mascotas asociadas al propietario. */
     List<Mascota> buscarMascotasPorCliente(Long clienteId) throws BadRequestException;
 
+    /** Consulta las mascotas asociadas a la raza. */
     List<Mascota> buscarMascotasPorRaza(Integer razaId) throws BadRequestException;
 
+    /** Guarda la mascota. */
     MiRespuestaRS guardarMascota(MascotaRq mascotaRq) throws BadRequestException;
 
+    /** Actualiza la mascota. */
     MiRespuestaRS actualizarMascota(MascotaRq mascotaRq) throws BadRequestException;
 
 }

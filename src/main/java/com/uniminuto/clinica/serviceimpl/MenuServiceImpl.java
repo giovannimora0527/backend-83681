@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/** Implementa las operaciones y validaciones relacionadas con una opción de navegación. */
 @Service
 public class MenuServiceImpl implements MenuService {
 
@@ -25,6 +26,7 @@ public class MenuServiceImpl implements MenuService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    /** Obtiene las opciones de menú que corresponden al perfil. */
     @Override
     public List<Menu> obtenerListaMenus(Long usuarioId) {
         List<Menu> menus = new ArrayList<>();

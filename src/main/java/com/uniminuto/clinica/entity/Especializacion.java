@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/** Representa una especialidad del catálogo y su disponibilidad para nuevas tarifas. */
 @Data
 @Entity
 @Table(name = "especializacion")
@@ -26,4 +27,7 @@ public class Especializacion {
 
     @Column(name = "codigo_especializacion")
     private String codigoEspecializacion;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean activo;
 }

@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/** Implementa las operaciones y validaciones relacionadas con la autenticación y sesión. */
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -49,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private Utilidades utilidades;
 
+    /** Comprueba las credenciales e inicia la verificación mediante un código temporal. */
     @Override
     public AuthRs login(AuthRq authRq) throws BadRequestException {
         this.validateAuthRq(authRq);
@@ -93,6 +95,7 @@ public class AuthServiceImpl implements AuthService {
         return rta;
     }
 
+    /** Verifica el código de acceso y genera la sesión del usuario. */
     @Override
     public LoginRs validateToken(TokenRq tokenRq) throws BadRequestException {
         OtpToken otpToken = this.validateOtpToken(tokenRq);
@@ -111,11 +114,13 @@ public class AuthServiceImpl implements AuthService {
         return loginRs;
     }
 
+    /** Elimina la sesión asociada al token recibido. */
     @Override
     public CloseSessionRs cerrarSesion(CloseSession closeSession) throws BadRequestException {
         return null;
     }
 
+    /** Prepara el contenido del correo con el código de verificación. */
     private String generarHtmlBodyCorreo(String username, String otpToken) {
         return "Estimado usuario " + username + ",\n\n" +
                 "Su token OTP es: " + otpToken + "\n\n" +
@@ -125,6 +130,7 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+    /** Comprueba que el código de verificación exista, siga vigente y sea correcto. */
     private OtpToken validateOtpToken(TokenRq tokenRq) throws BadRequestException {
         if (tokenRq.getUsuarioId() == null || tokenRq.getToken() == null) {
             throw new BadRequestException("UsuarioId o Token no puede ser nulo");
@@ -158,6 +164,7 @@ public class AuthServiceImpl implements AuthService {
         return otpToken;
     }
 
+    /** Comprueba que la solicitud incluya usuario y contraseña. */
     private void validateAuthRq(AuthRq authRq) throws BadRequestException {
         // Implement the AuthRq validation logic here
         if (authRq.getUsername() == null || authRq.getPassword() == null) {

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
@@ -81,6 +82,7 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
         Medicamento medicamento = medicamentoRepository.findLockedById(medicamentoId)
                 .orElseThrow(() -> new BadRequestException("El medicamento asociado al lote no existe."));
         Usuario usuario = validarOperadorInventario(usuarioResponsableId);
+        validarVencimiento(medicamento, inventarioLoteRq.getFechaVencimiento());
         String numeroLote = normalizarNumeroLote(inventarioLoteRq.getNumeroLote());
         validarNumeroLoteUnico(medicamentoId, numeroLote, null);
 
@@ -126,7 +128,9 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
         String numeroLote = normalizarNumeroLote(inventarioLoteRq.getNumeroLote());
         validarNumeroLoteUnico(medicamentoId, numeroLote, id);
 
-        inventarioLote.setMedicamento(obtenerMedicamento(medicamentoId));
+        Medicamento medicamento = obtenerMedicamento(medicamentoId);
+        validarVencimiento(medicamento, inventarioLoteRq.getFechaVencimiento());
+        inventarioLote.setMedicamento(medicamento);
         inventarioLote.setNumeroLote(numeroLote);
         inventarioLote.setPrecioCompraLote(inventarioLoteRq.getPrecioCompraLote());
         inventarioLote.setFechaVencimiento(inventarioLoteRq.getFechaVencimiento());
@@ -170,9 +174,6 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
             throw new BadRequestException("La cantidad de entrada debe ser mayor a cero.");
         }
         validarPrecioCompra(inventarioLoteRq.getPrecioCompraLote());
-        if (inventarioLoteRq.getFechaVencimiento() == null) {
-            throw new BadRequestException("La fecha de vencimiento del lote es obligatoria en la base de datos.");
-        }
     }
 
     /** Valida los campos editables de un lote existente. */
@@ -183,8 +184,12 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
         validarId(inventarioLoteRq.getMedicamentoId(), "medicamento");
         validarNumeroLote(inventarioLoteRq.getNumeroLote());
         validarPrecioCompra(inventarioLoteRq.getPrecioCompraLote());
-        if (inventarioLoteRq.getFechaVencimiento() == null) {
-            throw new BadRequestException("La fecha de vencimiento del lote es obligatoria en la base de datos.");
+    }
+
+    /** Exige una fecha de vencimiento para los lotes de medicamentos. */
+    private void validarVencimiento(Medicamento medicamento, LocalDate vencimiento) {
+        if ("MEDICAMENTO".equals(medicamento.getTipoProducto()) && vencimiento == null) {
+            throw new BadRequestException("La fecha de vencimiento es obligatoria para lotes de medicamentos.");
         }
     }
 
@@ -229,7 +234,7 @@ public class InventarioLoteServiceImpl implements InventarioLoteService {
 
     /** Solo administración y despacho médico pueden consultar lotes. */
     private void validarConsultaLotes() {
-        if (!tienePerfil("ADMIN", "DESPACHO_MEDICO")) {
+        if (!tienePerfil("ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO")) {
             throw new BadRequestException("El perfil no tiene permiso para consultar lotes de inventario.");
         }
     }

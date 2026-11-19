@@ -1,5 +1,8 @@
 package com.uniminuto.clinica.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.uniminuto.clinica.entity.Medico;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MiRespuestaRS;
@@ -10,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/** Agrupa las operaciones HTTP de gestión de usuarios. */
+@Tag(name = "Usuarios y perfiles", description = "Administración. Gestión de cuentas de acceso y perfiles.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/usuario")
 public interface UsuarioApi {
@@ -20,12 +25,15 @@ public interface UsuarioApi {
      * @return Lista<UsuarioRs> </>.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Listar usuarios")
     @GetMapping(value = {"/listar", "/listar-ordenado"},
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<UsuarioRs>> getUsuarios()
             throws BadRequestException;
 
+    /** Busca usuarios que coincidan con el criterio indicado. */
+    @Operation(summary = "Buscar usuarios")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -40,6 +48,7 @@ public interface UsuarioApi {
      * @return Lista<UsuarioRs> </>.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Registrar usuario")
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -55,6 +64,7 @@ public interface UsuarioApi {
      * @return Lista<UsuarioRs> </>.
      * @throws BadRequestException excepcion.
      */
+    @Operation(summary = "Actualizar usuario")
     @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})

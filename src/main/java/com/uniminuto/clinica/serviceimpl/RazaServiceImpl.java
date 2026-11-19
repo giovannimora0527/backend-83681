@@ -14,12 +14,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Locale;
 
+/** Implementa las operaciones y validaciones relacionadas con una raza del catálogo. */
 @Service
 public class RazaServiceImpl implements RazaService {
 
     @Autowired
     private RazaRepository razaRepository;
 
+    /** Registra una nueva raza en el catálogo. */
     @Override
     public MiRespuestaRS crearRazaNueva(RazaRq razaRq) throws BadRequestException {
 
@@ -42,6 +44,7 @@ public class RazaServiceImpl implements RazaService {
         return respuesta;
     }
 
+    /** Actualiza la raza. */
     @Override
     public MiRespuestaRS actualizarRaza(RazaRq razaRq) throws BadRequestException {
         if (razaRq == null) {
@@ -73,12 +76,14 @@ public class RazaServiceImpl implements RazaService {
         return respuesta;
     }
 
+    /** Consulta las razas. */
     @Override
     public List<Raza> listarRazas() throws BadRequestException {
         return razaRepository.findAll().stream().sorted((r1, r2) -> r1.getNombre().compareToIgnoreCase(r2
                 .getNombre())).toList();
     }
 
+    /** Busca las razas. */
     @Override
     public List<Raza> buscarRazas(String termino) {
         String busqueda = termino == null ? "" : termino.trim().toLowerCase(Locale.ROOT);
@@ -89,10 +94,12 @@ public class RazaServiceImpl implements RazaService {
                 .toList();
     }
 
+    /** Comprueba si el valor contiene el texto buscado. */
     private boolean contiene(String valor, String busqueda) {
         return valor != null && valor.toLowerCase(Locale.ROOT).contains(busqueda);
     }
 
+    /** Comprueba los datos requeridos para guardar la raza. */
     private void validarRazaRq(RazaRq razaRq) throws BadRequestException {
         if (razaRq == null) {
             throw new BadRequestException("El objeto de entrada no puede ser nulo.");

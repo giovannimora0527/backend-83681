@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Contiene los datos que se devuelven sobre una cuenta de usuario. */
 @Data
 public class UsuarioRs {
 

@@ -6,20 +6,26 @@ import com.uniminuto.clinica.entity.InventarioLote;
 import com.uniminuto.clinica.entity.MovimientoInventario;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.InventarioLoteRs;
+import com.uniminuto.clinica.models.InformeInventarioRs;
 import com.uniminuto.clinica.models.MedicamentoRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.ReporteRs;
 import com.uniminuto.clinica.service.MedicamentoService;
 import com.uniminuto.clinica.service.InventarioLoteService;
 import com.uniminuto.clinica.service.MovimientoInventarioService;
+import com.uniminuto.clinica.util.InformePdf;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RestController;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.time.LocalDate;
 
+/** Expone las operaciones HTTP relacionadas con un producto del catálogo de inventario. */
 @RestController
 public class MedicamentoApiController implements MedicamentoApi {
 
@@ -125,6 +131,32 @@ public class MedicamentoApiController implements MedicamentoApi {
                 .contentType(MediaType.parseMediaType(
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(archivo);
+    }
+
+    /** Consulta el informe de inventario. */
+    @Override
+    public InformeInventarioRs consultarInformeInventario(String tipo, LocalDate desde, LocalDate hasta) {
+        return medicamentoService.consultarInformeInventario(tipo, desde, hasta);
+    }
+
+    /** Genera el informe de inventario en formato PDF. */
+    @Override
+    public ResponseEntity<byte[]> exportarInformeInventarioPdf(String tipo, LocalDate desde, LocalDate hasta)
+            throws IOException {
+        var informe = medicamentoService.consultarInformeInventario(tipo, desde, hasta);
+        var secciones = new ArrayList<ReporteRs>();
+        secciones.add(new ReporteRs("Totales", informe.generado(), List.of("Concepto", "Total"), informe.filasTotales()));
+        for (var seccion : informe.secciones()) {
+            secciones.add(new ReporteRs(seccion.nombre(), informe.generado(), seccion.columnas(), seccion.filas()));
+        }
+        String contexto = "Tipo: " + informe.tipo()
+                + "  |  Desde (movimientos): " + (desde == null ? "Sin límite" : desde)
+                + "  |  Hasta (movimientos): " + (hasta == null ? "Sin límite" : hasta)
+                + "  |  Moneda: " + informe.moneda();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"informe_inventario.pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(InformePdf.generar("Informe de inventario", informe.generado(), contexto, secciones));
     }
 
     /** Convierte un lote al contrato de consulta utilizado en inventario. */

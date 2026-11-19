@@ -1,5 +1,8 @@
 package com.uniminuto.clinica.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.HistoriaMedicaRq;
 import com.uniminuto.clinica.models.HistoriaMedicaRs;
@@ -16,22 +19,30 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
+/** Expone el historial clínico y permite registrar o corregir el diagnóstico de una cita abierta. */
+@Tag(name = "Historia clínica", description = "Administración y Veterinaria. El servicio comprueba el acceso a las historias y citas.")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/historia-clinica")
 public interface HistoriaApi {
 
+    /** Consulta todas las historias clínicas disponibles. */
+    @Operation(summary = "Listar historias clínicas")
     @GetMapping(value = "/listar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<HistoriaMedicaRs>> listarAllHIstorias()
             throws BadRequestException;
 
+    /** Busca las historias clínicas que coinciden con el criterio. */
+    @Operation(summary = "Buscar historias clínicas")
     @GetMapping(value = "/buscar",
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<List<HistoriaMedicaRs>> buscarHistorias(@RequestParam String termino)
             throws BadRequestException;
 
+    /** Guarda los datos de la historia clínica. */
+    @Operation(summary = "Registrar historia de una cita")
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})
@@ -40,6 +51,8 @@ public interface HistoriaApi {
     )
             throws BadRequestException;
 
+    /** Guarda cambios en la historia clínica del paciente. */
+    @Operation(summary = "Actualizar historia de una cita abierta")
     @RequestMapping(value = "/actualizar", method = {RequestMethod.POST, RequestMethod.PUT},
             produces = {"application/json"},
             consumes = {"application/json"})

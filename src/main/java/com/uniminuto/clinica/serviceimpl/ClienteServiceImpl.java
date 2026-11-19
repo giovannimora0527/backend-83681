@@ -3,6 +3,7 @@ package com.uniminuto.clinica.serviceimpl;
 import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.repository.ClienteRepository;
+import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import com.uniminuto.clinica.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +13,17 @@ import java.util.List;
 import java.util.Optional;
 import java.time.LocalDate;
 
+/** Implementa las operaciones y validaciones relacionadas con un propietario de mascotas. */
 @Service
 public class ClienteServiceImpl implements ClienteService {
 
     @Autowired
     private ClienteRepository clienteRepository;
 
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
+    /** Consulta los propietarios. */
     @Override
     public List<Cliente> listarClientes() throws BadRequestException {
         return clienteRepository.findAll().stream()
@@ -26,6 +31,7 @@ public class ClienteServiceImpl implements ClienteService {
                 .toList();
     }
 
+    /** Busca los propietarios cuyo documento coincide con el criterio. */
     @Override
     public Cliente buscarClientesPorDocumento(String documento) throws BadRequestException {
         Optional<Cliente> clienteOptional = clienteRepository.findByNumeroDocumento(documento);
@@ -36,9 +42,11 @@ public class ClienteServiceImpl implements ClienteService {
         }
     }
 
+    /** Registra el propietario. */
     @Override
     public MiRespuestaRS crearCliente(Cliente cliente) {
         validarCliente(cliente);
+        validarUsuario(cliente.getUsuarioId(), null);
         String documento = cliente.getNumeroDocumento().trim();
         if (clienteRepository.existsByNumeroDocumento(documento)) {
             throw new BadRequestException("Ya existe un cliente con ese número de documento.");
@@ -53,6 +61,7 @@ public class ClienteServiceImpl implements ClienteService {
         return respuesta("Cliente creado correctamente.");
     }
 
+    /** Actualiza el propietario. */
     @Override
     public MiRespuestaRS actualizarCliente(Cliente cliente) {
         validarCliente(cliente);
@@ -73,12 +82,32 @@ public class ClienteServiceImpl implements ClienteService {
         existente.setGenero(limpiar(cliente.getGenero()));
         existente.setTelefono(limpiar(cliente.getTelefono()));
         existente.setDireccion(limpiar(cliente.getDireccion()));
-        if (cliente.getUsuarioId() != null) existente.setUsuarioId(cliente.getUsuarioId());
+        if (cliente.getUsuarioId() != null) {
+            validarUsuario(cliente.getUsuarioId(), existente.getId());
+            existente.setUsuarioId(cliente.getUsuarioId());
+        }
         if (cliente.getActivo() != null) existente.setActivo(cliente.getActivo());
         clienteRepository.save(existente);
         return respuesta("Cliente actualizado correctamente.");
     }
 
+    /** Valida el usuario. */
+    private void validarUsuario(Long usuarioId, Long clienteId) {
+        if (usuarioId == null) {
+            return;
+        }
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw new BadRequestException("El usuario asociado al cliente no existe.");
+        }
+        boolean vinculadoAOtroCliente = clienteRepository.findByUsuarioId(usuarioId)
+                .filter(cliente -> !cliente.getId().equals(clienteId))
+                .isPresent();
+        if (vinculadoAOtroCliente) {
+            throw new BadRequestException("El usuario ya está asociado a otro cliente.");
+        }
+    }
+
+    /** Valida el propietario. */
     private void validarCliente(Cliente cliente) {
         if (cliente == null) throw new BadRequestException("La información del cliente es obligatoria.");
         if (vacio(cliente.getTipoDocumento()) || vacio(cliente.getNumeroDocumento())
@@ -94,8 +123,11 @@ public class ClienteServiceImpl implements ClienteService {
         }
     }
 
+    /** Comprueba si el texto está ausente o solo contiene espacios. */
     private boolean vacio(String valor) { return valor == null || valor.isBlank(); }
+    /** Elimina espacios sobrantes al inicio y al final del valor. */
     private String limpiar(String valor) { return valor == null || valor.isBlank() ? null : valor.trim(); }
+    /** Prepara el mensaje que devuelve la operación. */
     private MiRespuestaRS respuesta(String mensaje) {
         MiRespuestaRS respuesta = new MiRespuestaRS();
         respuesta.setStatus(200);

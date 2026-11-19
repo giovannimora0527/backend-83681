@@ -23,6 +23,7 @@ import java.util.Locale;
 @Configuration
 public class SecurityConfig {
 
+    /** Configura los permisos y filtros que se aplican a las peticiones HTTP. */
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
         return http
@@ -39,30 +40,45 @@ public class SecurityConfig {
                                 response.sendError(HttpServletResponse.SC_FORBIDDEN)))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/v3/api-docs/**", "/v3/api-docs.yaml",
+                                "/swagger-ui.html", "/swagger-ui/**").permitAll()
                         .requestMatchers("/auth/login", "/auth/validate-token", "/error").permitAll()
                         .requestMatchers("/auth/cerrar-sesion").authenticated()
-                        .requestMatchers("/inventario/dispensaciones/**")
-                        .access(perfiles("ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO"))
+                        .requestMatchers(HttpMethod.POST, "/inventario/dispensaciones/*/cerrar-pendientes")
+                        .access(perfiles("DESPACHO_MEDICO"))
+                        .requestMatchers("/inventario/dispensaciones/**").access(perfiles("DESPACHO_MEDICO"))
                         .requestMatchers("/inventario/carga-masiva/**").access(administradores())
                         .requestMatchers(HttpMethod.GET,
-                                "/inventario/medicamentos/informes/**", "/medicamento/informes/**")
+                                "/inventario/medicamentos/informes", "/inventario/medicamentos/informes/**",
+                                "/medicamento/informes", "/medicamento/informes/**")
                         .access(perfiles("ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO"))
                         .requestMatchers("/inventario/medicamentos/**", "/medicamento/**")
                         .access(permisosMedicamento())
-                        .requestMatchers("/inventario-lote/**").access(permisosLotes())
+                        .requestMatchers(HttpMethod.POST, "/inventario-lote/guardar", "/inventario-lote/actualizar/*", "/inventario-lote/desactivar/*").access(administradores())
+                        .requestMatchers("/inventario-lote/**").access(soloLectura("ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO"))
                         .requestMatchers("/movimiento-inventario/**").access(soloLectura("ADMIN",
                                 "ADMINISTRADOR", "DESPACHO_MEDICO"))
                         .requestMatchers("/formula-medica/**").access(permisosFormula())
                         .requestMatchers("/historia-clinica/**", "/anotacion-historia/**")
                         .access(perfiles("ADMIN", "ADMINISTRADOR", "MEDICO", "VETERINARIO"))
+                        // El veterinario asignado trabaja desde Atención. El servicio comprueba a quién pertenece la cita.
+                        .requestMatchers("/atencion/**").access(perfiles("MEDICO", "VETERINARIO"))
+                        // La devolución y la anulación conservan el historial y requieren perfil administrativo.
+                        .requestMatchers(HttpMethod.POST, "/factura/*/anular", "/factura/*/pagos/*/devolucion")
+                        .access(administradores())
+                        // La agenda personal requiere un veterinario vinculado. La gestión de citas también admite
+                        // Administración y Recepción.
                         .requestMatchers("/cita/**")
                         .access(perfiles("ADMIN", "ADMINISTRADOR", "RECEPCION", "RECEPCIONISTA",
                                 "MEDICO", "VETERINARIO"))
                         .requestMatchers("/cliente/**", "/mascota/**").access(permisosClienteYMascota())
+                        .requestMatchers("/medico/cuentas-disponibles", "/medico/*/cuenta").access(administradores())
                         .requestMatchers("/medico/**").access(permisosLecturaRecepcion())
                         .requestMatchers("/raza/**").access(permisosRaza())
                         .requestMatchers("/factura/**", "/pago/**")
                         .access(perfiles("ADMIN", "ADMINISTRADOR", "RECEPCION", "RECEPCIONISTA"))
+                        // Recepción y Administración consultan el reporte financiero. El reporte médico queda bajo la
+                        // regla general de Administración.
                         .requestMatchers(HttpMethod.GET, "/reporte/financiero/**", "/reportes/financieros/**")
                         .access(perfiles("ADMIN", "ADMINISTRADOR", "RECEPCION", "RECEPCIONISTA"))
                         .anyRequest().access(administradores()))
@@ -83,25 +99,15 @@ public class SecurityConfig {
         };
     }
 
-    /** Permite consulta de lotes a administración y despacho, y escrituras a administración. */
-    private AuthorizationManager<RequestAuthorizationContext> permisosLotes() {
-        return (authentication, context) -> {
-            Authentication actual = authentication.get();
-            boolean permitido = esMetodoLectura(context.getRequest().getMethod())
-                    ? tienePerfil(actual, "ADMIN", "ADMINISTRADOR", "DESPACHO_MEDICO")
-                    : esMetodoEscritura(context.getRequest().getMethod())
-                    && tienePerfil(actual, "ADMIN", "ADMINISTRADOR");
-            return new AuthorizationDecision(permitido);
-        };
-    }
 
-    /** Permite leer fórmulas a despacho y administra CRUD para médicos y administradores. */
+    /** Permite formular al veterinario y consultar a administración. */
     private AuthorizationManager<RequestAuthorizationContext> permisosFormula() {
         return (authentication, context) -> {
             Authentication actual = authentication.get();
             String metodo = context.getRequest().getMethod();
-            boolean permitido = tienePerfil(actual, "ADMIN", "ADMINISTRADOR", "MEDICO", "VETERINARIO")
-                    || esMetodoLectura(metodo) && tienePerfil(actual, "DESPACHO_MEDICO");
+            boolean permitido = esMetodoLectura(metodo)
+                    ? tienePerfil(actual, "ADMIN", "ADMINISTRADOR", "MEDICO", "VETERINARIO")
+                    : esMetodoEscritura(metodo) && tienePerfil(actual, "MEDICO", "VETERINARIO");
             return new AuthorizationDecision(permitido);
         };
     }

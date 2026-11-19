@@ -26,7 +26,7 @@ public interface InventarioLoteRepository extends JpaRepository<InventarioLote, 
     @Query("select l from InventarioLote l where l.medicamento.id = :medicamentoId "
             + "and l.activo = true and l.cantidad > 0 "
             + "and (l.fechaVencimiento is null or l.fechaVencimiento >= :fechaCorte) "
-            + "order by l.fechaVencimiento asc, l.id asc")
+            + "order by case when l.fechaVencimiento is null then 1 else 0 end, l.fechaVencimiento asc, l.id asc")
     List<InventarioLote> buscarLotesDisponibles(@Param("medicamentoId") Long medicamentoId,
                                                 @Param("fechaCorte") LocalDate fechaCorte);
 
@@ -36,23 +36,27 @@ public interface InventarioLoteRepository extends JpaRepository<InventarioLote, 
     List<InventarioLote> buscarLotesPorVencer(@Param("desde") LocalDate desde,
                                                @Param("hasta") LocalDate hasta);
 
+    /** Comprueba si el producto ya tiene un lote con ese número. */
     boolean existsByMedicamento_IdAndNumeroLoteIgnoreCase(Long medicamentoId, String numeroLote);
 
+    /** Comprueba si otro lote del mismo producto tiene ese número. */
     boolean existsByMedicamento_IdAndNumeroLoteIgnoreCaseAndIdNot(
             Long medicamentoId,
             String numeroLote,
             Long id);
 
+    /** Busca y bloquea los lotes vigentes en orden de vencimiento. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from InventarioLote l "
             + "where l.medicamento.id = :medicamentoId "
             + "and l.activo = true and l.cantidad > 0 "
-            + "and l.fechaVencimiento >= :fechaCorte "
-            + "order by l.fechaVencimiento asc, l.id asc")
+            + "and (l.fechaVencimiento is null or l.fechaVencimiento >= :fechaCorte) "
+            + "order by case when l.fechaVencimiento is null then 1 else 0 end, l.fechaVencimiento asc, l.id asc")
     List<InventarioLote> buscarDisponiblesPorVencimientoParaBloqueo(
             @Param("medicamentoId") Long medicamentoId,
             @Param("fechaCorte") LocalDate fechaCorte);
 
+    /** Obtiene el registro por identificador con bloqueo durante la operación. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from InventarioLote l where l.id = :id")
     Optional<InventarioLote> findLockedById(@Param("id") Long id);

@@ -24,8 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/** Comprueba la generación de códigos de verificación y tokens de sesión. */
 class UtilidadesTests {
 
+    /** Comprueba el algoritmo de firma y la vigencia del token. */
     @Test
     void generarJwtTokenDebeFirmarConHs512YExpirarEnUnaHora() {
         SecretKey key = Jwts.SIG.HS512.key().build();
@@ -44,6 +46,7 @@ class UtilidadesTests {
                 claims.getExpiration().getTime() - claims.getIssuedAt().getTime());
     }
 
+    /** Comprueba que se necesite un usuario para generar el token. */
     @Test
     void generarJwtTokenDebeRechazarUsuarioNulo() {
         SecretKey key = Jwts.SIG.HS512.key().build();
@@ -56,6 +59,7 @@ class UtilidadesTests {
                 () -> utilidades.crearJwtToken(new OtpToken(), secret));
     }
 
+    /** Comprueba que se rechacen claves que no cumplan la longitud requerida. */
     @Test
     void generarJwtTokenDebeRechazarClaveInsuficienteParaHs512() {
         SecretKey key = Jwts.SIG.HS256.key().build();
@@ -68,6 +72,7 @@ class UtilidadesTests {
                         otpToken, Encoders.BASE64.encode(key.getEncoded())));
     }
 
+    /** Comprueba que la firma utilice la clave configurada. */
     @Test
     void generarJwtTokenDebeUsarSecretoConfiguradoEnBase64() {
         SecretKey key = Jwts.SIG.HS512.key().build();
@@ -82,6 +87,7 @@ class UtilidadesTests {
                 .parseSignedClaims(token).getPayload().getSubject());
     }
 
+    /** Comprueba que el token incluya las opciones de menú autorizadas. */
     @Test
     void crearJwtTokenDebeIncluirLosMenusDelServicioEnElClaim() {
         SecretKey key = Jwts.SIG.HS512.key().build();
@@ -111,6 +117,7 @@ class UtilidadesTests {
         assertEquals("Dashboard", menuClaim.get("title"));
     }
 
+    /** Comprueba que se rechace una clave de firma vacía. */
     @Test
     void generarJwtTokenDebeRechazarSecretoVacio() {
         OtpToken otpToken = new OtpToken();
@@ -121,6 +128,7 @@ class UtilidadesTests {
                 () -> utilidades.crearJwtToken(otpToken, ""));
     }
 
+    /** Comprueba la longitud y el formato del código de verificación. */
     @Test
     void generarTokenOtpDebeRetornarSeisCaracteresAlfanumericos() {
         for (int i = 0; i < 1000; i++) {
@@ -131,6 +139,7 @@ class UtilidadesTests {
         }
     }
 
+    /** Comprueba que el token incluya los datos básicos del usuario. */
     @Test
     void crearJwtTokenDebeIncluirInformacionBasicaDelUsuario() {
         SecretKey key = Jwts.SIG.HS512.key().build();
@@ -148,16 +157,19 @@ class UtilidadesTests {
         assertEquals("Administrador", claims.get("rol", String.class));
     }
 
+    /** Prepara el objeto usado para probar la generación de tokens y códigos. */
     private static Utilidades crearUtilidades(MenuService menuService) {
         return crearUtilidades(menuService, usuario());
     }
 
+    /** Prepara el objeto usado para probar la generación de tokens y códigos. */
     private static Utilidades crearUtilidades(MenuService menuService, Usuario usuario) {
         UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
         when(usuarioRepository.findById(42L)).thenReturn(Optional.of(usuario));
         return new Utilidades(menuService, usuarioRepository, new ObjectMapper());
     }
 
+    /** Identifica al usuario relacionado con la operación. */
     private static Usuario usuario() {
         Perfil perfil = new Perfil();
         perfil.setNombre("Administrador");
@@ -169,12 +181,14 @@ class UtilidadesTests {
         return usuario;
     }
 
+    /** Prepara la información del código de verificación. */
     private static OtpToken otpToken() {
         OtpToken otpToken = new OtpToken();
         otpToken.setUsuarioId(42L);
         return otpToken;
     }
 
+    /** Lee los datos de las opciones de menú para incluirlas en la sesión. */
     private static List<?> parseMenus(String menusJson) {
         return new ObjectMapper().readValue(menusJson, List.class);
     }

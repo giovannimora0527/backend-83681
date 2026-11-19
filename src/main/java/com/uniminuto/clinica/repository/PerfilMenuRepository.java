@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/** Consulta y guarda los datos relacionados con la asignación de una opción de navegación a un perfil. */
 @Repository
 public interface PerfilMenuRepository extends JpaRepository<PerfilMenu, Integer> {
     /**

@@ -1,5 +1,6 @@
 package com.uniminuto.clinica.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +13,10 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Registra la cita, el propietario, la mascota, el veterinario y los datos de programación,
+ * atención o cancelación.
+ */
 @Entity
 @Table(name = "cita")
 @Data
@@ -43,6 +48,11 @@ public class Cita {
     @Column(name = "hora_fin")
     private LocalDateTime horaFin;
 
+    /** Fecha real de cierre. Puede faltar en citas históricas. */
+    @Column(name = "fecha_atencion")
+    @JsonIgnore
+    private LocalDateTime fechaAtencion;
+
     @Column(name = "duracion_minutos", nullable = false)
     private Integer duracionMinutos = 30;
 
@@ -57,6 +67,7 @@ public class Cita {
 
     @ManyToOne
     @JoinColumn(name = "usuario_cancelacion")
+    @JsonIgnore
     private Usuario usuarioCancelacion;
 
     @Column(name = "fecha_cancelacion")

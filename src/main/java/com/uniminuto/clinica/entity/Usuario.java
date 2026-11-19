@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Representa una cuenta de usuario en la base de datos. */
 @Entity
 @Table(name = "usuario")
 @Data

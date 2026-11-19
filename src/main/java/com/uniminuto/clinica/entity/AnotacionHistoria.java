@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/** Registra las notas de seguimiento vinculadas a una historia clínica y a su veterinario. */
 @Entity
 @Table(name = "anotacion_historia")
 @Data
@@ -23,15 +24,15 @@ public class AnotacionHistoria {
     @ManyToOne
     private Medico medico;
 
-    @Column(name = "fecha_hora", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "fecha", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fecha;
 
     @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(name = "diagnostico_evolucion", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "diagnostico", nullable = false, columnDefinition = "TEXT")
     private String diagnostico;
 
-    @Column(name = "observacion", columnDefinition = "TEXT")
+    @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
 }

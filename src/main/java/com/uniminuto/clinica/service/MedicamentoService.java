@@ -1,5 +1,7 @@
 package com.uniminuto.clinica.service;
 
+import com.uniminuto.clinica.models.InformeInventarioRs;
+
 import com.uniminuto.clinica.entity.Medicamento;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MedicamentoRq;
@@ -12,8 +14,10 @@ import java.time.LocalDate;
 /** Define los casos de uso de administración y consulta de medicamentos. */
 public interface MedicamentoService {
 
+    /** Consulta los medicamentos. */
     List<Medicamento> listarMedicamentos() throws BadRequestException;
 
+    /** Busca los medicamentos. */
     List<Medicamento> buscarMedicamentos(String termino);
 
     /** Lista productos con existencias positivas. */
@@ -34,7 +38,12 @@ public interface MedicamentoService {
     /** Genera el informe de inventario en formato Excel con filtros opcionales. */
     byte[] exportarInventarioExcel(String tipo, LocalDate desde, LocalDate hasta);
 
+    /** Consulta el informe de inventario. */
+    InformeInventarioRs consultarInformeInventario(String tipo, LocalDate desde, LocalDate hasta);
+
+    /** Registra el medicamento. */
     MiRespuestaRS crearMedicamento(MedicamentoRq medicamentoRq, String usuarioResponsableId);
 
+    /** Actualiza el medicamento. */
     MiRespuestaRS actualizarMedicamento(MedicamentoRq medicamentoRq, String usuarioResponsableId);
 }

@@ -1,17 +1,27 @@
 package com.uniminuto.clinica.models;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import lombok.Data;
 
 /**
  * Clase que representa la solicitud para crear o actualizar una mascota.
  */
+@Schema(example = """
+        {
+          "nombre": "Nube",
+          "edad": 4,
+          "razaId": 3,
+          "clienteId": 11
+        }
+        """)
 @Data
 public class MascotaRq {
 
     /**
      * Id unico de la mascota.
      */
-    private Integer mascotaId;
+    private Long mascotaId;
 
     /**
      * Nombre de la mascota.
