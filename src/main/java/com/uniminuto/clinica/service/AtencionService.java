@@ -3,7 +3,7 @@ package com.uniminuto.clinica.service;
 import com.uniminuto.clinica.models.AtencionDetalleRs;
 import com.uniminuto.clinica.models.AtencionRq;
 import com.uniminuto.clinica.models.PrescripcionRq;
-import com.uniminuto.clinica.models.ReporteRs;
+import java.io.IOException;
 
 /**
  * Define la consulta de antecedentes, la formulación y el cierre de la atención que genera la
@@ -19,5 +19,5 @@ public interface AtencionService {
     /** Obtiene el saldo disponible de un medicamento para la atención. */
     long existencias(long citaId, long medicamentoId);
     /** Prepara los datos del documento PDF de la fórmula. */
-    ReporteRs formula(long citaId, long formulaId);
+    byte[] formula(long citaId, long formulaId) throws IOException;
 }

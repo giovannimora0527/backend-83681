@@ -110,7 +110,10 @@ public final class FacturaPdf implements AutoCloseable {
         float derecha = MARGEN + 366;
         trazo(derecha, y - 12, derecha, y - alto + 12);
         texto(tipo(), derecha + 12, y - 25, 10, true, AZUL);
-        texto("N.º " + campo("numero_factura"), derecha + 12, y - 48, 14, true, TINTA);
+        String numero = "N.º " + campo("numero_factura");
+        float anchoNumero = MARGEN + ANCHO - derecha - 24;
+        float tamanoNumero = 14 * Math.min(1f, anchoNumero / medir(numero, 14, true));
+        texto(numero, derecha + 12, y - 48, tamanoNumero, true, TINTA);
         texto("Emisión (Bogotá)", derecha + 12, y - 68, 8, true, GRIS);
         texto(fecha(factura.cabecera().get("fecha_emision")), derecha + 12, y - 81, 9, false, TINTA);
         y -= alto + 12;

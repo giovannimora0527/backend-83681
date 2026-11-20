@@ -7,6 +7,7 @@ import com.uniminuto.clinica.models.AtencionRq;
 import com.uniminuto.clinica.models.HistoriaAtencionRs;
 import com.uniminuto.clinica.models.PrescripcionRq;
 import com.uniminuto.clinica.models.ReporteRs;
+import com.uniminuto.clinica.util.InformePdf;
 import com.uniminuto.clinica.repository.CitaRepository;
 import com.uniminuto.clinica.repository.HistoriaMedicaRepository;
 import com.uniminuto.clinica.repository.AnotacionHistoriaRepository;
@@ -147,39 +148,33 @@ public class AtencionServiceImpl implements AtencionService {
      */
     @Override
     @Transactional(readOnly = true)
-    public ReporteRs formula(long citaId, long formulaId) {
+    public byte[] formula(long citaId, long formulaId) throws java.io.IOException {
         var cita = citas.detalle(citaId);
         var formula = formulaRepository.findByIdAndCita_Id(formulaId, citaId)
                 .orElseThrow(() -> new BadRequestException("La fórmula no existe para esta cita."));
         var medico = formula.getMedico();
-        var filas = new ArrayList<List<Object>>();
-        filas.add(List.of("Veterinario emisor: " + medico.getNombres() + " " + medico.getApellidos()));
+        var generado = LocalDateTime.now(ZoneId.of("America/Bogota"));
         var formatoFecha = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        filas.add(List.of("Fecha de emisión: " + formula.getFechaEmision().format(formatoFecha)));
-        if (!vacio(formula.getIndicaciones())) {
-            filas.add(List.of("Indicaciones generales: " + formula.getIndicaciones()));
-        }
-
-        filas.addAll(jdbc.query("""
+        String contexto = "Mascota: " + cita.mascota() + "  |  Cita: " + citaId
+                + "\nVeterinario emisor: " + medico.getNombres() + " " + medico.getApellidos()
+                + "  |  Emisión: " + formula.getFechaEmision().format(formatoFecha);
+        var filas = jdbc.query("""
                 SELECT m.nombre, d.cantidad_prescrita, d.dosis, d.frecuencia, d.duracion_tratamiento,
                        d.via_administracion, COALESCE(d.indicaciones, '')
                 FROM formula_detalle d JOIN medicamento m ON m.id = d.medicamento_id
                 WHERE d.formula_id = ? ORDER BY d.id
-                """, (rs, index) -> {
-            var datos = new ArrayList<Object>();
-            datos.add("Medicamento: " + rs.getString(1));
-            datos.add("Cantidad: " + rs.getInt(2));
-            datos.add("Dosis: " + rs.getString(3));
-            datos.add("Frecuencia: " + rs.getString(4));
-            datos.add("Duración: " + rs.getString(5));
-            datos.add("Vía: " + rs.getString(6));
-            if (!rs.getString(7).isBlank()) {
-                datos.add("Indicaciones especiales: " + rs.getString(7));
-            }
-            return datos;
-        }, formulaId));
-        return new ReporteRs("Fórmula " + formula.getNumeroFormula() + " para " + cita.mascota(),
-                LocalDateTime.now(ZoneId.of("America/Bogota")), List.of(), filas);
+                """, (rs, index) -> java.util.Arrays.<Object>asList(rs.getString(1), rs.getInt(2),
+                rs.getString(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7)), formulaId);
+
+        var secciones = new ArrayList<ReporteRs>();
+        secciones.add(new ReporteRs("Medicamentos prescritos", generado,
+                List.of("Medicamento", "Cantidad", "Dosis", "Frecuencia", "Duración", "Vía", "Indicaciones especiales"),
+                filas));
+        if (!vacio(formula.getIndicaciones())) {
+            secciones.add(new ReporteRs("Indicaciones generales", generado, List.of("Indicaciones"),
+                    List.of(List.of(formula.getIndicaciones()))));
+        }
+        return InformePdf.generar("Fórmula médica · " + formula.getNumeroFormula(), generado, contexto, secciones);
     }
 
     /** Bloquea la cita y comprueba que todavía permita registrar atención. */
