@@ -15,15 +15,13 @@ import java.util.List;
 public interface ClienteApi {
 
     @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<Cliente>> listarClientes()
             throws BadRequestException;
 
 
     @GetMapping(value = "/buscar-por-documento",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<Cliente> buscarClientesPorDocumento(
             @RequestParam String documento
     )

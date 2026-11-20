@@ -16,4 +16,6 @@ public interface EspecializacionService {
 
     MiRespuestaRS actualizarEspecializacion(Especializacion especializacion)
             throws BadRequestException;
+
+    MiRespuestaRS actualizarEstado(Long id, boolean activo);
 }

@@ -27,8 +27,7 @@ public class EspecializacionServiceImpl implements EspecializacionService {
     @Override
     public MiRespuestaRS crearEspecializacion(Especializacion especializacion) throws BadRequestException {
         this.validarEspecializacion(especializacion);
-        Optional<Especializacion> especializacionExistente = especializacionRepository
-                .findByCodigoEspecializacion(especializacion.getCodigoEspecializacion());
+        Optional<Especializacion> especializacionExistente = especializacionRepository.findByCodigoEspecializacion(especializacion.getCodigoEspecializacion());
         if (especializacionExistente.isPresent()) {
             throw new BadRequestException("La especialización con el código proporcionado ya existe.");
         }
@@ -39,6 +38,7 @@ public class EspecializacionServiceImpl implements EspecializacionService {
             throw new BadRequestException("La especialización con el nombre proporcionado ya existe.");
         }
 
+        especializacion.setActivo(especializacion.getActivo() == null || especializacion.getActivo());
         especializacionRepository.save(especializacion);
         MiRespuestaRS rta = new MiRespuestaRS();
         rta.setMessage("Especialización creada exitosamente.");
@@ -67,31 +67,34 @@ public class EspecializacionServiceImpl implements EspecializacionService {
             throw new BadRequestException("La especialización que se intenta actualizar no existe.");
         }
         Especializacion especializacionActual = especializacionExistente.get();
-        if (especializacionActual.getCodigoEspecializacion().equals(especializacion.getCodigoEspecializacion())) {
-            Optional<Especializacion> especializacionPorCodigo = especializacionRepository
-                    .findByCodigoEspecializacion(especializacion.getCodigoEspecializacion());
-            if (especializacionPorCodigo.isPresent() && !especializacionPorCodigo.get().getId()
-                    .equals(especializacion.getId())) {
+        if (!especializacionActual.getCodigoEspecializacion().equals(especializacion.getCodigoEspecializacion())) {
+            Optional<Especializacion> especializacionPorCodigo = especializacionRepository.findByCodigoEspecializacion(especializacion.getCodigoEspecializacion());
+            if (especializacionPorCodigo.isPresent() && !especializacionPorCodigo.get().getId().equals(especializacion.getId()))
                 throw new BadRequestException("La especialización con el código proporcionado ya existe.");
-            }
         }
 
-        if (especializacionActual.getNombre().equals(especializacion.getNombre())) {
-            Optional<Especializacion> especializacionPorNombre = especializacionRepository
-                    .findByNombre(especializacion.getNombre());
-            if (especializacionPorNombre.isPresent() && !especializacionPorNombre.get().getId()
-                    .equals(especializacion.getId())) {
+        if (!especializacionActual.getNombre().equals(especializacion.getNombre())) {
+            Optional<Especializacion> especializacionPorNombre = especializacionRepository.findByNombre(especializacion.getNombre());
+            if (especializacionPorNombre.isPresent() && !especializacionPorNombre.get().getId().equals(especializacion.getId()))
                 throw new BadRequestException("La especialización con el nombre proporcionado ya existe.");
-            }
         }
 
         especializacionActual.setCodigoEspecializacion(especializacion.getCodigoEspecializacion());
         especializacionActual.setNombre(especializacion.getNombre());
         especializacionActual.setDescripcion(especializacion.getDescripcion());
+        if (especializacion.getActivo() != null) especializacionActual.setActivo(especializacion.getActivo());
         especializacionRepository.save(especializacionActual);
         MiRespuestaRS rta = new MiRespuestaRS();
         rta.setMessage("Especialización actualizada exitosamente.");
         rta.setStatus(200);
         return rta;
+    }
+
+    @Override public MiRespuestaRS actualizarEstado(Long id, boolean activo) {
+        Especializacion entity = especializacionRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("La especialización no existe."));
+        entity.setActivo(activo); especializacionRepository.save(entity);
+        MiRespuestaRS response = new MiRespuestaRS(); response.setMessage(activo ? "Especialización activada." : "Especialización inactivada.");
+        response.setStatus(200); return response;
     }
 }

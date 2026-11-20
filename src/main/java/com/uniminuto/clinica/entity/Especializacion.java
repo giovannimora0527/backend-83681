@@ -26,4 +26,7 @@ public class Especializacion {
 
     @Column(name = "codigo_especializacion")
     private String codigoEspecializacion;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean activo = true;
 }

@@ -27,11 +27,11 @@ import java.util.Optional;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private static final String FROM = "clinicaveterinariauniminutosis@gmail.com";
+    private static final String FROM = "joelsantiagogarciaarevalo@gmail.com";
 
     private static final Integer OTP_TOKEN_EXPIRATION_MINUTES = 15; // Token expiration time in minutes
 
-    @Value("${JWT_SECRET}")
+    @Value("${app.jwt.secret:}")
     private String jwtSecret;
 
     @Autowired

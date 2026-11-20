@@ -31,4 +31,8 @@ public class EspecializacionApiController implements EspecializacionApi {
     public ResponseEntity<MiRespuestaRS> actualizarEspecializacion(Especializacion especializacion) throws BadRequestException {
         return ResponseEntity.ok(this.especializacionService.actualizarEspecializacion(especializacion));
     }
+
+    @Override public ResponseEntity<MiRespuestaRS> actualizarEstado(Long id, boolean activo) {
+        return ResponseEntity.ok(especializacionService.actualizarEstado(id, activo));
+    }
 }

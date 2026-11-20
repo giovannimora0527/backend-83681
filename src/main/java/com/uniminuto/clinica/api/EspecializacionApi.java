@@ -19,8 +19,7 @@ import java.util.List;
 public interface EspecializacionApi {
 
     @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<Especializacion>> listarEspecializaciones()
             throws BadRequestException;
 
@@ -41,4 +40,8 @@ public interface EspecializacionApi {
             @RequestBody Especializacion especializacion
     )
             throws BadRequestException;
+
+    @org.springframework.web.bind.annotation.PatchMapping(value = "/{id}/estado", produces = {"application/json"})
+    ResponseEntity<MiRespuestaRS> actualizarEstado(@org.springframework.web.bind.annotation.PathVariable Long id,
+                                                    @org.springframework.web.bind.annotation.RequestParam boolean activo);
 }

@@ -1,0 +1,6 @@
+.git
+.idea
+.codebase-memory
+target
+*.log
+.env

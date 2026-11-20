@@ -18,8 +18,7 @@ import java.util.List;
 public interface HistoriaApi {
 
     @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<HistoriaMedicaRs>> listarAllHIstorias()
             throws BadRequestException;
 

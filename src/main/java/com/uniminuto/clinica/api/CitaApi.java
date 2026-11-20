@@ -4,6 +4,8 @@ import com.uniminuto.clinica.entity.Cita;
 import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.CitaRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.DisponibilidadMedicoRq;
+import com.uniminuto.clinica.entity.CitaDisponibilidad;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +23,7 @@ public interface CitaApi {
      * @throws BadRequestException excepcion.
      */
     @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<Cita>> listarCitas()
             throws BadRequestException;
 
@@ -34,8 +35,7 @@ public interface CitaApi {
      * @throws BadRequestException excepcion.
      */
     @GetMapping(value = "/listar-rango",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<Cita>> listarCitasRango(
             @RequestParam LocalDateTime fechaInicio,
             @RequestParam LocalDateTime fechaFin
@@ -51,12 +51,16 @@ public interface CitaApi {
      * @throws BadRequestException excepcion.
      */
     @GetMapping(value = "/listar-por-mascota",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<Cita>> listarCitasPorMascota(
             @RequestParam Integer mascotaId
     )
             throws BadRequestException;
+
+    @GetMapping(value = "/mis-citas", produces = {"application/json"})
+    ResponseEntity<List<Cita>> listarMisCitas(@RequestParam LocalDateTime fechaInicio,
+                                               @RequestParam LocalDateTime fechaFin,
+                                               jakarta.servlet.http.HttpServletRequest request);
 
 
     /**
@@ -87,4 +91,10 @@ public interface CitaApi {
             @RequestBody CitaRq cita
     )
             throws BadRequestException;
+
+    @PostMapping(value = "/disponibilidad/crear", produces = {"application/json"}, consumes = {"application/json"})
+    ResponseEntity<CitaDisponibilidad> crearDisponibilidad(@RequestBody DisponibilidadMedicoRq disponibilidad);
+
+    @GetMapping(value = "/disponibilidad/medico", produces = {"application/json"})
+    ResponseEntity<List<CitaDisponibilidad>> disponibilidadMedico(@RequestParam Long medicoId);
 }

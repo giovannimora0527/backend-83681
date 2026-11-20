@@ -2,6 +2,7 @@ package com.uniminuto.clinica.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDateTime;
 
@@ -22,6 +23,7 @@ public class Usuario {
 
     /** * Contraseña almacenada como hash. */
     @Column(name = "password_hash", columnDefinition = "TEXT")
+    @JsonIgnore
     private String passwordHash;
 
     /** * Rol del usuario. */

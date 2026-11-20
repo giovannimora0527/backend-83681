@@ -20,8 +20,7 @@ import java.util.List;
 public interface MedicoApi {
 
     @GetMapping(value = "/listar-disponibles",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<Medico>> listarMedicosDisponibles(
             @RequestParam LocalDateTime fechaInicio,
             @RequestParam LocalDateTime fechaFin)
@@ -29,8 +28,7 @@ public interface MedicoApi {
 
 
     @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<List<Medico>> listarTodos()
             throws BadRequestException;
 

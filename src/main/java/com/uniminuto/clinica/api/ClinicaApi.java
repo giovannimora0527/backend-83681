@@ -18,21 +18,18 @@ public interface ClinicaApi {
      * @throws BadRequestException excepcion.
      */
     @GetMapping(value = "/test",
-            produces = {"application/text"},
-            consumes = {"application/json"})
+            produces = {"application/text"})
     ResponseEntity<String> testService()
             throws BadRequestException;
 
 
     @GetMapping(value = "/test2",
-            produces = {"application/text"},
-            consumes = {"application/json"})
+            produces = {"application/text"})
     ResponseEntity<String> testService2()
             throws BadRequestException;
 
     @GetMapping(value = "/test3",
-            produces = {"application/json"},
-            consumes = {"application/json"})
+            produces = {"application/json"})
     ResponseEntity<MiRespuestaRS> testService3()
             throws BadRequestException;
 }
