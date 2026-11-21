@@ -9,7 +9,6 @@ import com.uniminuto.clinica.service.CitaService;
 import com.uniminuto.clinica.service.TarifaService;
 import com.uniminuto.clinica.service.AtencionService;
 import com.uniminuto.clinica.service.FacturacionService;
-import com.uniminuto.clinica.util.ExportarReporte;
 import com.uniminuto.clinica.util.FacturaPdf;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -68,7 +67,7 @@ public class AtencionApiController implements AtencionApi {
     /** Prepara el documento de la fórmula para la cita indicada. */
     @Override
     public ResponseEntity<byte[]> formula(long citaId, long formulaId) throws IOException {
-        return pdf("formula-" + formulaId, ExportarReporte.pdf(atenciones.formula(citaId, formulaId)));
+        return pdf("formula-" + formulaId, atenciones.formula(citaId, formulaId));
     }
 
     /** Obtiene el documento de la prefactura asociada a la cita. */

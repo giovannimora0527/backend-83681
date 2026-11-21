@@ -70,12 +70,18 @@ public final class InformePdf {
                 if (logo != null) lienzo.drawImage(logo, 41, 522, 35, 35);
                 texto(lienzo, negrita, 9, Color.WHITE, 86, 548, "CLÍNICA VETERINARIA UNIMINUTO");
                 texto(lienzo, negrita, 16, Color.WHITE, 86, 528, titulo);
-                texto(lienzo, normal, 9, TINTA, MARGEN, 497, contexto);
-                texto(lienzo, normal, 9, TINTA, MARGEN, 483, "Generado el " + FECHA.format(generado) + " (Bogotá)");
-                texto(lienzo, negrita, 11, AZUL, MARGEN, 461,
+                float yContexto = 497;
+                for (String dato : contexto.lines().toList()) {
+                    for (String linea : envolver(List.of(dato), new float[]{ANCHO}, normal, 9).getFirst()) {
+                        texto(lienzo, normal, 9, TINTA, MARGEN, yContexto, linea);
+                        yContexto -= 14;
+                    }
+                }
+                texto(lienzo, normal, 9, TINTA, MARGEN, yContexto, "Generado el " + FECHA.format(generado) + " (Bogotá)");
+                texto(lienzo, negrita, 11, AZUL, MARGEN, yContexto - 22,
                         titulo.equals(seccion.titulo()) ? "Resultados del informe" : seccion.titulo());
                 float y = dibujarFila(lienzo, encabezados, anchos, negrita, 9, Color.WHITE, AZUL,
-                        450, 0, alto(encabezados), null);
+                        yContexto - 33, 0, alto(encabezados), null);
                 if (seccion.filas().isEmpty()) {
                     texto(lienzo, normal, 10, TINTA, MARGEN + 5, y - 20, "Sin registros para los filtros consultados.");
                 }

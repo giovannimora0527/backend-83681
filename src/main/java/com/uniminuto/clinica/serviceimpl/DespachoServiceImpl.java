@@ -25,17 +25,12 @@ import com.uniminuto.clinica.repository.MedicamentoRepository;
 import com.uniminuto.clinica.repository.MovimientoInventarioRepository;
 import com.uniminuto.clinica.repository.UsuarioRepository;
 import com.uniminuto.clinica.service.DespachoService;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import com.uniminuto.clinica.util.InformePdf;
+import com.uniminuto.clinica.models.ReporteRs;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.Normalizer;
 import java.time.LocalDate;
@@ -491,55 +486,30 @@ public class DespachoServiceImpl implements DespachoService {
             throw new BadRequestException("El despacho todavía no tiene entregas confirmadas para generar comprobante.");
         }
 
-        List<String> lineas = new ArrayList<>();
-        lineas.add("COMPROBANTE DE DISPENSACION DE MEDICAMENTOS");
-        lineas.add("Numero de comprobante: " + despacho.getNumeroComprobante());
-        lineas.add("Numero de despacho: " + despacho.getNumeroDespacho());
-        lineas.add("Formula: " + despacho.getNumeroFormula());
-        lineas.add("Fecha y hora de entrega: " + despacho.getFechaDespacho());
-        lineas.add("Veterinario: " + despacho.getMedicoNombre());
-        lineas.add("Propietario: " + despacho.getPropietarioNombre());
-        lineas.add("Mascota: " + despacho.getMascotaNombre());
-        lineas.add("Usuario responsable: " + (despacho.getUsuarioDespacho() == null
-                ? "" : despacho.getUsuarioDespacho().getUsername()));
-        lineas.add("Estado del despacho: " + despacho.getEstado());
-        lineas.add("Detalle de medicamentos entregados:");
-        for (DespachoDetalle detalle : despacho.getDetallesTrazabilidad()) {
-            lineas.add("- " + detalle.getMedicamentoNombre() + " | Lote " + detalle.getNumeroLote()
-                    + " | Vence " + detalle.getFechaVencimientoLote()
-                    + " | Entregado " + detalle.getCantidadEntregada()
-                    + " de " + detalle.getCantidadFormulada());
-        }
-        lineas.add("Observaciones: " + (despacho.getObservacion() == null ? "" : despacho.getObservacion()));
+        var generado = LocalDateTime.now(java.time.ZoneId.of("America/Bogota"));
+        var formatoFecha = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String entrega = despacho.getFechaDespacho() == null ? "Sin registrar"
+                : despacho.getFechaDespacho().format(formatoFecha);
+        String responsable = despacho.getUsuarioDespacho() == null ? "" : despacho.getUsuarioDespacho().getUsername();
+        String contexto = "Despacho: " + despacho.getNumeroDespacho() + "  |  Fórmula: " + despacho.getNumeroFormula()
+                + "  |  Entrega: " + entrega + "  |  Estado: " + despacho.getEstado()
+                + "\nMascota: " + despacho.getMascotaNombre() + "  |  Propietario: " + despacho.getPropietarioNombre()
+                + "\nVeterinario: " + despacho.getMedicoNombre() + "  |  Responsable: " + responsable;
+        var filas = despacho.getDetallesTrazabilidad().stream().map(detalle -> java.util.Arrays.<Object>asList(
+                detalle.getMedicamentoNombre(), detalle.getNumeroLote(), detalle.getFechaVencimientoLote(),
+                detalle.getCantidadFormulada(), detalle.getCantidadEntregada())).toList();
 
-        try (PDDocument documento = new PDDocument(); ByteArrayOutputStream salida = new ByteArrayOutputStream()) {
-            PDPage pagina = new PDPage(PDRectangle.LETTER);
-            documento.addPage(pagina);
-            PDPageContentStream contenido = new PDPageContentStream(documento, pagina);
-            float posicionY = 740;
-            for (String linea : lineas) {
-                String texto = limpiarTextoPdf(linea);
-                int longitud = Math.max(1, texto.length());
-                for (int inicio = 0; inicio < longitud; inicio += 95) {
-                    if (posicionY < 50) {
-                        contenido.close();
-                        pagina = new PDPage(PDRectangle.LETTER);
-                        documento.addPage(pagina);
-                        contenido = new PDPageContentStream(documento, pagina);
-                        posicionY = 740;
-                    }
-                    String segmento = texto.substring(inicio, Math.min(inicio + 95, texto.length()));
-                    contenido.beginText();
-                    contenido.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 10);
-                    contenido.newLineAtOffset(50, posicionY);
-                    contenido.showText(segmento);
-                    contenido.endText();
-                    posicionY -= 16;
-                }
-            }
-            contenido.close();
-            documento.save(salida);
-            return salida.toByteArray();
+        var secciones = new ArrayList<ReporteRs>();
+        secciones.add(new ReporteRs("Medicamentos entregados", generado,
+                List.of("Medicamento", "Lote", "Vencimiento", "Cantidad formulada", "Cantidad entregada"), filas));
+        if (despacho.getObservacion() != null && !despacho.getObservacion().isBlank()) {
+            secciones.add(new ReporteRs("Observaciones del despacho", generado, List.of("Observaciones"),
+                    List.of(List.of(despacho.getObservacion()))));
+        }
+
+        try {
+            return InformePdf.generar("Comprobante de dispensación · " + despacho.getNumeroComprobante(),
+                    generado, contexto, secciones);
         } catch (IOException exception) {
             throw new IllegalStateException("No fue posible generar el comprobante PDF del despacho.", exception);
         }
@@ -797,17 +767,6 @@ public class DespachoServiceImpl implements DespachoService {
         }
         LocalDate fecha = despacho.getFechaDespacho().toLocalDate();
         return (desde == null || !fecha.isBefore(desde)) && (hasta == null || !fecha.isAfter(hasta));
-    }
-
-    /** Prepara el texto para que se pueda escribir en el PDF. */
-    private String limpiarTextoPdf(String texto) {
-        if (texto == null) {
-            return "";
-        }
-        return Normalizer.normalize(texto, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .replaceAll("[^\\x20-\\x7E]", " ")
-                .trim();
     }
 
     /** Bloquea la cita durante la operación y comprueba que permita dispensar. */
