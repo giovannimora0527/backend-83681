@@ -12,18 +12,22 @@ public class AnotacionHistoria {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, unique = true)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @ManyToOne
     @JoinColumn(name = "historia_id", nullable = false)
+    @ManyToOne
     private HistoriaMedica historia;
 
-    @ManyToOne
     @JoinColumn(name = "medico_id", nullable = false)
+    @ManyToOne
     private Medico medico;
 
-    @Column(name = "fecha")
+    @JoinColumn(name = "cita_id")
+    @ManyToOne
+    private Cita cita;
+
+    @Column(name = "fecha", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fecha;
 
     @Column(name = "descripcion", nullable = false, columnDefinition = "TEXT")
@@ -32,6 +36,6 @@ public class AnotacionHistoria {
     @Column(name = "diagnostico", columnDefinition = "TEXT")
     private String diagnostico;
 
-    @Column(name = "observacion", columnDefinition = "TEXT")
-    private String observacion;
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
 }

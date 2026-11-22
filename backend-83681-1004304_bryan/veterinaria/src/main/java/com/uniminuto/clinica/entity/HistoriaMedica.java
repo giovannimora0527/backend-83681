@@ -12,30 +12,13 @@ public class HistoriaMedica {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, unique = true)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "paciente_id", nullable = false)
     private Mascota mascota;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fechaCreacion;
-
-    @ManyToOne
-    @JoinColumn(name = "cita_id")
-    private CitaMedica cita;
-
-    @ManyToOne
-    @JoinColumn(name = "medico_id")
-    private Medico medico;
-
-    @Column(name = "motivo", columnDefinition = "TEXT")
-    private String motivo;
-
-    @Column(name = "diagnostico", columnDefinition = "TEXT")
-    private String diagnostico;
-
-    @Column(name = "observaciones", columnDefinition = "TEXT")
-    private String observaciones;
 }

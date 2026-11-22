@@ -14,28 +14,18 @@ import java.util.List;
 @RequestMapping("/cliente")
 public interface ClienteApi {
 
-    /**
-     * Metodo test del servicio.
-     *
-     * @return Servicio funcionando correctamente.
-     * @throws BadRequestException excepcion.
-     */
-    @GetMapping(value = "/all",
-            produces = {"application/json"})
-    ResponseEntity<List<Cliente>> getClientes()
+    @GetMapping(value = "/listar",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<List<Cliente>> listarClientes()
             throws BadRequestException;
 
 
-    /**
-     * Metodo test del servicio.
-     *
-     * @return Servicio funcionando correctamente.
-     * @throws BadRequestException excepcion.
-     */
-    @GetMapping(value = "/cliente-documento",
-            produces = {"application/json"})
-    ResponseEntity<Cliente> getClientesByNumeroDocumento(
-            @RequestParam String numeroDocumento
+    @GetMapping(value = "/buscar-por-documento",
+            produces = {"application/json"},
+            consumes = {"application/json"})
+    ResponseEntity<Cliente> buscarClientesPorDocumento(
+            @RequestParam String documento
     )
             throws BadRequestException;
 }

@@ -16,23 +16,21 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private ClienteRepository clienteRepository;
 
+
     @Override
-    public List<Cliente> getAllClientes() {
-        return this.clienteRepository.findAll();
+    public List<Cliente> listarClientes() throws BadRequestException {
+        return clienteRepository.findAll().stream()
+                .sorted((c1, c2) -> c1.getNombres().compareToIgnoreCase(c2.getNombres()))
+                .toList();
     }
 
     @Override
-    public Cliente getClienteByNumeroDocumento(String numeroDocumento)
-            throws BadRequestException {
-        if (numeroDocumento == null || numeroDocumento.isEmpty()) {
-            throw new BadRequestException("El número de documento no puede ser nulo o vacío");
+    public Cliente buscarClientesPorDocumento(String documento) throws BadRequestException {
+        Optional<Cliente> clienteOptional = clienteRepository.findByNumeroDocumento(documento);
+        if (clienteOptional.isPresent()) {
+            return clienteOptional.get();
+        } else {
+            throw new BadRequestException("Cliente no encontrado con el documento: " + documento);
         }
-
-        Optional<Cliente> optCliente = this.clienteRepository.findByNumeroDocumento(numeroDocumento);
-        if (optCliente.isEmpty()) {
-            throw new BadRequestException("Cliente no encontrado");
-        }
-
-        return optCliente.get();
     }
 }
