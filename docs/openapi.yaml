@@ -1,0 +1,266 @@
+openapi: 3.1.0
+info:
+  title: Clínica Veterinaria API
+  version: 1.0.0
+  description: API del backend. Las fechas se expresan en ISO-8601 y se prefija la ruta con /clinica/v1.
+servers:
+  - url: http://localhost:8080/clinica/v1
+security:
+  - bearerAuth: []
+paths:
+  /inventario/resumen:
+    get:
+      summary: Consulta existencias y alertas de inventario
+      parameters:
+        - in: query
+          name: estado
+          schema: { type: string, enum: [TODOS, BAJO, AGOTADO, DISPONIBLE, INACTIVO, POR_VENCER] }
+      responses:
+        '200': { description: Resumen de catálogo y stock }
+  /inventario/importaciones/previsualizar:
+    post:
+      summary: Valida un archivo de inventario sin guardar cambios
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [archivo]
+              properties: { archivo: { type: string, format: binary } }
+      responses:
+        '200': { description: Resultado de validación por fila }
+  /inventario/importaciones/ejecutar:
+    post:
+      summary: Importa lotes válidos y registra auditoría
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [archivo]
+              properties: { archivo: { type: string, format: binary } }
+      responses:
+        '201': { description: Resultado de importación y auditoría }
+  /cita/horarios:
+    get:
+      summary: Lista los horarios semanales activos de un médico
+      parameters:
+        - in: query
+          name: medicoId
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200': { description: Horarios ISO weekday (1 lunes, 7 domingo) }
+    post:
+      summary: Registra disponibilidad semanal de un médico
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [medicoId, diaSemana, horaInicio, horaFin]
+              properties:
+                medicoId: { type: integer, format: int64 }
+                diaSemana: { type: integer, minimum: 1, maximum: 7 }
+                horaInicio: { type: string, example: '08:00:00' }
+                horaFin: { type: string, example: '17:00:00' }
+      responses:
+        '200': { description: Horario guardado }
+  /cita/disponibilidad:
+    get:
+      summary: Consulta inicios disponibles en la jornada de un médico
+      parameters:
+        - { in: query, name: medicoId, required: true, schema: { type: integer, format: int64 } }
+        - { in: query, name: fecha, required: true, schema: { type: string, format: date } }
+        - { in: query, name: duracionMinutos, required: false, schema: { type: integer, minimum: 10, maximum: 240, multipleOf: 5, default: 30 } }
+      responses:
+        '200': { description: Inicios libres cada 15 minutos que caben en el horario y no se cruzan con citas existentes }
+  /cita/{id}/cerrar:
+    post:
+      summary: Guarda diagnóstico y observaciones y cierra la consulta
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, format: int64 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [medicoId, descripcion, diagnostico, observaciones]
+              properties:
+                medicoId: { type: integer, format: int64 }
+                descripcion: { type: string }
+                diagnostico: { type: string }
+                observaciones: { type: string }
+      responses:
+        '200': { description: Consulta cerrada }
+  /formula-medica/{id}/dispensar:
+    post:
+      summary: Despacha una fórmula con consumo FEFO y auditoría
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200': { description: Fórmula despachada }
+        '400': { description: Stock insuficiente o fórmula ya despachada }
+  /inventario/despachos/pendientes:
+    get:
+      summary: Lista fórmulas pendientes para el personal de despacho
+      responses:
+        '200': { description: Pendientes con datos mínimos de paciente y producto }
+  /inventario/despachos/{formulaId}:
+    get:
+      summary: Obtiene comprobante de despacho y lotes consumidos
+      parameters:
+        - { in: path, name: formulaId, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        '200': { description: Comprobante con cantidades y trazabilidad por lote }
+    post:
+      summary: Despacha la cantidad disponible de una fórmula, hasta la cantidad solicitada, con clave idempotente
+      parameters:
+        - { in: path, name: formulaId, required: true, schema: { type: integer, format: int64 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cantidad, claveIdempotencia]
+              properties:
+                cantidad: { type: integer, minimum: 1 }
+                claveIdempotencia: { type: string, minLength: 8, maxLength: 64 }
+      responses:
+        '200': { description: Despacho aplicado; responde el mismo resultado ante un reintento con la misma clave }
+        '400': { description: Solicitud inválida, clave reutilizada para otra solicitud o cantidad excede lo pendiente }
+  /inventario/despachos/{formulaId}.pdf:
+    get:
+      summary: Descarga el comprobante PDF de las cantidades despachadas y lotes utilizados
+      parameters:
+        - { in: path, name: formulaId, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        '200': { description: Comprobante de despacho, application/pdf }
+  /formula-medica/{id}.pdf:
+    get:
+      summary: Descarga la fórmula médica en PDF
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        '200': { description: PDF de la fórmula, application/pdf }
+  /facturacion/tarifas:
+    get:
+      summary: Lista tarifas actualmente vigentes
+      responses:
+        '200': { description: Tarifas vigentes }
+    post:
+      summary: Crea una tarifa con vigencia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, valor, impuestoPorcentaje, vigenciaDesde]
+              properties:
+                nombre: { type: string }
+                valor: { type: number }
+                impuestoPorcentaje: { type: number, minimum: 0, maximum: 100 }
+                vigenciaDesde: { type: string, format: date }
+                vigenciaHasta: { type: [string, 'null'], format: date }
+      responses:
+        '201': { description: Tarifa creada }
+  /facturacion/facturas:
+    post:
+      summary: Emite una factura para una cita con snapshot de tarifa, impuesto y descuento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [citaId, tarifaId, cantidad]
+              properties:
+                citaId: { type: integer, format: int64 }
+                tarifaId: { type: integer, format: int64 }
+                cantidad: { type: integer, minimum: 1 }
+                descuento: { type: number, default: 0 }
+      responses:
+        '201': { description: Factura emitida }
+  /facturacion/facturas/{id}/pagos:
+    post:
+      summary: Registra pago parcial o total
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [monto, metodo]
+              properties:
+                monto: { type: number, exclusiveMinimum: 0 }
+                metodo: { type: string, enum: [EFECTIVO, TARJETA, TRANSFERENCIA, OTRO] }
+                referencia: { type: string }
+      responses:
+        '200': { description: Factura y saldo actualizado }
+  /facturacion/facturas/{id}.pdf:
+    get:
+      summary: Descarga la factura con sus pagos y saldo en PDF
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        '200': { description: PDF de la factura, application/pdf }
+  /facturacion/facturas/{id}/anular:
+    post:
+      summary: Anula una factura y conserva el motivo y usuario responsable
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: motivo
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Factura anulada }
+  /reportes/citas:
+    get:
+      summary: Vista previa del reporte de citas por fechas
+      parameters:
+        - { in: query, name: desde, required: true, schema: { type: string, format: date } }
+        - { in: query, name: hasta, required: true, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Citas y total }
+  /reportes/facturacion:
+    get:
+      summary: Vista previa de facturación por fechas y totales
+      parameters:
+        - { in: query, name: desde, required: true, schema: { type: string, format: date } }
+        - { in: query, name: hasta, required: true, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Facturas, pagos y saldo agregado }
+  /reportes/{tipo}.{formato}:
+    get:
+      summary: Exporta informe de citas o facturación a PDF/XLSX
+      parameters:
+        - { in: path, name: tipo, required: true, schema: { type: string, enum: [citas, facturacion] } }
+        - { in: path, name: formato, required: true, schema: { type: string, enum: [pdf, xlsx] } }
+        - { in: query, name: desde, required: true, schema: { type: string, format: date } }
+        - { in: query, name: hasta, required: true, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Archivo de informe }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

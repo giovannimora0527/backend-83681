@@ -3,7 +3,10 @@ package com.uniminuto.clinica.apicontroller;
 import com.uniminuto.clinica.api.RazaApi;
 import com.uniminuto.clinica.entity.Raza;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.RazaRq;
 import com.uniminuto.clinica.service.RazaService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,24 +15,21 @@ import java.util.List;
 @RestController
 public class RazaApiController implements RazaApi {
 
-    private final RazaService service;
+    @Autowired
+    private RazaService razaService;
 
-    public RazaApiController(RazaService service) {
-        this.service = service;
+    @Override
+    public ResponseEntity<MiRespuestaRS> guardarRaza(RazaRq razaRq) throws BadRequestException {
+        return ResponseEntity.ok(this.razaService.crearRazaNueva(razaRq));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> actualizarRaza(RazaRq razaRq) throws BadRequestException {
+        return ResponseEntity.ok(this.razaService.actualizarRaza(razaRq));
     }
 
     @Override
     public ResponseEntity<List<Raza>> listarRazas() throws BadRequestException {
-        return ResponseEntity.ok(service.listarRazas());
-    }
-
-    @Override
-    public ResponseEntity<Raza> guardarRaza(Raza raza) throws BadRequestException {
-        return ResponseEntity.ok(service.guardarRaza(raza));
-    }
-
-    @Override
-    public ResponseEntity<Raza> actualizarRaza(Raza raza) throws BadRequestException {
-        return ResponseEntity.ok(service.actualizarRaza(raza));
+        return ResponseEntity.ok(this.razaService.listarRazas());
     }
 }

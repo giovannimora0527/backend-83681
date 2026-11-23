@@ -4,32 +4,33 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public final class PasswordUtil {
+public class PasswordUtil {
 
-    private PasswordUtil() {
+    public static String generarMD5(String cadena) {
+        return generateMD5(cadena);
     }
 
-    public static String generateMd5(String value) {
-        if (value == null || value.isEmpty()) {
-            return null;
+    public static String generateMD5(String cadena) {
+        if (cadena == null || cadena.isEmpty()) {
+            return "";
         }
 
         try {
-            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-            byte[] bytes = messageDigest.digest(value.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] bytes = md.digest(cadena.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
 
             for (byte b : bytes) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
+                String part = Integer.toHexString(b & 0xFF);
+                if (part.length() == 1) {
+                    hex.append('0');
                 }
-                hexString.append(hex);
+                hex.append(part);
             }
 
-            return hexString.toString();
+            return hex.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("No se pudo generar el hash MD5", e);
+            throw new IllegalStateException("No se pudo generar la clave MD5", e);
         }
     }
 }

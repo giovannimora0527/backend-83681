@@ -3,55 +3,47 @@ package com.uniminuto.clinica.apicontroller;
 import com.uniminuto.clinica.api.FormulaMedicaApi;
 import com.uniminuto.clinica.entity.FormulaMedica;
 import com.uniminuto.clinica.exception.BadRequestException;
-import com.uniminuto.clinica.models.UsuarioRS;
-import com.uniminuto.clinica.service.FormulaMedicaService;
+import com.uniminuto.clinica.models.FormulaRq;
+import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.service.FormulaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-/**
- * Controlador que implementa los endpoints definidos en la interfaz FormulaMedicaApi.
- * Proporciona funcionalidades para listar y consultar fórmulas médicas.
- */
+
 @RestController
 public class FormulaMedicaApiController implements FormulaMedicaApi {
 
-    /**
-     * Servicio que maneja la lógica de negocio relacionada con las fórmulas médicas.
-     */
     @Autowired
-    private FormulaMedicaService formulaMedicaService;
+    private FormulaService formulaService;
 
-    /**
-     * Endpoint para listar todas las fórmulas médicas registradas en el sistema.
-     *
-     * @return Respuesta HTTP con la lista completa de fórmulas médicas.
-     * @throws BadRequestException Si ocurre una validación o un problema de negocio.
-     */
     @Override
-    public ResponseEntity<List<FormulaMedica>> listarFormulasMedicas() throws BadRequestException {
-        return ResponseEntity.ok(this.formulaMedicaService.listarFormulasMedicas());
-    }
-
-    /**
-     * Endpoint dedicado solo a consultar fórmulas médicas por el alias /formulas.
-     *
-     * @return Respuesta HTTP con la lista de fórmulas médicas.
-     * @throws BadRequestException Si ocurre una validación o un problema de negocio.
-     */
-    @Override
-    public ResponseEntity<List<FormulaMedica>> consultarFormulasMedicas() throws BadRequestException {
-        return ResponseEntity.ok(this.formulaMedicaService.listarFormulasMedicas());
+    public ResponseEntity<List<FormulaMedica>> listarFormulas() {
+        return ResponseEntity.ok(this.formulaService.findAllFormulas());
     }
 
     @Override
-    public ResponseEntity<UsuarioRS> guardarFormulaMedica(FormulaMedica formula) throws BadRequestException {
-        return ResponseEntity.ok(this.formulaMedicaService.guardarFormulaMedica(formula));
+    public ResponseEntity<MiRespuestaRS> guardarFormula(FormulaRq formulaRq) throws BadRequestException {
+        return ResponseEntity.ok(this.formulaService.guardarFormula(formulaRq));
     }
 
     @Override
-    public ResponseEntity<UsuarioRS> actualizarFormulaMedica(FormulaMedica formula) throws BadRequestException {
-        return ResponseEntity.ok(this.formulaMedicaService.actualizarFormulaMedica(formula));
+    public ResponseEntity<MiRespuestaRS> actualizarFormula(FormulaRq formulaRq) throws BadRequestException {
+        return ResponseEntity.ok(this.formulaService.actualizarFormula(formulaRq));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> dispensar(Long id) throws BadRequestException {
+        return ResponseEntity.ok(this.formulaService.dispensar(id));
+    }
+
+    @Override
+    public ResponseEntity<byte[]> descargarPdf(Long id) {
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"formula-" + id + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF).body(formulaService.generarPdf(id));
     }
 }

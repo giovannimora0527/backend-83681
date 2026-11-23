@@ -1,29 +1,23 @@
 package com.uniminuto.clinica.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
-@Data
 @Table(name = "medicamento")
+@Data
 public class Medicamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "nombre", nullable = false, length = 100)
+    @Column(name = "nombre", nullable = false, length = 100, unique = true)
     private String nombre;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
@@ -32,11 +26,35 @@ public class Medicamento {
     @Column(name = "presentacion", length = 100)
     private String presentacion;
 
-    @Column(name = "fecha_compra", nullable = false)
+    @Deprecated
+    @Column(name = "fecha_compra")
     private LocalDate fechaCompra;
 
-    @Column(name = "fecha_vence", nullable = false)
+    @Deprecated
+    @Column(name = "fecha_vence")
     private LocalDate fechaVence;
+
+    @Column(name = "codigo", length = 8, unique = true)
+    private String codigo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_producto", nullable = false, length = 20)
+    private TipoProducto tipoProducto;
+
+    @Column(name = "registro_invima", length = 100)
+    private String registroInvima;
+
+    @Column(name = "precio_compra", nullable = false, precision = 12, scale = 2)
+    private BigDecimal precioCompra;
+
+    @Column(name = "precio_publico", nullable = false, precision = 12, scale = 2)
+    private BigDecimal precioPublico;
+
+    @Column(name = "stock_minimo", nullable = false)
+    private Integer stockMinimo;
+
+    @Column(name = "activo", nullable = false)
+    private Boolean activo;
 
     @Column(name = "fecha_creacion_registro", nullable = false)
     private LocalDateTime fechaCreacionRegistro;
@@ -45,14 +63,29 @@ public class Medicamento {
     private LocalDateTime fechaModificacionRegistro;
 
     @PrePersist
-    public void prePersist() {
+    void antesDeCrear() {
         if (fechaCreacionRegistro == null) {
             fechaCreacionRegistro = LocalDateTime.now();
+        }
+        if (tipoProducto == null) {
+            tipoProducto = TipoProducto.MEDICAMENTO;
+        }
+        if (precioCompra == null) {
+            precioCompra = BigDecimal.ZERO;
+        }
+        if (precioPublico == null) {
+            precioPublico = BigDecimal.ZERO;
+        }
+        if (stockMinimo == null) {
+            stockMinimo = 0;
+        }
+        if (activo == null) {
+            activo = true;
         }
     }
 
     @PreUpdate
-    public void preUpdate() {
+    void antesDeActualizar() {
         fechaModificacionRegistro = LocalDateTime.now();
     }
 }
