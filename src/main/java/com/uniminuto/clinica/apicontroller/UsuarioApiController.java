@@ -1,36 +1,42 @@
 package com.uniminuto.clinica.apicontroller;
 
 import com.uniminuto.clinica.api.UsuarioApi;
-import com.uniminuto.clinica.entity.Usuario;
 import com.uniminuto.clinica.exception.BadRequestException;
-import com.uniminuto.clinica.models.UsuarioRS;
+import com.uniminuto.clinica.models.MiRespuestaRS;
+import com.uniminuto.clinica.models.PerfilRs;
 import com.uniminuto.clinica.models.UsuarioRq;
+import com.uniminuto.clinica.models.UsuarioRs;
 import com.uniminuto.clinica.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
 public class UsuarioApiController implements UsuarioApi {
+
     @Autowired
     private UsuarioService usuarioService;
 
+
     @Override
-    public ResponseEntity<List<Usuario>> listarUsuarios() throws BadRequestException {
-        return ResponseEntity.ok(this.usuarioService.listarUsuarios());
+    public ResponseEntity<List<UsuarioRs>> getUsuarios() throws BadRequestException {
+        return ResponseEntity.ok(this.usuarioService.obtenerUsuariosOrdenados());
     }
 
     @Override
-    public ResponseEntity<UsuarioRS> guardarUsuario(@RequestBody UsuarioRq usuarioRq) throws BadRequestException {
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.usuarioService.guardarUsuario(usuarioRq));
+    public ResponseEntity<List<PerfilRs>> getPerfiles() throws BadRequestException {
+        return ResponseEntity.ok(this.usuarioService.obtenerPerfilesActivos());
     }
 
     @Override
-    public ResponseEntity<UsuarioRS> actualizarUsuario(@RequestBody UsuarioRq usuarioRq) throws BadRequestException {
+    public ResponseEntity<MiRespuestaRS> guardar(UsuarioRq usuarioRq) throws BadRequestException {
+        return ResponseEntity.ok(this.usuarioService.crearUsuario(usuarioRq));
+    }
+
+    @Override
+    public ResponseEntity<MiRespuestaRS> actualizar(UsuarioRq usuarioRq) throws BadRequestException {
         return ResponseEntity.ok(this.usuarioService.actualizarUsuario(usuarioRq));
     }
 }

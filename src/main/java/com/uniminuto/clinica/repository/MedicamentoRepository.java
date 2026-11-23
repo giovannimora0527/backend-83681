@@ -2,8 +2,18 @@ package com.uniminuto.clinica.repository;
 
 import com.uniminuto.clinica.entity.Medicamento;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-@Repository
+import java.util.Optional;
+
 public interface MedicamentoRepository extends JpaRepository<Medicamento, Long> {
+
+    Optional<Medicamento> findByCodigoIgnoreCase(String codigo);
+
+    boolean existsByCodigoIgnoreCase(String codigo);
+
+    boolean existsByCodigoIgnoreCaseAndIdNot(String codigo, Long id);
+
+    boolean existsByNombreIgnoreCase(String nombre);
+
+    boolean existsByNombreIgnoreCaseAndIdNot(String nombre, Long id);
 }

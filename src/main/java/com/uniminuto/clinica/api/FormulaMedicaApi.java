@@ -1,57 +1,61 @@
 package com.uniminuto.clinica.api;
 
 import com.uniminuto.clinica.entity.FormulaMedica;
+import com.uniminuto.clinica.entity.Mascota;
 import com.uniminuto.clinica.exception.BadRequestException;
+import com.uniminuto.clinica.models.FormulaRq;
+import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import com.uniminuto.clinica.models.UsuarioRS;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequestMapping("/formula-medica")
-/**
- * Interfaz que define los endpoints relacionados con la gestión de fórmulas médicas.
- */
 public interface FormulaMedicaApi {
+
+
     /**
-     * Endpoint para listar todas las fórmulas médicas registradas en el sistema.
+     * Metodo test del servicio.
      *
-     * @return Respuesta HTTP con la lista completa de fórmulas médicas.
-     * @throws BadRequestException Si ocurre una validación o un problema de negocio.
+     * @return Servicio funcionando correctamente.
+     * @throws BadRequestException excepcion.
      */
     @GetMapping(value = "/listar",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<List<FormulaMedica>> listarFormulasMedicas()
+            produces = {"application/json"})
+    ResponseEntity<List<FormulaMedica>> listarFormulas()
             throws BadRequestException;
+
 
     /**
-     * Endpoint dedicado solo a consultar fórmulas médicas por el alias /formulas.
-     *
-     * @return Respuesta HTTP con la lista de fórmulas médicas.
-     * @throws BadRequestException Si ocurre una validación o un problema de negocio.
+     * Metodo para guardar una formula medica.
+     * @return
+     * @throws BadRequestException
      */
-    @GetMapping(value = "/formulas",
-            produces = {"application/json"},
-            consumes = {"application/json"})
-    ResponseEntity<List<FormulaMedica>> consultarFormulasMedicas()
-            throws BadRequestException;
-
     @PostMapping(value = "/guardar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<UsuarioRS> guardarFormulaMedica(@RequestBody FormulaMedica formula)
+    ResponseEntity<MiRespuestaRS> guardarFormula(
+            @RequestBody FormulaRq formulaRq
+    )
             throws BadRequestException;
+
 
     @PostMapping(value = "/actualizar",
             produces = {"application/json"},
             consumes = {"application/json"})
-    ResponseEntity<UsuarioRS> actualizarFormulaMedica(@RequestBody FormulaMedica formula)
+    ResponseEntity<MiRespuestaRS> actualizarFormula(
+            @RequestBody FormulaRq formulaRq
+    )
             throws BadRequestException;
+
+    @PostMapping(value = "/{id}/dispensar", produces = {"application/json"})
+    ResponseEntity<MiRespuestaRS> dispensar(@PathVariable("id") Long id) throws BadRequestException;
+
+    @GetMapping(value = "/{id}.pdf", produces = "application/pdf")
+    ResponseEntity<byte[]> descargarPdf(@PathVariable("id") Long id);
 }

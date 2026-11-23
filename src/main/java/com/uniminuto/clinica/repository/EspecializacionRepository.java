@@ -7,6 +7,13 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface EspecializacionRepository extends JpaRepository<Especializacion, Long> {
+public interface EspecializacionRepository extends JpaRepository<Especializacion,Long> {
+
+    Optional<Especializacion> findByNombre(String nombre);
+
     Optional<Especializacion> findByCodigoEspecializacion(String codigoEspecializacion);
+
+    Boolean existsByCodigoEspecializacion(String codigoEspecializacion);
+
+    Boolean existsByNombre(String nombre);
 }

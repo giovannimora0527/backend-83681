@@ -1,46 +1,45 @@
 package com.uniminuto.clinica.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
-/**
- * Represents a user in the system.
- */
 @Entity
 @Table(name = "usuario")
 @Data
 public class Usuario {
+
+    /** * Identificador único del usuario. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "username", nullable = false, length = 50)
+    /** * Nombre de usuario. */
+    @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
 
-    @JsonIgnore
+    /** * Contraseña almacenada como hash. */
     @Column(name = "password_hash", columnDefinition = "TEXT")
     private String passwordHash;
 
-    @Column(name = "rol", nullable = false, length = 30)
-    private String rol;
+    /** * Rol del usuario. */
+    @ManyToOne
+    @JoinColumn(name = "rol", nullable = false)
+    private Perfil perfil;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "fecha_creacion", nullable = false, updatable = false)
-    private Date fechaCreacion;
+    /** * Fecha de creación del usuario. */
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
 
+    /** * Indica si el usuario está activo. */
     @Column(name = "activo")
     private Boolean activo;
 
+    /**
+     * Correo electrónico.
+     */
     @Column(name = "email", nullable = false, length = 255)
     private String email;
-
-    @PrePersist
-    protected void onCreate() {
-        if (this.fechaCreacion == null) {
-            this.fechaCreacion = new Date();
-        }
-    }
 }

@@ -1,31 +1,31 @@
 package com.uniminuto.clinica.repository;
 
+import com.uniminuto.clinica.entity.Cliente;
 import com.uniminuto.clinica.entity.Mascota;
+import com.uniminuto.clinica.entity.Raza;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
+import jakarta.persistence.LockModeType;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface MascotaRepository extends JpaRepository<Mascota, Long> {
+public interface MascotaRepository extends JpaRepository<Mascota, Integer> {
 
-    /**
-     * Busca una mascota por su nombre.
-     * @param nombre Nombre de la mascota a buscar.
-     * @return La mascota encontrada o null si no existe.
-     */
-    Mascota findByNombreMascota(String nombre);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select m from Mascota m where m.mascotaId = :id")
+    Optional<Mascota> findByIdForUpdate(@Param("id") Integer id);
 
-    /**
-    * Busca todas las mascotas ordenadas por nombre de forma ascendente.
-    *
-    * @return Lista de mascotas ordenadas por nombre ascendente.
-    */
     List<Mascota> findAllByOrderByNombreMascotaAsc();
 
-    /**
-     * Busca todas las mascotas ordenadas por nombre de forma descendente.
-     * @return Lista de mascotas ordenadas por nombre descendente.
-     */
     List<Mascota> findAllByOrderByNombreMascotaDesc();
+
+    Mascota findByNombreMascota(String nombreMascota);
+
+    List<Mascota> findByClienteOrderByNombreMascotaAsc(Cliente c);
+
+    List<Mascota> findByRazaOrderByNombreMascotaAsc(Raza raza);
 }

@@ -1,12 +1,16 @@
 package com.uniminuto.clinica.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 
 @Component
 public class DatabaseConnectionTest implements CommandLineRunner {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseConnectionTest.class);
 
     private final DataSource dataSource;
 
@@ -19,18 +23,7 @@ public class DatabaseConnectionTest implements CommandLineRunner {
 
         try (var connection = dataSource.getConnection()) {
 
-            System.out.println("==========================================");
-            System.out.println("CONEXIÓN A BASE DE DATOS");
-            System.out.println("==========================================");
-            System.out.println("URL      : "
-                    + connection.getMetaData().getURL());
-            System.out.println("USUARIO  : "
-                    + connection.getMetaData().getUserName());
-            System.out.println("DRIVER   : "
-                    + connection.getMetaData().getDriverName());
-            System.out.println("DATABASE : "
-                    + connection.getCatalog());
-            System.out.println("==========================================");
+            LOGGER.info("Conexión con la base de datos verificada.");
         }
     }
 }

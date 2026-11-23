@@ -1,16 +1,40 @@
 package com.uniminuto.clinica.models;
 
+import jakarta.persistence.Column;
 import lombok.Data;
 
-/**
- * Modelo de respuesta genérico usado por varios endpoints para indicar status y mensaje.
- */
+import java.time.LocalDateTime;
+
 @Data
-public class UsuarioRS {
+public class UsuarioRs {
 
-    /** Código numérico de resultado (e.j. 200 para éxito). */
-    private int status;
+    /*
+     * Identificador único del usuario.
+     */
+    private Long id;
 
-    /** Mensaje legible con información del resultado. */
-    private String message;
+    /**
+     * Nombre de usuario.
+     */
+    private String username;
+
+    /**
+     * Rol del usuario.
+     */
+    private String rol;
+
+    /**
+     * Fecha de creación del usuario.
+     */
+    private LocalDateTime fechaCreacion;
+
+    /**
+     * Indica si el usuario está activo.
+     */
+    private Boolean activo;
+
+    /**
+     * Correo electrónico.
+     */
+    private String email;
 }

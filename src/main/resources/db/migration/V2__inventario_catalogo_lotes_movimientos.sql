@@ -1,0 +1,58 @@
+ALTER TABLE medicamento
+    MODIFY COLUMN fecha_compra DATE NULL,
+    MODIFY COLUMN fecha_vence DATE NULL,
+    ADD COLUMN codigo VARCHAR(8) NULL,
+    ADD COLUMN tipo_producto VARCHAR(20) NOT NULL DEFAULT 'MEDICAMENTO',
+    ADD COLUMN registro_invima VARCHAR(100) NULL,
+    ADD COLUMN precio_compra DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    ADD COLUMN precio_publico DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+    ADD COLUMN stock_minimo INT NOT NULL DEFAULT 0,
+    ADD COLUMN activo BIT NOT NULL DEFAULT b'1',
+    ADD UNIQUE KEY uk_medicamento_codigo (codigo);
+
+CREATE TABLE IF NOT EXISTS lote_medicamento (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    medicamento_id BIGINT NOT NULL,
+    codigo_lote VARCHAR(80) NOT NULL,
+    fecha_ingreso DATETIME(6) NOT NULL,
+    fecha_vencimiento DATE NOT NULL,
+    cantidad_inicial INT NOT NULL,
+    cantidad_disponible INT NOT NULL,
+    costo_unitario DECIMAL(12,2) NOT NULL,
+    usuario_creacion_id BIGINT NOT NULL,
+    fecha_creacion DATETIME(6) NOT NULL,
+    version BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_lote_producto_codigo (medicamento_id, codigo_lote),
+    KEY ix_lote_fefo (medicamento_id, fecha_vencimiento, cantidad_disponible),
+    KEY ix_lote_usuario_creacion (usuario_creacion_id),
+    CONSTRAINT ck_lote_cantidad_inicial CHECK (cantidad_inicial > 0),
+    CONSTRAINT ck_lote_cantidad_disponible CHECK (cantidad_disponible >= 0),
+    CONSTRAINT ck_lote_cantidad_maxima CHECK (cantidad_disponible <= cantidad_inicial),
+    CONSTRAINT ck_lote_costo CHECK (costo_unitario >= 0),
+    CONSTRAINT fk_lote_medicamento FOREIGN KEY (medicamento_id) REFERENCES medicamento (id),
+    CONSTRAINT fk_lote_usuario FOREIGN KEY (usuario_creacion_id) REFERENCES usuario (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS movimiento_inventario (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    lote_id BIGINT NOT NULL,
+    tipo VARCHAR(20) NOT NULL,
+    cantidad INT NOT NULL,
+    stock_anterior INT NOT NULL,
+    stock_nuevo INT NOT NULL,
+    usuario_id BIGINT NOT NULL,
+    formula_id BIGINT NULL,
+    referencia VARCHAR(100) NULL,
+    detalle TEXT NULL,
+    fecha DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    KEY ix_movimiento_lote_fecha (lote_id, fecha),
+    KEY ix_movimiento_usuario_fecha (usuario_id, fecha),
+    KEY ix_movimiento_formula (formula_id),
+    CONSTRAINT ck_movimiento_cantidad CHECK (cantidad > 0),
+    CONSTRAINT ck_movimiento_stock CHECK (stock_anterior >= 0 AND stock_nuevo >= 0),
+    CONSTRAINT fk_movimiento_lote FOREIGN KEY (lote_id) REFERENCES lote_medicamento (id),
+    CONSTRAINT fk_movimiento_usuario FOREIGN KEY (usuario_id) REFERENCES usuario (id),
+    CONSTRAINT fk_movimiento_formula FOREIGN KEY (formula_id) REFERENCES formula_medica (id)
+) ENGINE=InnoDB;
