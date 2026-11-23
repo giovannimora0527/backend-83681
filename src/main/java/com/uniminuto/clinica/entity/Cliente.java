@@ -10,18 +10,26 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+/**
+ * Entidad cliente (dueño de una o más mascotas).
+ */
 @Entity
-@Table(name = "cliente")
 @Data
+@Table(name = "cliente")
 public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cliente_id")
+<<<<<<< HEAD
     private Long id;
 
     @Column(name = "usuario_id", unique = true)
     private Integer usuarioId;
 
+=======
+    private Long clienteId;
+
+>>>>>>> 69d248a2c289f0849669bc921e5317721d7eb661
     @Column(name = "tipo_documento", nullable = false, length = 10)
     private String tipoDocumento;
 

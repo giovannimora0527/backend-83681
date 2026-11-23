@@ -28,6 +28,8 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<!-- Lombok compatible con JDK 21+; evita ExceptionInInitializerError (EndPosTable). -->
+		<lombok.version>1.18.38</lombok.version>
 	</properties>
 	<dependencies>
 		<dependency>

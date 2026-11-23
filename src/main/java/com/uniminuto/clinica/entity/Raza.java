@@ -5,14 +5,22 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+<<<<<<< HEAD
+=======
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+>>>>>>> 69d248a2c289f0849669bc921e5317721d7eb661
 import jakarta.persistence.Table;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * Entidad raza (catálogo de razas por especie).
+ */
 @Entity
-@Table(name = "raza")
 @Data
+@Table(name = "raza")
 public class Raza {
 
     @Id

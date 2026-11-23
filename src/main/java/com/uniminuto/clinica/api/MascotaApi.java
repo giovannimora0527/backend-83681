@@ -5,8 +5,15 @@ import com.uniminuto.clinica.exception.BadRequestException;
 import com.uniminuto.clinica.models.MascotaRq;
 import com.uniminuto.clinica.models.MiRespuestaRS;
 import org.springframework.http.ResponseEntity;
+<<<<<<< HEAD
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+=======
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+>>>>>>> 69d248a2c289f0849669bc921e5317721d7eb661
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +23,10 @@ import java.util.List;
 /**
  * API para la gestión de mascotas.
  */
+<<<<<<< HEAD
+=======
+@CrossOrigin(origins = "*", allowedHeaders = "*")
+>>>>>>> 69d248a2c289f0849669bc921e5317721d7eb661
 @RequestMapping("/mascota")
 public interface MascotaApi {
 
@@ -101,7 +112,11 @@ public interface MascotaApi {
      * @return Servicio funcionando correctamente.
      * @throws BadRequestException excepcion.
      */
+<<<<<<< HEAD
     @PostMapping(value = "/actualizar",
+=======
+    @PutMapping(value = "/actualizar",
+>>>>>>> 69d248a2c289f0849669bc921e5317721d7eb661
             produces = {"application/json"},
             consumes = {"application/json"})
     ResponseEntity<MiRespuestaRS> actualizarMascota(

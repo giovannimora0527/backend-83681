@@ -10,6 +10,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * Entidad médico veterinario. Pertenece a una especialización.
+ */
 @Entity
 @Table(name = "medico")
 @Data

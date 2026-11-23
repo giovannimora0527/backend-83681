@@ -7,6 +7,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 
+/**
+ * Entidad medicamento (catálogo de medicamentos disponibles).
+ */
 @Entity
 @Table(name = "medicamento")
 @Data
@@ -17,7 +20,11 @@ public class Medicamento {
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
+<<<<<<< HEAD
     @Column(name = "nombre", nullable = false, length = 100, unique = true)
+=======
+    @Column(name = "nombre", nullable = false, unique = true, length = 100)
+>>>>>>> 69d248a2c289f0849669bc921e5317721d7eb661
     private String nombre;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")

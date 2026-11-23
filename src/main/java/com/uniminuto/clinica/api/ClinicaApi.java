@@ -6,6 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import com.uniminuto.clinica.exception.BadRequestException;
 
+<<<<<<< HEAD
+=======
+@CrossOrigin(origins = "*", allowedHeaders = "*")
+>>>>>>> 69d248a2c289f0849669bc921e5317721d7eb661
 @RequestMapping("/clinica")
 public interface ClinicaApi {
 
